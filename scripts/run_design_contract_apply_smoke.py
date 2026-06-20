@@ -374,7 +374,7 @@ def _contract_fixture(
         },
         "readability_contract": {
             "min_title_pt": 26,
-            "min_body_pt": 16,
+            "min_body_pt": 15,
             "min_caption_pt": 8,
             "max_title_lines": 2,
             "max_slide_text_lines": 8,

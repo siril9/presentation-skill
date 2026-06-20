@@ -9,7 +9,7 @@ This release focuses on structured, reproducible, taste-constrained slide genera
 
 - Source-first deck workspaces: `outline.json`, `design_brief.json`, `content_plan.json`, `evidence_plan.json`, and `asset_plan.json` travel with the PPTX.
 - Reproducible style decisions: stable style seeds, supported treatment pools, and resolved heading/footer variants.
-- Cleaner lab/report slides: compact source-line footers, bottom-right page numbers, readable tables, and evidence-first layouts.
+- Cleaner lab/report slides: tuned 15 pt comparison body copy, compact source-line footers, bottom-right page numbers, readable tables, and evidence-first layouts.
 - QA-led delivery: rendered slides are checked for overflow, overlap, geometry, placeholder text, visual warnings, and design warnings.
 - Data/artifact path: local CSV/Excel/JSON inputs can become reusable figures, chart specs, and summary tables.
 
@@ -27,7 +27,7 @@ This release focuses on structured, reproducible, taste-constrained slide genera
 
 ## Verification
 
-- `npm run check:focused` passed for the release commit.
+- `npm run check:focused` passed for the release commit and the 15 pt body-copy tune.
 - `scripts/build_release_showcase.py` generated the 13-style comparison matrix
   and gallery deck.
 - Detailed per-deck counts remain available in

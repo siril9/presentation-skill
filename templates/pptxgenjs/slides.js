@@ -3676,7 +3676,7 @@ function renderComparison2col(pptx, slide, slideData, preset) {
         textOpts({
           x, y: bodyY, w: colW, h: bodyH,
           fontFace: preset.font_body,
-          fontSize: 16,
+          fontSize: 15,
           color: preset.text_primary,
           valign: 'top',
           paraSpaceAfter: 5,
