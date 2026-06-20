@@ -74,9 +74,8 @@ const PRESETS = {
     line: 'D1D5DB',
     font_heading: 'Helvetica Neue',
     font_body: 'Helvetica Neue',
-    // Clinical-red accent stripe under the dark header — the skill
-    // signature for the lab-report aesthetic. Python path renders the
-    // same stripe (see build_deck.py _content_header lab_report branch).
+    // Clinical-red accent is available for dark-bar headers and for the
+    // lab-clean heading-rule variants wired in build_deck_pptxgenjs.js.
     header_accent_stripe: true,
   },
   'editorial-minimal': {

@@ -135,6 +135,35 @@ handles cascades.
 
 ## Template-adaptation workflow
 
+If the user wants a new source-driven deck inspired by an existing PPTX, do
+not start by unpacking and cloning slide XML. Extract the measurable style
+signals first, then merge the emitted fragment into the new workspace's
+`design_brief.json`:
+
+```bash
+python3 scripts/extract_pptx_style.py \
+  --input template.pptx \
+  --report decks/my-deck/style_extract_report.json \
+  --markdown-report decks/my-deck/style_extract_report.md \
+  --design-brief-fragment decks/my-deck/style_extract_design_brief.json
+
+python3 scripts/apply_pptx_style_fragment.py \
+  --workspace decks/my-deck \
+  --fragment decks/my-deck/style_extract_design_brief.json \
+  --report decks/my-deck/style_fragment_apply_report.json
+```
+
+For a reference corpus, point `--input` at the folder and add `--recursive`.
+The extraction report and applied notes include fast/rendered
+`build_header_variant_gallery.py` commands for previewing the imported preset
+and header-variant pool on actual slides before committing to the style.
+Use the report for bounded choices such as header variants, footer/source-line
+behavior, page numbers, palette candidates, text-size floors, and
+figure/table-first posture. The apply step records those choices in
+`design_brief.json` and `notes.md`; use `--preserve-existing` for a workspace
+that already has intentional style decisions. Continue through the normal
+workspace build and QA pipeline.
+
 When the user brings a branded `.pptx` and wants its look applied to new
 content, you do NOT rebuild from outline — you adapt the template. The
 workflow:

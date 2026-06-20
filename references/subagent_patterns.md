@@ -40,6 +40,27 @@ different things to different agents. Mitigations, in order:
 
 ## High-value patterns (use these)
 
+### 0. Recommended sequence for complex decks
+
+Use the smallest useful set of subagents, in this order:
+
+1. Deck start packet when the deck needs reproducible setup. Run
+   `scripts/emit_deck_start_packet.py`, read `agent_kickoff_brief`, ask or
+   auto-resolve the compact question card, and follow its command ladder before
+   spawning scouts.
+2. Main-agent user intake when only personalization is underspecified. Run
+   `scripts/emit_deck_intake_prompt.py` and record answers or assumptions in
+   `design_brief.user_intake`; do not spawn a subagent to interview the user.
+3. Content research scout when claims are public/researched and still generic.
+4. Data/evidence analysis scout when local data, run tables, figures, or chart
+   candidates carry the proof burden.
+5. Style/content routing scout after evidence shape and user taste are clearer.
+6. Outline critique after the main agent drafts `outline.json`.
+7. Rendered visual QA after deterministic QA and slide rendering.
+
+The main agent remains the integrator. Subagents return punch lists or JSON
+constraint layers; they do not own final deck source edits.
+
 ### 1. Visual QA after render
 
 Fresh eyes on rendered JPGs. Automated `qa_gate.py` misses
@@ -89,10 +110,75 @@ visual elements on content slides, weak or generic palette choice,
 text-heavy slides that would fit kpi-hero or comparison-2col. Catches
 things the main agent glosses over because it's focused on content.
 
-**Operational**: `scripts/emit_outline_critique_prompt.py --outline
+**Operational**: `scripts/emit_outline_critique.py --outline
 outline.json` emits a ready-to-paste prompt. Run before `build_deck.py`.
 
-### 4. Template analysis before reuse
+### 4. Style/content routing scout
+
+Use one deck-level scout before finalizing `outline.json` when the deck is
+non-trivial, researched, scientific/lab-heavy, source-backed, or visually
+ambiguous. This is the right way to avoid brittle keyword routing such as
+"ASCO/TB/LAMP means lab-report" while still catching real lab decks.
+
+**Operational**:
+```
+python3 scripts/emit_style_content_router.py \
+  --workspace decks/my-deck \
+  --user-prompt "original user request"
+```
+
+Paste the emitted prompt into an `Explore` subagent. The subagent returns JSON
+that constrains `design_dna`, `style_preset`, `deck_style`, allowed variants,
+`design_modulation`, slide routes, asset requests, subagent plan, and QA
+sensitivities. The main agent remains responsible for applying those choices
+to the source files.
+
+Use this once per deck, not once per slide. The scout should classify evidence
+objects, audience posture, proof burden, density, and asset availability. Terms
+such as ASCO, TB, LAMP, clinical, LOD, sequencing, assay, sample, and
+resistance are priors only; they do not override the actual evidence shape.
+
+### 5. Content research scout
+
+Use when a researched/public deck has hedged or generic claims. This scout
+finds missing concrete anchors and source types; it does not rewrite the deck.
+
+**Operational**:
+```
+python3 scripts/emit_content_research.py --outline decks/my-deck/outline.json
+```
+
+The output should become updates to `content_plan.json`, `evidence_plan.json`,
+and selected slide text after the main agent verifies the facts.
+
+### 6. Data/evidence analysis scout
+
+Use when local files, result tables, lab data, chart candidates, or generated
+figures carry the proof burden. This scout classifies available files,
+recommends analyses, and returns provenance-aware chart/table/evidence updates.
+When `assets/artifacts_manifest.json` exists, the emitted prompt includes
+manifest aliases, selection templates, and binder commands. The scout should
+return `artifact_selection_recommendations.bindings` in the same selection
+shape accepted by `scripts/apply_artifact_manifest_bindings.py --selection`,
+plus `script_edit_plan`, `outline_binding_plan`, `qa_readiness_plan`, and
+`main_agent_handoff` blocks so the main agent can apply source edits without
+re-deriving artifact names. Save the scout JSON and run
+`scripts/apply_data_analysis_handoff.py` to persist deterministic bindings,
+evidence updates, and handoff notes before editing analysis scripts by hand.
+
+**Operational**:
+```
+python3 scripts/emit_data_analysis_prompt.py \
+  --workspace decks/my-deck \
+  --user-prompt "original user request"
+```
+
+If the analysis is repeatable or supports figures, convert it into a
+deterministic workspace script such as `assets/make_figures.py` and record the
+outputs in `asset_plan.json`. Do not leave important calculations as invisible
+subagent prose.
+
+### 7. Template analysis before reuse
 
 When the user hands you a branded `.pptx` to adapt, spawn an `Explore`
 subagent to analyze it. Give it the thumbnail grid path and the
@@ -127,12 +213,18 @@ Examples where the script is better:
 - "Is the outline schema valid?" → `preflight.py`
 - "Does any slide have overflow?" → `layout_lint.py`
 - "What font pairs are loadable?" → read `design_tokens.py`
+- "Are planning JSON files valid?" → `validate_planning.py`
+- "Did placeholder text remain?" → `qa_gate.py` or deterministic text extraction
 
 ### Subagent to pick a variant
 
 Variant selection for a single slide is trivial (the outline schema
 covers the whole decision matrix). Spawning an agent per slide adds
 seconds per slide with no quality win over the main agent.
+
+Exception: use the deck-level style/content routing scout above when the
+question is the whole deck's design DNA and evidence posture, not one slide's
+variant.
 
 ### Agent-per-slide on tiny decks
 

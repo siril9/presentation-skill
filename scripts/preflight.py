@@ -26,6 +26,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+try:
+    from PIL import Image, ImageChops
+except Exception:  # pragma: no cover - optional dependency error path
+    Image = None  # type: ignore[assignment]
+    ImageChops = None  # type: ignore[assignment]
+
 # Numeric KPI regex for stats.facts[].value. Mirrors design_rules_qa /
 # layout_lint but expressed per the preflight spec. Accepts optional
 # leading sign ("-" or unicode "−"), digits/dot/comma/percent, and an
@@ -40,7 +46,54 @@ _VALID_FONT_PAIRS = {
     "clean_modern_v1",
 }
 
-_ASSET_ALIAS_PREFIXES = ("asset:", "image:", "background:", "chart:", "generated:")
+_STYLE_ENUM_VALUES = {
+    "visual_density": {"low", "medium", "high"},
+    "header_mode": {"bar", "stack", "eyebrow", "lab-clean", "lab-card"},
+    "header_variant": {
+        "auto",
+        "left-accent",
+        "split-rule",
+        "title-rule",
+        "side-rail",
+        "top-bottom-rule",
+        "plain",
+    },
+    "title_layout": {
+        "split-hero",
+        "lab-plate",
+        "command-center",
+        "poster",
+        "masthead",
+        "light-atlas",
+    },
+    "title_motif": {"orbit", "network", "editorial", "none"},
+    "section_motif": {"rail-dots", "numbered-tabs", "plain", "none"},
+    "timeline_mode": {"rail-cards", "staggered", "open-events", "bands", "chapter-spread"},
+    "matrix_mode": {"cards", "open-quadrants"},
+    "stats_mode": {"tiles", "feature-left", "policy-bands"},
+    "cards_mode": {"feature-left", "staggered-row"},
+    "chart_treatment": {"standard", "facts-below", "facts-right", "minimal"},
+    "footer_mode": {"standard", "source-line", "none"},
+    "summary_callout_mode": {"default", "lab-box"},
+    "figure_table_treatment": {"figure-first", "table-first", "stats-strip", "image-sidebar"},
+}
+
+_ROOT_STYLE_ENUM_KEYS = set(_STYLE_ENUM_VALUES)
+_SLIDE_STYLE_ENUM_KEYS = {
+    "header_mode",
+    "header_variant",
+    "title_layout",
+    "timeline_mode",
+    "matrix_mode",
+    "stats_mode",
+    "cards_mode",
+    "chart_treatment",
+    "footer_mode",
+    "summary_callout_mode",
+    "figure_table_treatment",
+}
+
+_ASSET_ALIAS_PREFIXES = ("asset:", "image:", "background:", "chart:", "table:", "generated:")
 _REACT_ICON_PREFIXES = ("fa6:", "fa:", "bi:", "bs:", "md:", "lu:")
 
 _ASSET_FIELDS_SCALAR = (
@@ -51,6 +104,8 @@ _ASSET_FIELDS_SCALAR = (
     "mermaid_source",
     "logo",
     "chart_data",
+    "table_data",
+    "table",
 )
 _ASSET_FIELDS_ARRAY = ("icons",)
 _MERMAID_EDGE_RE = re.compile(
@@ -58,6 +113,50 @@ _MERMAID_EDGE_RE = re.compile(
     r"([A-Za-z0-9_]+)"
 )
 _MERMAID_NODE_RE = re.compile(r"^\s*([A-Za-z0-9_]+)\s*(?:\[|\(|\{)")
+
+_ALIAS_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("images", ("asset", "image")),
+    ("backgrounds", ("asset", "background")),
+    ("charts", ("asset", "chart")),
+    ("tables", ("asset", "table")),
+    ("generated_images", ("asset", "image", "generated")),
+)
+
+_PLACEHOLDER_MARKER_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("xxx", re.compile(r"\bx{3,}\b", re.IGNORECASE)),
+    ("lorem/ipsum", re.compile(r"\b(?:lorem|ipsum)\b", re.IGNORECASE)),
+    ("todo/tbd", re.compile(r"\b(?:TODO|TBD)\b", re.IGNORECASE)),
+    (
+        "bracketed placeholder",
+        re.compile(r"\[\s*(?:insert|placeholder|todo|tbd)\b[^\]]*\]", re.IGNORECASE),
+    ),
+    (
+        "angle placeholder",
+        re.compile(r"<\s*(?:insert|placeholder|todo|tbd)\b[^>]*>", re.IGNORECASE),
+    ),
+    ("powerpoint prompt", re.compile(r"\bclick\s+to\s+add\b", re.IGNORECASE)),
+    (
+        "layout prompt",
+        re.compile(r"\bthis\s+(?:page|slide)\b.{0,80}\blayout\b", re.IGNORECASE | re.DOTALL),
+    ),
+)
+_PLACEHOLDER_TEXT_SKIP_KEYS = {
+    "attribution_file",
+    "background_image",
+    "chart_data",
+    "diagram",
+    "generated_image",
+    "hero_image",
+    "image",
+    "logo",
+    "mermaid",
+    "mermaid_source",
+    "path",
+    "src",
+    "table_data",
+    "url",
+}
+_PLACEHOLDER_TEXT_SKIP_SUBTREES = {"icons"}
 
 
 def _make_issue(
@@ -76,6 +175,12 @@ def _make_issue(
     }
 
 
+class _PreflightContext:
+    def __init__(self) -> None:
+        self.json_objects: dict[Path, dict[str, Any] | None] = {}
+        self.declared_aliases: dict[Path, set[str]] = {}
+
+
 def _is_numeric_stats_value(text: str) -> bool:
     stripped = (text or "").strip()
     if not stripped:
@@ -88,16 +193,18 @@ def _is_numeric_stats_value(text: str) -> bool:
 def _check_asset_path(
     value: str,
     outline_parent: Path,
+    context: _PreflightContext | None = None,
 ) -> bool:
     """Return True if path resolves locally (or is aliased), False if missing.
 
-    Aliased prefixes (asset:/image:/background:/chart:) are always OK.
+    Aliased prefixes are considered OK only when declared in the staged
+    manifest or the pre-stage `asset_plan.json`.
     """
     if not value or not isinstance(value, str):
         return True
     for prefix in _ASSET_ALIAS_PREFIXES:
         if value.startswith(prefix):
-            return True
+            return _is_declared_alias(value, outline_parent, context)
     p = Path(value)
     if p.is_absolute():
         return p.exists()
@@ -108,6 +215,149 @@ def _check_asset_path(
         outline_parent / "assets" / "staged" / p,
     ]
     return any(c.exists() for c in candidates)
+
+
+def _normalize_alias(value: str) -> str:
+    return str(value or "").strip().lower()
+
+
+def _safe_alias_name(value: str) -> str:
+    safe = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in value).strip("_")
+    return safe.lower()
+
+
+def _declared_aliases_from_entries(entries: Any, prefixes: tuple[str, ...]) -> set[str]:
+    aliases: set[str] = set()
+    if not isinstance(entries, list):
+        return aliases
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        name = _safe_alias_name(str(entry.get("name") or ""))
+        if not name:
+            continue
+        aliases.update(f"{prefix}:{name}" for prefix in prefixes)
+    return aliases
+
+
+def _alias_entry_label(section: str, index: int, raw_name: Any, normalized_name: str) -> str:
+    explicit = str(raw_name or "").strip()
+    if explicit:
+        return f"{section}[{index}] name {explicit!r} -> {normalized_name!r}"
+    return f"{section}[{index}]"
+
+
+def _check_declared_alias_conflicts(
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for path in (
+        outline_parent / "assets" / "staged" / "staged_manifest.json",
+        outline_parent / "asset_plan.json",
+    ):
+        if not path.exists():
+            continue
+        payload = _load_json_object(path, context)
+        if not payload:
+            continue
+        seen_aliases: dict[str, str] = {}
+        for section, prefixes in _ALIAS_SECTIONS:
+            entries = payload.get(section)
+            if not isinstance(entries, list):
+                continue
+            for index, entry in enumerate(entries):
+                if not isinstance(entry, dict):
+                    continue
+                name = _safe_alias_name(str(entry.get("name") or ""))
+                if not name:
+                    continue
+                label = _alias_entry_label(section, index, entry.get("name"), name)
+                for prefix in prefixes:
+                    alias = f"{prefix}:{name}"
+                    previous = seen_aliases.get(alias)
+                    if previous is not None:
+                        issues.append(
+                            _make_issue(
+                                None,
+                                "staged_alias_ambiguous",
+                                "error",
+                                f"{path.name} declares duplicate staged alias {alias!r}: {previous} conflicts with {label}.",
+                                (
+                                    "Rename one asset in asset_plan.json and rerun asset_stage.py so staged aliases "
+                                    "resolve deterministically."
+                                ),
+                            )
+                        )
+                    else:
+                        seen_aliases[alias] = label
+    return issues
+
+
+def _declared_asset_aliases(
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> set[str]:
+    cache_key = outline_parent.resolve()
+    if context is not None and cache_key in context.declared_aliases:
+        return context.declared_aliases[cache_key]
+    aliases: set[str] = set()
+    for path in (
+        outline_parent / "assets" / "staged" / "staged_manifest.json",
+        outline_parent / "asset_plan.json",
+    ):
+        if not path.exists():
+            continue
+        payload = _load_json_object(path, context)
+        if not payload:
+            continue
+        for section, prefixes in _ALIAS_SECTIONS:
+            aliases.update(_declared_aliases_from_entries(payload.get(section), prefixes))
+    if context is not None:
+        context.declared_aliases[cache_key] = aliases
+    return aliases
+
+
+def _is_asset_alias(value: Any) -> bool:
+    return isinstance(value, str) and _normalize_alias(value).startswith(_ASSET_ALIAS_PREFIXES)
+
+
+def _is_declared_alias(
+    value: str,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> bool:
+    normalized = _normalize_alias(value)
+    if not normalized.startswith(_ASSET_ALIAS_PREFIXES):
+        return True
+    return normalized in _declared_asset_aliases(outline_parent, context)
+
+
+def _check_alias_reference(
+    value: Any,
+    idx: int,
+    field: str,
+    outline_parent: Path,
+    *,
+    severity: str = "warning",
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
+    if not _is_asset_alias(value):
+        return []
+    if _is_declared_alias(str(value), outline_parent, context):
+        return []
+    return [
+        _make_issue(
+            idx,
+            "staged_alias_not_declared",
+            severity,
+            f"{field} references undeclared staged alias {value!r}.",
+            (
+                "Add a matching named entry to asset_plan.json and run asset_stage.py, "
+                "or fix the alias spelling in outline.json."
+            ),
+        )
+    ]
 
 
 def _resolve_asset_path(value: str, outline_parent: Path) -> Path | None:
@@ -157,6 +407,188 @@ def _count_mermaid_nodes(path: Path) -> int:
     return len(nodes)
 
 
+def _read_json_object(path: Path) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _load_json_object(
+    path: Path,
+    context: _PreflightContext | None = None,
+) -> dict[str, Any] | None:
+    if context is None:
+        return _read_json_object(path)
+    key = path.resolve()
+    if key in context.json_objects:
+        return context.json_objects[key]
+    result = _read_json_object(key)
+    if context is not None:
+        context.json_objects[key] = result
+    return result
+
+
+def _chart_alias_name(value: str) -> str:
+    normalized = _normalize_alias(value)
+    for prefix in ("chart:", "asset:"):
+        if normalized.startswith(prefix):
+            return normalized.split(":", 1)[1].strip()
+    return ""
+
+
+def _resolve_manifest_entry_path(raw: Any, manifest_path: Path) -> Path | None:
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    path = Path(raw).expanduser()
+    if path.is_absolute():
+        return path if path.exists() else None
+    candidates = [
+        manifest_path.parent / path,
+        manifest_path.parent / "assets" / path,
+        manifest_path.parent / "assets" / "staged" / path,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _chart_payload_for_ref(
+    value: Any,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> dict[str, Any] | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    direct_path = _resolve_asset_path(value, outline_parent)
+    if direct_path is not None:
+        return _load_json_object(direct_path, context)
+
+    alias_name = _chart_alias_name(value)
+    if not alias_name:
+        return None
+    for manifest_path in (
+        outline_parent / "assets" / "staged" / "staged_manifest.json",
+        outline_parent / "asset_plan.json",
+    ):
+        payload = _load_json_object(manifest_path, context)
+        if not payload:
+            continue
+        charts = payload.get("charts")
+        if not isinstance(charts, list):
+            continue
+        for entry in charts:
+            if not isinstance(entry, dict):
+                continue
+            name = _safe_alias_name(str(entry.get("name") or ""))
+            if name != alias_name:
+                continue
+            chart_path = _resolve_manifest_entry_path(entry.get("path"), manifest_path)
+            if chart_path is not None:
+                return _load_json_object(chart_path, context)
+            if "series" in entry or "values" in entry or "categories" in entry or "labels" in entry:
+                return dict(entry)
+    return None
+
+
+def _table_alias_name(value: str) -> str:
+    normalized = _normalize_alias(value)
+    for prefix in ("table:", "asset:"):
+        if normalized.startswith(prefix):
+            return normalized.split(":", 1)[1].strip()
+    return ""
+
+
+def _table_payload_for_ref(
+    value: Any,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> dict[str, Any] | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    direct_path = _resolve_asset_path(value, outline_parent)
+    if direct_path is not None:
+        return _load_json_object(direct_path, context)
+
+    alias_name = _table_alias_name(value)
+    if not alias_name:
+        return None
+    for manifest_path in (
+        outline_parent / "assets" / "staged" / "staged_manifest.json",
+        outline_parent / "asset_plan.json",
+    ):
+        payload = _load_json_object(manifest_path, context)
+        if not payload:
+            continue
+        tables = payload.get("tables")
+        if not isinstance(tables, list):
+            continue
+        for entry in tables:
+            if not isinstance(entry, dict):
+                continue
+            name = _safe_alias_name(str(entry.get("name") or ""))
+            if name != alias_name:
+                continue
+            table_path = _resolve_manifest_entry_path(entry.get("path"), manifest_path)
+            if table_path is not None:
+                return _load_json_object(table_path, context)
+            if "headers" in entry or "rows" in entry:
+                return dict(entry)
+    return None
+
+
+def _image_alias_parts(value: str) -> tuple[str, tuple[str, ...]]:
+    normalized = _normalize_alias(value)
+    if normalized.startswith("image:"):
+        return normalized.split(":", 1)[1].strip(), ("images", "generated_images")
+    if normalized.startswith("generated:"):
+        return normalized.split(":", 1)[1].strip(), ("generated_images",)
+    if normalized.startswith("asset:"):
+        return normalized.split(":", 1)[1].strip(), ("images", "generated_images", "backgrounds")
+    if normalized.startswith("background:"):
+        return normalized.split(":", 1)[1].strip(), ("backgrounds",)
+    return "", ()
+
+
+def _image_path_for_ref(
+    value: Any,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> Path | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    direct_path = _resolve_asset_path(value, outline_parent)
+    if direct_path is not None:
+        return direct_path
+
+    alias_name, sections = _image_alias_parts(value)
+    if not alias_name:
+        return None
+    for manifest_path in (
+        outline_parent / "assets" / "staged" / "staged_manifest.json",
+        outline_parent / "asset_plan.json",
+    ):
+        payload = _load_json_object(manifest_path, context)
+        if not payload:
+            continue
+        for section in sections:
+            entries = payload.get(section)
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                name = _safe_alias_name(str(entry.get("name") or ""))
+                if name != alias_name:
+                    continue
+                image_path = _resolve_manifest_entry_path(entry.get("path"), manifest_path)
+                if image_path is not None:
+                    return image_path
+    return None
+
+
 def _check_icon_path(value: str, outline_parent: Path) -> bool:
     """Return True if an icon string resolves under the workspace.
 
@@ -185,22 +617,158 @@ def _check_icon_path(value: str, outline_parent: Path) -> bool:
     return False
 
 
-def _check_chart(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
+def _chart_series_items(chart: dict[str, Any]) -> list[dict[str, Any]]:
+    series = chart.get("series")
+    if isinstance(series, list) and series:
+        return [item for item in series if isinstance(item, dict)]
+    values = chart.get("values")
+    if isinstance(values, list) and values:
+        labels = chart.get("categories") if isinstance(chart.get("categories"), list) else chart.get("labels")
+        item: dict[str, Any] = {"values": values}
+        if isinstance(labels, list):
+            item["labels"] = labels
+        return [item]
+    return []
+
+
+def _chart_category_labels(chart: dict[str, Any], series_items: list[dict[str, Any]]) -> list[str]:
+    categories = chart.get("categories") if isinstance(chart.get("categories"), list) else chart.get("labels")
+    if isinstance(categories, list) and categories:
+        return [str(item) for item in categories]
+    longest: list[str] = []
+    for item in series_items:
+        labels = item.get("labels")
+        if isinstance(labels, list) and len(labels) > len(longest):
+            longest = [str(label) for label in labels]
+    return longest
+
+
+def _check_chart_density(chart: dict[str, Any], idx: int, label: str = "chart") -> list[dict[str, Any]]:
+    series_items = _chart_series_items(chart)
+    if not series_items:
+        return []
+    category_labels = _chart_category_labels(chart, series_items)
+    category_count = len(category_labels)
+    series_count = len(series_items)
+    point_count = 0
+    for item in series_items:
+        values = item.get("values")
+        if isinstance(values, list):
+            point_count += len(values)
+    longest_label = max((len(label_text.strip()) for label_text in category_labels), default=0)
+    avg_label = (
+        sum(len(label_text.strip()) for label_text in category_labels) / category_count
+        if category_count
+        else 0.0
+    )
+
+    issues: list[dict[str, Any]] = []
+    if category_count > 10:
+        issues.append(
+            _make_issue(
+                idx,
+                "chart_too_many_categories",
+                "warning",
+                f"{label} has {category_count} categories; native chart axis labels usually become cramped past ~10.",
+                "Split into two chart slides, aggregate low-value categories, or export a purpose-built figure.",
+            )
+        )
+    if series_count > 4:
+        issues.append(
+            _make_issue(
+                idx,
+                "chart_too_many_series",
+                "warning",
+                f"{label} has {series_count} series; legends and colors become hard to read past ~4 series.",
+                "Show fewer series, facet into multiple slides, or convert the comparison into a small-multiple figure.",
+            )
+        )
+    if point_count > 36 or (category_count and series_count * category_count > 36):
+        issues.append(
+            _make_issue(
+                idx,
+                "chart_point_budget_high",
+                "warning",
+                f"{label} plots {point_count} values across {series_count} series and {category_count} categories.",
+                "Keep editable slide charts compact; move dense exploratory results into a generated figure or appendix table.",
+            )
+        )
+    if longest_label > 24 or avg_label > 16:
+        issues.append(
+            _make_issue(
+                idx,
+                "chart_category_labels_long",
+                "warning",
+                f"{label} category labels are long (max {longest_label} chars, average {avg_label:.1f}).",
+                "Shorten category labels, rotate to a figure export, or use a table/sidebar for full labels.",
+            )
+        )
+    return issues
+
+
+def _check_chart(
+    slide: dict[str, Any],
+    idx: int,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     chart = slide.get("chart")
+    assets = slide.get("assets") if isinstance(slide.get("assets"), dict) else {}
+    chart_ref = (
+        slide.get("chart")
+        if isinstance(slide.get("chart"), str)
+        else assets.get("chart_data") or assets.get("chart")
+    )
+    issues.extend(
+        _check_alias_reference(
+            chart_ref,
+            idx,
+            "chart/assets.chart_data",
+            outline_parent,
+            severity="error",
+            context=context,
+        )
+    )
     if not isinstance(chart, dict):
+        if isinstance(chart_ref, str) and chart_ref.strip():
+            payload = _chart_payload_for_ref(chart_ref, outline_parent, context)
+            if payload is not None:
+                issues.extend(_check_chart_density(payload, idx, label=f"staged chart {chart_ref!r}"))
+            return issues
         issues.append(
             _make_issue(
                 idx,
                 "chart_missing",
                 "error",
-                "Slide has variant: chart but no `chart` object.",
-                "Add a `chart` object with `series` and either `categories` or per-series `labels`.",
+                "Slide has variant: chart but no inline `chart` object or staged chart alias.",
+                "Add a `chart` object with series/categories or reference staged chart JSON with `assets.chart_data`.",
             )
         )
         return issues
 
     series = chart.get("series")
+    categories = chart.get("categories") if isinstance(chart.get("categories"), list) else chart.get("labels")
+    flat_values = chart.get("values")
+    if (
+        (not isinstance(series, list) or len(series) < 1)
+        and isinstance(categories, list)
+        and len(categories) > 0
+        and isinstance(flat_values, list)
+        and len(flat_values) > 0
+    ):
+        if len(categories) != len(flat_values):
+            issues.append(
+                _make_issue(
+                    idx,
+                    "chart_categories_length_mismatch",
+                    "error",
+                    f"chart categories length ({len(categories)}) != chart values length ({len(flat_values)}).",
+                    "Use one category per value.",
+                )
+            )
+        issues.extend(_check_chart_density(chart, idx))
+        return issues
     if not isinstance(series, list) or len(series) < 1:
         issues.append(
             _make_issue(
@@ -276,6 +844,7 @@ def _check_chart(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
                     "Make labels and values the same length.",
                 )
             )
+    issues.extend(_check_chart_density(chart, idx))
     return issues
 
 
@@ -301,6 +870,143 @@ def _check_stats(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
                     "Use a real number + unit (e.g., \"14%\", \"2.1pt\") or switch variant to cards-3.",
                 )
             )
+    return issues
+
+
+def _check_style_enum_value(
+    *,
+    payload: dict[str, Any],
+    key: str,
+    slide_index: int | None,
+    path_label: str,
+) -> list[dict[str, Any]]:
+    if key not in payload:
+        return []
+    value = payload.get(key)
+    if not isinstance(value, str):
+        return [
+            _make_issue(
+                slide_index,
+                "style_treatment_invalid_type",
+                "error",
+                f"{path_label}.{key} must be a string when present.",
+                "Use one of the documented treatment names, or remove the field.",
+            )
+        ]
+    text = value.strip()
+    if not text:
+        return [
+            _make_issue(
+                slide_index,
+                "style_treatment_empty",
+                "warning",
+                f"{path_label}.{key} is empty and will be ignored.",
+                "Remove the empty treatment field or choose a supported value.",
+            )
+        ]
+    allowed = _STYLE_ENUM_VALUES[key]
+    if text.lower() not in allowed:
+        return [
+            _make_issue(
+                slide_index,
+                "style_treatment_unsupported",
+                "error",
+                f"{path_label}.{key} = {text!r} is unsupported.",
+                f"Set {path_label}.{key} to one of: {', '.join(sorted(allowed))}.",
+            )
+        ]
+    return []
+
+
+def _check_header_variants(
+    payload: dict[str, Any],
+    *,
+    slide_index: int | None,
+    path_label: str,
+) -> list[dict[str, Any]]:
+    if "header_variants" not in payload:
+        return []
+    value = payload.get("header_variants")
+    if not isinstance(value, list):
+        return [
+            _make_issue(
+                slide_index,
+                "style_treatment_invalid_type",
+                "error",
+                f"{path_label}.header_variants must be a list when present.",
+                "Use an array of supported header variants, or remove the field.",
+            )
+        ]
+    issues: list[dict[str, Any]] = []
+    allowed = _STYLE_ENUM_VALUES["header_variant"]
+    for item_idx, item in enumerate(value):
+        item_path = f"{path_label}.header_variants[{item_idx}]"
+        if not isinstance(item, str):
+            issues.append(
+                _make_issue(
+                    slide_index,
+                    "style_treatment_invalid_type",
+                    "error",
+                    f"{item_path} must be a string.",
+                    "Use a supported header variant name.",
+                )
+            )
+            continue
+        text = item.strip()
+        if not text:
+            issues.append(
+                _make_issue(
+                    slide_index,
+                    "style_treatment_empty",
+                    "warning",
+                    f"{item_path} is empty and will be ignored.",
+                    "Remove the empty array entry.",
+                )
+            )
+            continue
+        if text.lower() not in allowed:
+            issues.append(
+                _make_issue(
+                    slide_index,
+                    "style_treatment_unsupported",
+                    "error",
+                    f"{item_path} = {text!r} is unsupported.",
+                    f"Use one of: {', '.join(sorted(allowed))}.",
+                )
+            )
+    return issues
+
+
+def _check_style_treatments(
+    payload: Any,
+    *,
+    slide_index: int | None,
+    path_label: str,
+    keys: set[str],
+) -> list[dict[str, Any]]:
+    if payload is None:
+        return []
+    if not isinstance(payload, dict):
+        return [
+            _make_issue(
+                slide_index,
+                "style_treatment_invalid_type",
+                "error",
+                f"{path_label} must be an object when present.",
+                "Use an object with supported renderer treatment fields.",
+            )
+        ]
+    issues: list[dict[str, Any]] = []
+    for key in sorted(keys):
+        issues.extend(
+            _check_style_enum_value(
+                payload=payload,
+                key=key,
+                slide_index=slide_index,
+                path_label=path_label,
+            )
+        )
+    issues.extend(_check_header_variants(payload, slide_index=slide_index, path_label=path_label))
     return issues
 
 
@@ -359,7 +1065,169 @@ def _table_payload(slide: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _check_table_payload(table: dict[str, Any], idx: int, label: str = "table") -> list[dict[str, Any]]:
+def _is_table_alias(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().startswith(("table:", "asset:"))
+
+
+def _has_table_alias(slide: dict[str, Any]) -> bool:
+    assets = slide.get("assets") if isinstance(slide.get("assets"), dict) else {}
+    if _is_table_alias(slide.get("table")) or _is_table_alias(slide.get("table_data")):
+        return True
+    if _is_table_alias(assets.get("table")) or _is_table_alias(assets.get("table_data")):
+        return True
+    tables = slide.get("tables") or slide.get("table_groups") or assets.get("tables")
+    return isinstance(tables, list) and any(_is_table_alias(item) for item in tables)
+
+
+def _check_table_aliases(
+    slide: dict[str, Any],
+    idx: int,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    assets = slide.get("assets") if isinstance(slide.get("assets"), dict) else {}
+
+    def check_ref(field: str, value: Any) -> None:
+        issues.extend(
+            _check_alias_reference(
+                value,
+                idx,
+                field,
+                outline_parent,
+                severity="error",
+                context=context,
+            )
+        )
+        payload = _table_payload_for_ref(value, outline_parent, context)
+        if payload is not None:
+            issues.extend(_check_table_payload(payload, idx, f"staged table {field} {value!r}"))
+
+    for field, value in (
+        ("table", slide.get("table")),
+        ("table_data", slide.get("table_data")),
+        ("assets.table", assets.get("table")),
+        ("assets.table_data", assets.get("table_data")),
+    ):
+        check_ref(field, value)
+    tables = slide.get("tables") or slide.get("table_groups") or assets.get("tables")
+    if isinstance(tables, list):
+        for table_idx, value in enumerate(tables):
+            check_ref(f"tables[{table_idx}]", value)
+    return issues
+
+
+def _table_cell_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return re.sub(r"\s+", " ", value).strip()
+    if isinstance(value, (int, float, bool)):
+        return str(value).strip()
+    if isinstance(value, dict):
+        for key in ("text", "value", "label", "title", "body"):
+            text = value.get(key)
+            if isinstance(text, str) and text.strip():
+                return re.sub(r"\s+", " ", text).strip()
+        return re.sub(r"\s+", " ", json.dumps(value, ensure_ascii=False, sort_keys=True)).strip()
+    return re.sub(r"\s+", " ", str(value)).strip()
+
+
+def _is_source_footer_reference_slide(slide: dict[str, Any]) -> bool:
+    metadata = slide.get("source_footer_compaction")
+    return (
+        isinstance(metadata, dict)
+        and str(metadata.get("generated_by") or "") == "scripts/compact_source_footers.py"
+    )
+
+
+def _check_table_text_lengths(
+    *,
+    headers: list[Any],
+    rows: list[Any],
+    idx: int,
+    label: str,
+) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    header_texts = [_table_cell_text(header) for header in headers]
+    longest_header = max((len(text) for text in header_texts), default=0)
+    if longest_header > _TABLE_HEADER_TEXT_MAX_CHARS:
+        header_index, header_text = max(
+            enumerate(header_texts),
+            key=lambda item: len(item[1]),
+        )
+        issues.append(
+            _make_issue(
+                idx,
+                "table_header_text_long",
+                "warning",
+                (
+                    f"{label} header {header_index} is {len(header_text)} chars; "
+                    f"editable table headers are hard to read past ~{_TABLE_HEADER_TEXT_MAX_CHARS} chars."
+                ),
+                "Shorten the header, abbreviate with a caption/footnote, or split the table.",
+            )
+        )
+
+    body_cells: list[tuple[int, int, str]] = []
+    for row_idx, row in enumerate(rows):
+        if not isinstance(row, list):
+            continue
+        for col_idx, cell in enumerate(row):
+            text = _table_cell_text(cell)
+            if text:
+                body_cells.append((row_idx, col_idx, text))
+    if not body_cells:
+        return issues
+
+    longest_row, longest_col, longest_text = max(
+        body_cells,
+        key=lambda item: len(item[2]),
+    )
+    avg_len = sum(len(text) for _, _, text in body_cells) / len(body_cells)
+    long_body_cells = [
+        (row_idx, col_idx, text)
+        for row_idx, col_idx, text in body_cells
+        if len(text) > _TABLE_CELL_TEXT_MAX_CHARS
+    ]
+    if long_body_cells or avg_len > _TABLE_AVG_CELL_TEXT_MAX_CHARS:
+        reasons: list[str] = []
+        if long_body_cells:
+            reasons.append(
+                f"{len(long_body_cells)} body cell(s) exceed {_TABLE_CELL_TEXT_MAX_CHARS} chars"
+            )
+        if avg_len > _TABLE_AVG_CELL_TEXT_MAX_CHARS:
+            reasons.append(
+                f"average non-empty body cell is {avg_len:.1f} chars "
+                f"(>{_TABLE_AVG_CELL_TEXT_MAX_CHARS})"
+            )
+        issues.append(
+            _make_issue(
+                idx,
+                "table_cell_text_long",
+                "warning",
+                (
+                    f"{label} has sentence-length editable table text: "
+                    + "; ".join(reasons)
+                    + f". Longest cell is rows[{longest_row}][{longest_col}] "
+                    f"at {len(longest_text)} chars."
+                ),
+                (
+                    "Keep editable table cells to labels, values, and short calls; "
+                    "move explanations to caption/footnotes/sidebar or split into a figure-plus-summary table."
+                ),
+            )
+        )
+    return issues
+
+
+def _check_table_payload(
+    table: dict[str, Any],
+    idx: int,
+    label: str = "table",
+    *,
+    allow_long_text: bool = False,
+) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     headers = table.get("headers")
     rows = table.get("rows")
@@ -409,6 +1277,8 @@ def _check_table_payload(table: dict[str, Any], idx: int, label: str = "table") 
                     "Pad or trim the row to match the header count.",
                 )
             )
+    if not allow_long_text:
+        issues.extend(_check_table_text_lengths(headers=headers, rows=rows, idx=idx, label=label))
     if len(rows) > 10:
         issues.append(
             _make_issue(
@@ -421,17 +1291,149 @@ def _check_table_payload(table: dict[str, Any], idx: int, label: str = "table") 
                 "most-important rows and moving details to an appendix.",
             )
         )
+    if col_count > 6:
+        issues.append(
+            _make_issue(
+                idx,
+                "table_too_many_columns",
+                "warning",
+                f"{label} has {col_count} columns; editable tables become hard "
+                "to read past ~6 columns on a 16:9 slide.",
+                "Split the table, remove low-value columns, or convert the "
+                "wide readout into a chart plus compact summary table.",
+            )
+        )
+    cell_count = len(rows) * col_count
+    if cell_count > 48 or (col_count >= 6 and len(rows) > 7):
+        issues.append(
+            _make_issue(
+                idx,
+                "table_cell_budget_high",
+                "warning",
+                f"{label} has {len(rows)} rows x {col_count} columns "
+                f"({cell_count} editable cells), which is likely to force "
+                "small text or cramped gutters.",
+                "Summarize to the decision-critical rows, split across slides, "
+                "or generate a figure/table pair from the source data.",
+            )
+        )
     return issues
 
 
 def _has_caption_or_sources(slide: dict[str, Any]) -> bool:
     if str(slide.get("caption") or slide.get("figure_caption") or slide.get("footer") or "").strip():
         return True
-    sources = slide.get("sources")
-    return isinstance(sources, list) and any(str(item).strip() for item in sources)
+    return _has_footer_provenance_items(slide)
 
 
-def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
+def _has_footer_provenance_items(slide: dict[str, Any]) -> bool:
+    for key in ("sources", "refs", "references"):
+        values = slide.get(key)
+        if isinstance(values, list) and any(_source_text(item) for item in values):
+            return True
+    return False
+
+
+def _has_footer_chrome(slide: dict[str, Any]) -> bool:
+    if str(slide.get("footer") or "").strip():
+        return True
+    if _has_footer_provenance_items(slide):
+        return True
+    if slide.get("page_number") is not None:
+        return True
+    footer_mode = str(slide.get("footer_mode") or "").strip().lower()
+    return footer_mode == "source-line"
+
+
+_EVIDENCE_ANCHOR_VARIANTS = {
+    "chart",
+    "table",
+    "lab-run-results",
+    "image-sidebar",
+    "scientific-figure",
+    "flow",
+    "stats",
+    "kpi-hero",
+    "comparison-2col",
+    "matrix",
+    "timeline",
+}
+
+
+def _nonempty_list(value: Any) -> bool:
+    return isinstance(value, list) and any(str(item).strip() for item in value)
+
+
+def _slide_requests_evidence_anchor(slide: dict[str, Any]) -> bool:
+    slide_intent = str(slide.get("slide_intent") or "").strip().lower()
+    visual_intent = str(slide.get("visual_intent") or "").strip().lower()
+    if slide_intent == "evidence":
+        return True
+    if visual_intent in {"data", "chart", "table", "figure"}:
+        return True
+    return _nonempty_list(slide.get("evidence_needs")) or _nonempty_list(slide.get("evidence_objects"))
+
+
+def _slide_has_evidence_anchor(slide: dict[str, Any]) -> bool:
+    variant = str(slide.get("variant") or "").strip().lower()
+    if variant in _EVIDENCE_ANCHOR_VARIANTS:
+        return True
+    assets = slide.get("assets")
+    if not isinstance(assets, dict):
+        assets = {}
+    anchor_fields = (
+        "hero_image",
+        "image",
+        "generated_image",
+        "diagram",
+        "mermaid_source",
+        "chart_data",
+        "chart",
+        "table_data",
+        "table",
+        "tables",
+        "figures",
+    )
+    if any(assets.get(field) for field in anchor_fields):
+        return True
+    if any(slide.get(field) for field in ("chart", "table", "tables", "figures", "facts", "stats", "evidence")):
+        return True
+    return False
+
+
+def _check_evidence_anchor(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
+    slide_type = str(slide.get("type") or "content").strip().lower()
+    if slide_type not in {"content", "text"}:
+        return []
+    if not _slide_requests_evidence_anchor(slide):
+        return []
+    if _slide_has_evidence_anchor(slide):
+        return []
+    variant = str(slide.get("variant") or "standard").strip() or "standard"
+    return [
+        _make_issue(
+            idx,
+            "evidence_slide_missing_anchor",
+            "warning",
+            (
+                "Slide declares evidence/data intent but has no chart, table, figure, "
+                f"image, diagram, stats, KPI, or structured comparison anchor (variant={variant!r})."
+            ),
+            (
+                "Use an evidence-first variant such as chart, table, lab-run-results, "
+                "image-sidebar, scientific-figure, stats, comparison-2col, or flow; "
+                "or add assets.chart_data/table_data/hero_image/figures from the artifact plan."
+            ),
+        )
+    ]
+
+
+def _check_variant_required(
+    slide: dict[str, Any],
+    idx: int,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     variant = (slide.get("variant") or "").strip().lower()
 
@@ -569,6 +1571,16 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
                     'Add `"sidebar_sections": [{"title": "...", "body": "..."}]`.',
                 )
             )
+        if not _has_caption_or_sources(slide):
+            issues.append(
+                _make_issue(
+                    idx,
+                    "image_sidebar_missing_caption_or_sources",
+                    "warning",
+                    "image-sidebar should include caption, footer, sources, or refs for figure/image provenance.",
+                    "Add concise figure provenance, run metadata, or source text so the image-sidebar slide is auditable.",
+                )
+            )
 
     elif variant == "scientific-figure":
         assets = slide.get("assets") or {}
@@ -595,7 +1607,7 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
                     idx,
                     "scientific_figure_missing_caption_or_sources",
                     "warning",
-                    "scientific-figure should include caption, figure_caption, footer, or sources.",
+                    "scientific-figure should include caption, figure_caption, footer, sources, or refs.",
                     "Add concise provenance/readout text so the figure is auditable.",
                 )
             )
@@ -638,20 +1650,42 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
                 )
             )
 
+    elif variant == "chart":
+        if not _has_caption_or_sources(slide):
+            issues.append(
+                _make_issue(
+                    idx,
+                    "chart_missing_caption_or_sources",
+                    "warning",
+                    "Evidence charts should include caption, footer, sources, or refs.",
+                    "Add compact chart provenance, source data, or run metadata so the chart is auditable.",
+                )
+            )
+
     elif variant == "table":
-        issues.extend(_check_table_payload(_table_payload(slide), idx, "variant: table"))
+        issues.extend(_check_table_aliases(slide, idx, outline_parent, context))
+        if not _has_table_alias(slide):
+            issues.extend(
+                _check_table_payload(
+                    _table_payload(slide),
+                    idx,
+                    "variant: table",
+                    allow_long_text=_is_source_footer_reference_slide(slide),
+                )
+            )
         if not _has_caption_or_sources(slide):
             issues.append(
                 _make_issue(
                     idx,
                     "table_missing_caption_or_sources",
                     "warning",
-                    "Evidence tables should include caption, footer, or sources.",
+                    "Evidence tables should include caption, footer, sources, or refs.",
                     "Add source/run metadata or a caption below the table.",
                 )
             )
 
     elif variant == "lab-run-results":
+        issues.extend(_check_table_aliases(slide, idx, outline_parent, context))
         tables = slide.get("tables") or slide.get("table_groups")
         if isinstance(tables, list) and tables:
             if len(tables) > 3:
@@ -665,6 +1699,8 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
                     )
                 )
             for table_idx, table in enumerate(tables):
+                if _is_table_alias(table):
+                    continue
                 if not isinstance(table, dict):
                     issues.append(
                         _make_issue(
@@ -680,14 +1716,15 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
                     _check_table_payload(table, idx, f"lab-run-results tables[{table_idx}]")
                 )
         else:
-            issues.extend(_check_table_payload(_table_payload(slide), idx, "variant: lab-run-results"))
+            if not _has_table_alias(slide):
+                issues.extend(_check_table_payload(_table_payload(slide), idx, "variant: lab-run-results"))
         if not _has_caption_or_sources(slide):
             issues.append(
                 _make_issue(
                     idx,
                     "lab_run_missing_caption_or_sources",
                     "warning",
-                    "lab-run-results should include caption, footer, or sources for run/data provenance.",
+                    "lab-run-results should include caption, footer, sources, or refs for run/data provenance.",
                     "Add assay/run metadata, data source, or a compact footnote.",
                 )
             )
@@ -739,10 +1776,311 @@ def _check_variant_required(slide: dict[str, Any], idx: int) -> list[dict[str, A
     return issues
 
 
+def _figure_specs(slide: dict[str, Any]) -> list[Any]:
+    assets = slide.get("assets")
+    if isinstance(slide.get("figures"), list):
+        return slide.get("figures") or []
+    if isinstance(assets, dict) and isinstance(assets.get("figures"), list):
+        return assets.get("figures") or []
+    return []
+
+
+def _figure_path(spec: Any) -> str:
+    if isinstance(spec, str):
+        return spec
+    if isinstance(spec, dict):
+        return str(spec.get("path") or spec.get("image") or "").strip()
+    return ""
+
+
+def _has_figure_caption(spec: Any) -> bool:
+    return isinstance(spec, dict) and bool(str(spec.get("caption") or spec.get("note") or "").strip())
+
+
+def _image_size(path: Path) -> tuple[int, int] | None:
+    if Image is None:
+        return None
+    try:
+        with Image.open(path) as img:
+            return img.size
+    except Exception:
+        return None
+
+
+def _corner_background(img: Any) -> tuple[int, int, int, int]:
+    rgba = img.convert("RGBA")
+    width, height = rgba.size
+    corners = [
+        rgba.getpixel((0, 0)),
+        rgba.getpixel((max(0, width - 1), 0)),
+        rgba.getpixel((0, max(0, height - 1))),
+        rgba.getpixel((max(0, width - 1), max(0, height - 1))),
+    ]
+    return tuple(sorted(values)[len(values) // 2] for values in zip(*corners))  # type: ignore[return-value]
+
+
+def _image_exterior_whitespace(path: Path, *, tolerance: int = 12) -> dict[str, Any] | None:
+    if Image is None or ImageChops is None:
+        return None
+    try:
+        with Image.open(path) as raw:
+            img = raw.convert("RGBA")
+            if img.width <= 1 or img.height <= 1:
+                return None
+            bg = Image.new("RGBA", img.size, _corner_background(img))
+            diff = ImageChops.difference(img, bg)
+            mask = Image.new("L", img.size, 0)
+            for channel in diff.split():
+                thresholded = channel.point(lambda value: 255 if value > tolerance else 0)
+                mask = ImageChops.lighter(mask, thresholded)
+            bbox = mask.getbbox()
+            if not bbox:
+                return None
+            left, top, right, bottom = bbox
+            content_area = max(1, right - left) * max(1, bottom - top)
+            total_area = img.width * img.height
+            exterior_fraction = max(0.0, min(1.0, 1.0 - (content_area / total_area)))
+            return {
+                "size": (img.width, img.height),
+                "bbox": bbox,
+                "exterior_fraction": exterior_fraction,
+            }
+    except Exception:
+        return None
+
+
+def _looks_like_generated_figure(raw_path: str, resolved: Path) -> bool:
+    text = f"{raw_path} {resolved.as_posix()}".lower()
+    figure_terms = ("assets/figures", "/figures/", "figure", "plot", "chart", "graph", "readout", "panel")
+    return any(term in text for term in figure_terms)
+
+
+def _figure_whitespace_issue(
+    *,
+    raw_path: str,
+    resolved: Path | None,
+    idx: int,
+    context: str,
+    require_figure_like: bool = False,
+) -> list[dict[str, Any]]:
+    if resolved is None:
+        return []
+    if resolved.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"}:
+        return []
+    if require_figure_like and not _looks_like_generated_figure(raw_path, resolved):
+        return []
+    report = _image_exterior_whitespace(resolved)
+    if not report:
+        return []
+    exterior_fraction = float(report.get("exterior_fraction") or 0.0)
+    if exterior_fraction < 0.45:
+        return []
+    bbox = report.get("bbox") or (0, 0, 0, 0)
+    size = report.get("size") or (0, 0)
+    return [
+        _make_issue(
+            idx,
+            "figure_exterior_whitespace_high",
+            "warning",
+            (
+                f"{context} appears to have {exterior_fraction:.0%} exterior blank area "
+                f"(content bbox {bbox[2] - bbox[0]}x{bbox[3] - bbox[1]} px inside {size[0]}x{size[1]} px)."
+            ),
+            (
+                "Export the figure with bbox_inches='tight' and small padding, "
+                "or run scripts/trim_image_whitespace.py before inserting it."
+            ),
+        )
+    ]
+
+
+def _scientific_panel_geometry(slide: dict[str, Any], figure_count: int, has_panel_caption: bool) -> tuple[float, float]:
+    """Approximate the pptxgenjs scientific-figure image box in inches."""
+    slide_w = 10.0
+    slide_h = 5.625
+    margin_x = 0.50
+    usable_w = slide_w - margin_x * 2
+    gap = 0.30
+    top_y = 1.08
+    bottom_text = bool(slide.get("caption") or slide.get("figure_caption") or slide.get("interpretation") or slide.get("takeaway"))
+    has_footer = _has_footer_chrome(slide)
+    bottom_reserve = 0.62 if bottom_text else 0.18
+    footer_reserve = 0.50 if has_footer else 0.12
+    grid_h = slide_h - top_y - bottom_reserve - footer_reserve
+    count = max(1, min(figure_count, 4))
+    cols = 1 if count == 1 else 2
+    rows = 1 if count <= 2 else 2
+    panel_w = (usable_w - gap * (cols - 1)) / cols
+    panel_h = (grid_h - gap * (rows - 1)) / rows
+    title_h = 0.22
+    fig_caption_h = 0.22 if has_panel_caption else 0.0
+    image_h = max(0.1, panel_h - 0.12 - title_h - fig_caption_h - 0.08)
+    image_w = max(0.1, panel_w - 0.12)
+    return image_w, image_h
+
+
+def _scientific_bottom_text_lines(slide: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    for key in ("caption", "figure_caption", "interpretation", "takeaway"):
+        _append_text_density_lines(slide.get(key), lines)
+    return [line.strip() for line in lines if line.strip()]
+
+
+def _check_scientific_bottom_text_readability(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
+    lines = _scientific_bottom_text_lines(slide)
+    if not lines:
+        return []
+    words = sum(len(re.findall(r"\b[\w'-]+\b", line)) for line in lines)
+    chars = sum(len(line) for line in lines)
+    estimated_lines = sum(
+        _estimate_text_lines(line, font_size_pt=8.2, width_in=8.7)
+        for line in lines
+    )
+    if estimated_lines <= 2 and words <= 34 and chars <= 220:
+        return []
+    exceeded: list[str] = []
+    if estimated_lines > 2:
+        exceeded.append(f"~{estimated_lines} wrapped lines > 2")
+    if words > 34:
+        exceeded.append(f"{words} words > 34")
+    if chars > 220:
+        exceeded.append(f"{chars} chars > 220")
+    return [
+        _make_issue(
+            idx,
+            "scientific_figure_bottom_text_long",
+            "warning",
+            "scientific-figure bottom caption/interpretation is too dense for the fixed synthesis strip "
+            f"({', '.join(exceeded)}).",
+            (
+                "Keep the bottom strip to a compact figure caption plus one interpretation sentence; "
+                "move method detail to notes/refs, split the figure, or use image-sidebar for longer explanation."
+            ),
+        )
+    ]
+
+
+def _check_scientific_figure_readability(
+    slide: dict[str, Any],
+    idx: int,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
+    if (slide.get("variant") or "").strip().lower() != "scientific-figure":
+        return []
+    figures = _figure_specs(slide)
+    if not figures:
+        return []
+
+    issues: list[dict[str, Any]] = []
+    issues.extend(_check_scientific_bottom_text_readability(slide, idx))
+    if len(figures) > 4:
+        issues.append(
+            _make_issue(
+                idx,
+                "scientific_figure_panel_count_exceeds_limit",
+                "error",
+                (
+                    f"scientific-figure has {len(figures)} panels, but the renderer "
+                    "can place at most 4 and will ignore extras."
+                ),
+                (
+                    "Split the extra panels to a second scientific-figure slide, "
+                    "combine them into one slide-ready composite figure, or make "
+                    "the dominant plot an image-sidebar hero."
+                ),
+            )
+        )
+    if len(figures) >= 3:
+        issues.append(
+            _make_issue(
+                idx,
+                "scientific_figure_dense_grid",
+                "warning",
+                f"scientific-figure has {len(figures)} panels; detailed plots often become tiny in a 2x2 grid.",
+                "Use one composite slide-ready figure, split into two slides, or make the primary plot an image-sidebar hero.",
+            )
+        )
+
+    smallest: tuple[float, float, str] | None = None
+    for spec in figures[:4]:
+        raw_path = _figure_path(spec)
+        resolved = _image_path_for_ref(raw_path, outline_parent, context)
+        if resolved is None:
+            continue
+        issues.extend(
+            _figure_whitespace_issue(
+                raw_path=raw_path,
+                resolved=resolved,
+                idx=idx,
+                context=f"scientific-figure panel {raw_path!r}",
+            )
+        )
+        size = _image_size(resolved)
+        if not size:
+            continue
+        img_w, img_h = size
+        box_w, box_h = _scientific_panel_geometry(slide, len(figures), _has_figure_caption(spec))
+        image_ratio = img_w / max(img_h, 1)
+        box_ratio = box_w / max(box_h, 0.01)
+        if image_ratio >= box_ratio:
+            fit_w = box_w
+            fit_h = box_w / image_ratio
+        else:
+            fit_h = box_h
+            fit_w = box_h * image_ratio
+        if smallest is None or (fit_w * fit_h) < (smallest[0] * smallest[1]):
+            smallest = (fit_w, fit_h, raw_path)
+
+    if smallest and (smallest[0] < 2.45 or smallest[1] < 1.35):
+        issues.append(
+            _make_issue(
+                idx,
+                "scientific_figure_tiny_plot_risk",
+                "warning",
+                (
+                    "At least one figure is estimated to render at "
+                    f"{smallest[0]:.1f}x{smallest[1]:.1f} inches inside its panel."
+                ),
+                (
+                    "Export tighter slide-ready figures from the Python figure script "
+                    "(bbox_inches='tight', small padding, or scripts/trim_image_whitespace.py), "
+                    "or use image-sidebar for the dominant plot."
+                ),
+            )
+        )
+    return issues
+
+
+def _check_figure_asset_whitespace(
+    slide: dict[str, Any],
+    idx: int,
+    outline_parent: Path,
+    context: _PreflightContext | None = None,
+) -> list[dict[str, Any]]:
+    variant = (slide.get("variant") or "").strip().lower()
+    if variant != "image-sidebar":
+        return []
+    assets = slide.get("assets")
+    if not isinstance(assets, dict):
+        return []
+    raw_path = str(assets.get("hero_image") or assets.get("image") or "").strip()
+    if not raw_path:
+        return []
+    return _figure_whitespace_issue(
+        raw_path=raw_path,
+        resolved=_image_path_for_ref(raw_path, outline_parent, context),
+        idx=idx,
+        context=f"image-sidebar hero image {raw_path!r}",
+        require_figure_like=True,
+    )
+
+
 def _check_assets(
     slide: dict[str, Any],
     idx: int,
     outline_parent: Path,
+    context: _PreflightContext | None = None,
 ) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     assets = slide.get("assets")
@@ -751,7 +2089,18 @@ def _check_assets(
     for field in _ASSET_FIELDS_SCALAR:
         value = assets.get(field)
         if isinstance(value, str) and value:
-            if not _check_asset_path(value, outline_parent):
+            if _is_asset_alias(value):
+                issues.extend(
+                    _check_alias_reference(
+                        value,
+                        idx,
+                        f"assets.{field}",
+                        outline_parent,
+                        context=context,
+                    )
+                )
+                continue
+            if not _check_asset_path(value, outline_parent, context):
                 issues.append(
                     _make_issue(
                         idx,
@@ -771,7 +2120,7 @@ def _check_assets(
                     # (enrichment only), so we check a wider path set here.
                     if field == "icons" and _check_icon_path(value, outline_parent):
                         continue
-                    if not _check_asset_path(value, outline_parent):
+                    if not _check_asset_path(value, outline_parent, context):
                         issues.append(
                             _make_issue(
                                 idx,
@@ -906,6 +2255,344 @@ def _slide_body_lines(slide: dict[str, Any]) -> list[str]:
                     if isinstance(v, str) and v.strip():
                         lines.append(v)
     return [l.strip() for l in lines if l and l.strip()]
+
+
+_TEXT_DENSITY_VARIANT_BUDGETS: dict[str, tuple[int, int, int]] = {
+    "": (8, 105, 700),
+    "standard": (8, 105, 700),
+    "split": (10, 130, 850),
+    "comparison-2col": (10, 130, 850),
+    "cards-2": (9, 120, 780),
+    "cards-3": (9, 120, 780),
+    "image-sidebar": (8, 105, 700),
+}
+
+_TABLE_HEADER_TEXT_MAX_CHARS = 34
+_TABLE_CELL_TEXT_MAX_CHARS = 72
+_TABLE_AVG_CELL_TEXT_MAX_CHARS = 34
+
+
+def _readability_contract(design_brief: Any) -> dict[str, Any]:
+    if not isinstance(design_brief, dict):
+        return {}
+    contract = design_brief.get("readability_contract")
+    return contract if isinstance(contract, dict) else {}
+
+
+def _positive_int(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if value <= 0:
+        return None
+    return int(value)
+
+
+def _title_font_for_length(title: str) -> int:
+    length = len(title.strip())
+    if length > 82:
+        return 17
+    if length > 64:
+        return 16
+    if length > 52:
+        return 18
+    if length > 42:
+        return 20
+    return 26
+
+
+def _title_slide_font_for_length(title: str, *, has_hero: bool) -> int:
+    length = len(title.strip())
+    base_font = 38 if has_hero else 42
+    min_font = 29
+    return max(min_font, min(base_font, int(base_font - max(0, length - 32) * 0.32)))
+
+
+def _estimated_chars_per_line(*, font_size_pt: float, width_in: float) -> int:
+    avg_char_w = max(0.055, (font_size_pt / 72.0) * 0.56)
+    return max(10, int(max(0.2, width_in - 0.08) / avg_char_w))
+
+
+def _estimate_text_lines(text: str, *, font_size_pt: float, width_in: float) -> int:
+    value = str(text or "").strip()
+    if not value:
+        return 0
+    chars_per_line = _estimated_chars_per_line(font_size_pt=font_size_pt, width_in=width_in)
+    total = 0
+    for paragraph in re.split(r"\n+", value):
+        total += max(1, (len(paragraph.strip()) + chars_per_line - 1) // chars_per_line)
+    return total
+
+
+def _estimated_wrapped_lines(text: str, *, font_size_pt: float, width_in: float) -> list[str]:
+    value = str(text or "").strip()
+    if not value:
+        return []
+    chars_per_line = _estimated_chars_per_line(font_size_pt=font_size_pt, width_in=width_in)
+    lines: list[str] = []
+    for paragraph in re.split(r"\n+", value):
+        words = re.findall(r"\S+", paragraph.strip())
+        if not words:
+            continue
+        current = ""
+        for word in words:
+            if not current:
+                current = word
+            elif len(current) + 1 + len(word) <= chars_per_line:
+                current = f"{current} {word}"
+            else:
+                lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+    return lines
+
+
+def _title_line_estimate(
+    slide: dict[str, Any],
+    deck_style: dict[str, Any] | None,
+) -> tuple[int, int, float]:
+    title = str(slide.get("title") or "").strip()
+    slide_type = str(slide.get("type") or "content").strip().lower()
+    assets = slide.get("assets") if isinstance(slide.get("assets"), dict) else {}
+    has_hero = bool(assets.get("hero_image") or assets.get("image"))
+    deck_style = deck_style if isinstance(deck_style, dict) else {}
+    if slide_type == "title":
+        width = 5.3 if has_hero else 7.4
+        font = _title_slide_font_for_length(title, has_hero=has_hero)
+    elif slide_type == "section":
+        width = 8.7
+        font = 34
+    else:
+        header_mode = str(slide.get("header_mode") or deck_style.get("header_mode") or "").strip().lower()
+        width = 9.0
+        font = _title_font_for_length(title)
+        if header_mode in {"lab-clean", "lab-card"}:
+            font = min(24, font)
+    return _estimate_text_lines(title, font_size_pt=font, width_in=width), font, width
+
+
+def _check_title_readability(
+    slide: dict[str, Any],
+    idx: int,
+    deck_style: dict[str, Any] | None,
+    readability_contract: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    title = slide.get("title")
+    if not isinstance(title, str) or not title.strip():
+        return []
+    contract = readability_contract or {}
+    explicit_line_budget = _positive_int(contract.get("max_title_lines"))
+    max_lines = explicit_line_budget or 3
+    estimated_lines, font_size, width_in = _title_line_estimate(slide, deck_style)
+    if estimated_lines > max_lines:
+        return [
+            _make_issue(
+                idx,
+                "title_line_budget_high",
+                "warning",
+                (
+                    f"Title is estimated at {estimated_lines} wrapped lines, "
+                    f"above the max_title_lines budget of {max_lines} "
+                    f"(font ~{font_size}pt across {width_in:.1f} in)."
+                ),
+                (
+                    "Shorten the slide title, move detail to subtitle/body, "
+                    "or explicitly relax readability_contract.max_title_lines for this deck."
+                ),
+            )
+        ]
+    wrapped_lines = _estimated_wrapped_lines(title, font_size_pt=font_size, width_in=width_in)
+    final_line = wrapped_lines[-1] if wrapped_lines else ""
+    final_words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'%-]*", final_line)
+    title_words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'%-]*", title)
+    if (
+        1 < len(wrapped_lines) <= max_lines
+        and len(final_words) == 1
+        and len(final_words[0]) <= 12
+        and len(title_words) >= 6
+    ):
+        return [
+            _make_issue(
+                idx,
+                "title_orphan_final_line",
+                "warning",
+                (
+                    f"Title is estimated at {len(wrapped_lines)} wrapped lines with a single short "
+                    f"final line ({final_line!r}) at font ~{font_size}pt across {width_in:.1f} in."
+                ),
+                (
+                    "Rebalance the title by shortening it, moving a qualifier to subtitle/body, "
+                    "or rephrasing so the final heading line carries more than one short word."
+                ),
+            )
+        ]
+    if explicit_line_budget is None and len(title) > 85:
+        return [
+            _make_issue(
+                idx,
+                "title_too_long",
+                "warning",
+                f"Title is {len(title)} chars (> 85); likely to wrap awkwardly or force small header type.",
+                "Shorten to <= 60 chars, or set readability_contract.max_title_lines when a report deck deliberately allows longer titles.",
+            )
+        ]
+    return []
+
+
+def _check_subtitle_readability(
+    slide: dict[str, Any],
+    idx: int,
+    deck_style: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    subtitle = slide.get("subtitle")
+    if not isinstance(subtitle, str) or not subtitle.strip():
+        return []
+    slide_type = str(slide.get("type") or "content").strip().lower()
+    if slide_type != "content":
+        return []
+    deck_style = deck_style if isinstance(deck_style, dict) else {}
+    header_mode = str(slide.get("header_mode") or deck_style.get("header_mode") or "").strip().lower()
+    width_in = 8.6 if header_mode in {"lab-clean", "lab-card"} else 8.8
+    font_size = 12.5
+    estimated_lines = _estimate_text_lines(subtitle, font_size_pt=font_size, width_in=width_in)
+    if estimated_lines <= 2:
+        return []
+    return [
+        _make_issue(
+            idx,
+            "subtitle_line_budget_high",
+            "warning",
+            (
+                f"Subtitle is estimated at {estimated_lines} wrapped lines "
+                f"(font ~{font_size:g}pt across {width_in:.1f} in), crowding the content header."
+            ),
+            (
+                "Shorten the subtitle to one concise qualifier, move detail to body/notes, "
+                "or split the slide when the qualifier is part of the evidence."
+            ),
+        )
+    ]
+
+
+def _append_text_density_lines(value: Any, lines: list[str]) -> None:
+    if isinstance(value, str):
+        text = value.strip()
+        if text:
+            lines.append(text)
+    elif isinstance(value, list):
+        for item in value:
+            _append_text_density_lines(item, lines)
+    elif isinstance(value, dict):
+        for key in (
+            "body",
+            "text",
+            "caption",
+            "note",
+            "interpretation",
+            "takeaway",
+            "summary",
+        ):
+            if key in value:
+                _append_text_density_lines(value.get(key), lines)
+
+
+def _slide_text_density_lines(slide: dict[str, Any]) -> list[str]:
+    lines: list[str] = []
+    for key in (
+        "subtitle",
+        "body",
+        "bullets",
+        "highlights",
+        "caption",
+        "figure_caption",
+        "interpretation",
+        "takeaway",
+        "summary_callout",
+    ):
+        _append_text_density_lines(slide.get(key), lines)
+    for key in (
+        "left",
+        "right",
+        "cards",
+        "sidebar_sections",
+        "quadrants",
+        "milestones",
+    ):
+        _append_text_density_lines(slide.get(key), lines)
+    return [line.strip() for line in lines if line.strip()]
+
+
+def _scaled_text_budget(
+    budget: tuple[int, int, int],
+    *,
+    slide: dict[str, Any],
+    deck_style: dict[str, Any] | None,
+    readability_contract: dict[str, Any] | None = None,
+) -> tuple[int, int, int]:
+    density = str(
+        slide.get("visual_density")
+        or (deck_style or {}).get("visual_density")
+        or ""
+    ).strip().lower()
+    factor = 1.2 if density == "high" else 0.9 if density == "low" else 1.0
+    line_budget, word_budget, char_budget = budget
+    scaled = (
+        max(1, int(round(line_budget * factor))),
+        max(1, int(round(word_budget * factor))),
+        max(1, int(round(char_budget * factor))),
+    )
+    contract = readability_contract or {}
+    return (
+        _positive_int(contract.get("max_slide_text_lines")) or scaled[0],
+        _positive_int(contract.get("max_slide_words")) or scaled[1],
+        _positive_int(contract.get("max_slide_chars")) or scaled[2],
+    )
+
+
+def _check_text_density(
+    slide: dict[str, Any],
+    idx: int,
+    deck_style: dict[str, Any] | None,
+    readability_contract: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    stype = (slide.get("type") or "content").strip().lower()
+    if stype != "content":
+        return []
+    variant = (slide.get("variant") or "standard").strip().lower()
+    if variant not in _TEXT_DENSITY_VARIANT_BUDGETS:
+        return []
+    lines = _slide_text_density_lines(slide)
+    if not lines:
+        return []
+    words = sum(len(re.findall(r"\b[\w'-]+\b", line)) for line in lines)
+    chars = sum(len(line) for line in lines)
+    line_budget, word_budget, char_budget = _scaled_text_budget(
+        _TEXT_DENSITY_VARIANT_BUDGETS[variant],
+        slide=slide,
+        deck_style=deck_style,
+        readability_contract=readability_contract,
+    )
+    if len(lines) <= line_budget and words <= word_budget and chars <= char_budget:
+        return []
+    exceeded: list[str] = []
+    if len(lines) > line_budget:
+        exceeded.append(f"{len(lines)} text lines > {line_budget}")
+    if words > word_budget:
+        exceeded.append(f"{words} words > {word_budget}")
+    if chars > char_budget:
+        exceeded.append(f"{chars} chars > {char_budget}")
+    return [
+        _make_issue(
+            idx,
+            "content_text_density_high",
+            "warning",
+            f"{variant or 'standard'} slide text budget is high ({', '.join(exceeded)}).",
+            (
+                "Split the slide, shorten bullets, move detail to notes/refs, "
+                "or convert dense evidence into a chart, table, sidebar figure, or summary callout."
+            ),
+        )
+    ]
 
 
 def _check_content_quality(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
@@ -1180,47 +2867,62 @@ def _check_enrichment_pattern(
 ) -> list[dict[str, Any]]:
     """Promote scattered icons_absent_enrichment_hint notes to a single
     deck-level warning when the pattern is systemic — ≥3 slides flagged,
-    no staged images, no mermaid/diagram source, no asset_plan images
-    array populated. This is the "Codex acknowledged the nudges and
-    shipped anyway" failure mode.
+    no staged visuals/evidence anchors, and no asset_plan anchor arrays
+    populated. This is the "Codex acknowledged the nudges and shipped anyway"
+    failure mode.
     """
     icon_hints = [i for i in prior_issues if i.get("rule") == "icons_absent_enrichment_hint"]
     if len(icon_hints) < 3:
         return []
 
-    # Is there any staged visual anywhere in the deck?
-    has_any_visual = False
+    # Is there any visual/evidence anchor anywhere in the deck?
+    has_any_anchor = False
     for s in slides:
         if not isinstance(s, dict):
             continue
+        variant = str(s.get("variant") or "").strip().lower()
         assets = s.get("assets") or {}
         if not isinstance(assets, dict):
-            continue
+            assets = {}
         if (
-            assets.get("hero_image")
+            variant in {"chart", "table", "lab-run-results", "image-sidebar", "scientific-figure", "flow"}
+            or s.get("chart")
+            or s.get("table")
+            or s.get("tables")
+            or s.get("figures")
+            or assets.get("hero_image")
             or assets.get("image")
             or assets.get("generated_image")
             or assets.get("mermaid_source")
             or assets.get("diagram")
+            or assets.get("chart_data")
+            or assets.get("chart")
+            or assets.get("table_data")
+            or assets.get("table")
+            or assets.get("tables")
+            or assets.get("figures")
         ):
-            has_any_visual = True
+            has_any_anchor = True
             break
-    if has_any_visual:
+    if has_any_anchor:
         return []
 
     plan_path = outline_parent / "asset_plan.json"
-    plan_has_images = False
+    plan_has_anchors = False
     if plan_path.exists():
         try:
             plan = json.loads(plan_path.read_text(encoding="utf-8"))
-            plan_has_images = bool(
+            plan_has_anchors = bool(
                 (plan.get("images") or [])
+                or (plan.get("backgrounds") or [])
+                or (plan.get("charts") or [])
+                or (plan.get("tables") or [])
                 or (plan.get("generated_images") or [])
                 or (plan.get("icons") or [])
             )
         except (json.JSONDecodeError, OSError):
-            plan_has_images = False
-    if plan_has_images:
+            plan_has_anchors = False
+    if plan_has_anchors:
         return []
 
     slide_indices = sorted({i.get("slide_index") for i in icon_hints if isinstance(i.get("slide_index"), int)})
@@ -1232,8 +2934,9 @@ def _check_enrichment_pattern(
             (
                 f"{len(icon_hints)} slides were flagged with "
                 "icons_absent_enrichment_hint; the deck also has zero "
-                "staged hero images, generated images, zero mermaid diagrams, "
-                "and an empty asset_plan.json images/generated_images/icons array. "
+                "staged hero images, generated images, charts, tables, figures, "
+                "or mermaid diagrams, and an empty asset_plan.json "
+                "images/charts/tables/generated_images/icons array. "
                 "This is systemic — "
                 "the deck will ship as text-only despite multiple nudges."
             ),
@@ -1243,7 +2946,8 @@ def _check_enrichment_pattern(
                 "under <workspace>/assets/icons/<name>.png and add "
                 "`assets.icons` arrays to those slides; (2) populate "
                 "asset_plan.json with at least one wikimedia_query for a "
-                "photographic hero image and re-run the build; (3) if the "
+                "photographic hero image, or add a chart/table artifact and "
+                "re-run the build; (3) if the "
                 "deck genuinely doesn't need visuals (pure-prose primer), "
                 "note that decision explicitly in notes.md and accept the "
                 "warning. Don't ignore this rule silently — it means the "
@@ -1364,8 +3068,253 @@ def _check_sources_stretch(slides: list[dict[str, Any]]) -> list[dict[str, Any]]
     return issues
 
 
-def lint_outline(outline: dict[str, Any], outline_parent: Path) -> list[dict[str, Any]]:
+def _source_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (int, float, bool)):
+        return str(value).strip()
+    if isinstance(value, dict):
+        for key in ("text", "citation", "source", "title", "label", "name"):
+            text = value.get(key)
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+        for text in value.values():
+            if isinstance(text, str) and text.strip():
+                return text.strip()
+    return ""
+
+
+def _source_list_texts(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [text for item in value if (text := _source_text(item))]
+
+
+def _placeholder_path(parent: str, key: str | int) -> str:
+    if isinstance(key, int):
+        return f"{parent}[{key}]" if parent else f"[{key}]"
+    return f"{parent}.{key}" if parent else key
+
+
+def _iter_placeholder_text(value: Any, path: str = "", parent_key: str = "") -> list[tuple[str, str]]:
+    key = parent_key.lower()
+    if key in _PLACEHOLDER_TEXT_SKIP_SUBTREES:
+        return []
+    if isinstance(value, str):
+        if key in _PLACEHOLDER_TEXT_SKIP_KEYS:
+            return []
+        return [(path or "$", value)]
+    if isinstance(value, (int, float, bool)):
+        return []
+    if isinstance(value, list):
+        chunks: list[tuple[str, str]] = []
+        for index, item in enumerate(value):
+            chunks.extend(_iter_placeholder_text(item, _placeholder_path(path, index), parent_key))
+        return chunks
+    if isinstance(value, dict):
+        chunks = []
+        for raw_key, item in value.items():
+            child_key = str(raw_key)
+            if child_key.lower() in _PLACEHOLDER_TEXT_SKIP_SUBTREES:
+                continue
+            chunks.extend(
+                _iter_placeholder_text(
+                    item,
+                    _placeholder_path(path, child_key),
+                    child_key,
+                )
+            )
+        return chunks
+    return []
+
+
+def _placeholder_snippet(text: str, match: re.Match[str]) -> str:
+    start = max(0, match.start() - 28)
+    end = min(len(text), match.end() + 28)
+    snippet = re.sub(r"\s+", " ", text[start:end]).strip()
+    if start > 0:
+        snippet = "..." + snippet
+    if end < len(text):
+        snippet += "..."
+    return snippet
+
+
+def _placeholder_marker_hits(text: str) -> list[str]:
+    hits: list[str] = []
+    for label, pattern in _PLACEHOLDER_MARKER_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            hits.append(f"{label}: {_placeholder_snippet(text, match)!r}")
+    return hits
+
+
+def _check_placeholder_markers(
+    payload: Any,
+    slide_index: int | None,
+    path_label: str,
+) -> list[dict[str, Any]]:
+    hits: list[str] = []
+    for path, text in _iter_placeholder_text(payload, path_label):
+        marker_hits = _placeholder_marker_hits(text)
+        if marker_hits:
+            hits.append(f"{path} ({'; '.join(marker_hits)})")
+    if not hits:
+        return []
+
+    visible_hits = hits[:4]
+    remainder = len(hits) - len(visible_hits)
+    if remainder > 0:
+        visible_hits.append(f"{remainder} more field(s)")
+    return [
+        _make_issue(
+            slide_index,
+            "placeholder_marker_in_outline",
+            "warning",
+            "Outline text contains placeholder marker(s): " + "; ".join(visible_hits) + ".",
+            (
+                "Replace TODO/TBD/lorem/XXX/bracketed insert prompts with final slide text, "
+                "or move unresolved work into notes.md before building the deck."
+            ),
+        )
+    ]
+
+
+def _source_line_footer_text(slide: dict[str, Any], deck_style: dict[str, Any] | None) -> tuple[str, list[str]]:
+    deck_style = deck_style if isinstance(deck_style, dict) else {}
+    footer = str(slide.get("footer") or "").strip()
+    source_label = str(slide.get("source_label") or deck_style.get("footer_source_label") or "Sources").strip()
+    refs_label = str(slide.get("refs_label") or deck_style.get("footer_refs_label") or "Refs").strip()
+    sources = _source_list_texts(slide.get("sources"))
+    refs = _source_list_texts(slide.get("refs")) or _source_list_texts(slide.get("references"))
+
+    parts: list[str] = []
+    if footer:
+        parts.append(footer)
+    if sources:
+        parts.append(f"{source_label}: " + "; ".join(sources))
+    if refs:
+        parts.append(f"{refs_label}: " + "; ".join(refs))
+    return " · ".join(parts), [*sources, *refs]
+
+
+def _check_source_line_footer_budget(
+    slide: dict[str, Any],
+    idx: int,
+    deck_style: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    slide_mode = str(slide.get("footer_mode") or "").strip().lower()
+    deck_mode = ""
+    if isinstance(deck_style, dict):
+        deck_mode = str(deck_style.get("footer_mode") or "").strip().lower()
+    footer_mode = slide_mode or deck_mode
+    if footer_mode != "source-line":
+        return []
+
+    left_text, provenance_items = _source_line_footer_text(slide, deck_style)
+    if not left_text:
+        return []
+
+    text_len = len(left_text)
+    longest_item = max((len(item) for item in provenance_items), default=0)
+    item_count = len(provenance_items)
+    reasons: list[str] = []
+    if text_len > 170:
+        reasons.append(f"combined footer/source text is {text_len} chars (>170)")
+    if longest_item > 95:
+        reasons.append(f"one source/ref item is {longest_item} chars (>95)")
+    if item_count > 4:
+        reasons.append(f"{item_count} source/ref items are packed into one footer (>4)")
+    if not reasons:
+        return []
+
+    return [
+        _make_issue(
+            idx,
+            "source_line_footer_over_budget",
+            "warning",
+            "source-line footer is likely to shrink into unreadable provenance text: "
+            + "; ".join(reasons)
+            + ".",
+            (
+                "Keep slide footer provenance compact with short citation IDs, "
+                "or run scripts/compact_source_footers.py to move full references "
+                "to a References/Image Sources table slide and cite short IDs."
+            ),
+        )
+    ]
+
+
+def _collect_slide_text(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (int, float, bool)):
+        return [str(value)]
+    if isinstance(value, list):
+        chunks: list[str] = []
+        for item in value:
+            chunks.extend(_collect_slide_text(item))
+        return chunks
+    if isinstance(value, dict):
+        chunks = []
+        for item in value.values():
+            chunks.extend(_collect_slide_text(item))
+        return chunks
+    return []
+
+
+def _check_evidence_motif_continuity(slides: list[dict[str, Any]], deck_style: Any) -> list[dict[str, Any]]:
+    if not isinstance(deck_style, dict):
+        return []
+    title_layout = str(deck_style.get("title_layout") or "").strip().lower()
+    if title_layout != "lab-plate":
+        return []
+
+    content_text = []
+    for slide in slides[1:]:
+        if not isinstance(slide, dict):
+            continue
+        if str(slide.get("type") or "content").strip().lower() not in {"content", "text", "section"}:
+            continue
+        content_text.extend(_collect_slide_text(slide))
+    normalized = re.sub(r"[^a-z0-9]+", " ", " ".join(content_text).lower())
+    threads = {
+        "evidence": "evidence" in normalized,
+        "readout": "readout" in normalized,
+        "next run": "next run" in normalized or "next step" in normalized or "next steps" in normalized,
+    }
+    carried = [thread for thread, present in threads.items() if present]
+    if len(carried) >= 2:
+        return []
+    return [
+        _make_issue(
+            None,
+            "evidence_motif_not_carried",
+            "warning",
+            (
+                "deck_style.title_layout='lab-plate' creates Evidence/Readout/Next run chips on the cover, "
+                f"but only {len(carried)}/3 thread(s) appear in later slide text."
+            ),
+            (
+                "Carry the chips forward with subtitle prefixes, sidebar labels, table group titles, "
+                "or a final NEXT RUN strip; otherwise choose a title layout without those chips."
+            ),
+        )
+    ]
+
+
+def lint_outline(
+    outline: dict[str, Any],
+    outline_parent: Path,
+    design_brief: Any | None = None,
+) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
+    context = _PreflightContext()
+    issues.extend(_check_declared_alias_conflicts(outline_parent, context))
+    readability_contract = _readability_contract(design_brief)
+    deck_level_payload = {key: value for key, value in outline.items() if key != "slides"}
+    issues.extend(_check_placeholder_markers(deck_level_payload, None, "outline"))
 
     # Deck-level font_pair check.
     deck_style = outline.get("deck_style")
@@ -1381,6 +3330,23 @@ def lint_outline(outline: dict[str, Any], outline_parent: Path) -> list[dict[str
                     f"Set font_pair to one of: {', '.join(sorted(_VALID_FONT_PAIRS))}.",
                 )
             )
+        issues.extend(
+            _check_style_treatments(
+                deck_style,
+                slide_index=None,
+                path_label="deck_style",
+                keys=_ROOT_STYLE_ENUM_KEYS,
+            )
+        )
+    elif deck_style is not None:
+        issues.extend(
+            _check_style_treatments(
+                deck_style,
+                slide_index=None,
+                path_label="deck_style",
+                keys=_ROOT_STYLE_ENUM_KEYS,
+            )
+        )
 
     slides = outline.get("slides")
     if not isinstance(slides, list):
@@ -1424,17 +3390,23 @@ def lint_outline(outline: dict[str, Any], outline_parent: Path) -> list[dict[str
             )
             continue
 
-        title = slide.get("title") or ""
-        if isinstance(title, str) and len(title) > 85:
-            issues.append(
-                _make_issue(
-                    idx,
-                    "title_too_long",
-                    "warning",
-                    f"Title is {len(title)} chars (> 85); likely to wrap 3+ lines and trip overflow.",
-                    "Shorten to <= 60 chars.",
-                )
+        issues.extend(_check_placeholder_markers(slide, idx, f"slides[{idx}]"))
+
+        issues.extend(
+            _check_title_readability(
+                slide,
+                idx,
+                deck_style if isinstance(deck_style, dict) else None,
+                readability_contract,
             )
+        )
+        issues.extend(
+            _check_subtitle_readability(
+                slide,
+                idx,
+                deck_style if isinstance(deck_style, dict) else None,
+            )
+        )
 
         variant = (slide.get("variant") or "").strip().lower()
         if slide.get("render_mode") is not None:
@@ -1448,14 +3420,40 @@ def lint_outline(outline: dict[str, Any], outline_parent: Path) -> list[dict[str
                 )
             )
         if variant == "chart":
-            issues.extend(_check_chart(slide, idx))
+            issues.extend(_check_chart(slide, idx, outline_parent, context))
         if variant == "stats":
             issues.extend(_check_stats(slide, idx))
 
-        issues.extend(_check_variant_required(slide, idx))
-        issues.extend(_check_assets(slide, idx, outline_parent))
+        issues.extend(
+            _check_style_treatments(
+                slide,
+                slide_index=idx,
+                path_label=f"slides[{idx}]",
+                keys=_SLIDE_STYLE_ENUM_KEYS,
+            )
+        )
+        issues.extend(_check_variant_required(slide, idx, outline_parent, context))
+        issues.extend(_check_evidence_anchor(slide, idx))
+        issues.extend(_check_assets(slide, idx, outline_parent, context))
+        issues.extend(
+            _check_text_density(
+                slide,
+                idx,
+                deck_style if isinstance(deck_style, dict) else None,
+                readability_contract,
+            )
+        )
+        issues.extend(_check_scientific_figure_readability(slide, idx, outline_parent, context))
+        issues.extend(_check_figure_asset_whitespace(slide, idx, outline_parent, context))
         issues.extend(_check_flow_complexity(slide, idx, outline_parent))
         issues.extend(_check_section_empty(slide, idx))
+        issues.extend(
+            _check_source_line_footer_budget(
+                slide,
+                idx,
+                deck_style if isinstance(deck_style, dict) else None,
+            )
+        )
         # Removed: _check_icon_nudge per-slide info. icons_systemically_absent
         # now fires at the deck level with concrete suggestions.
         # Removed: _check_content_quality (hedged-prose linter was firing on
@@ -1470,6 +3468,7 @@ def lint_outline(outline: dict[str, Any], outline_parent: Path) -> list[dict[str
     # Removed: _check_enrichment_pattern (overlapped with the rule below).
     issues.extend(_check_icon_absence_systemic(slides, issues))
     issues.extend(_check_variant_overuse(slides))
+    issues.extend(_check_evidence_motif_continuity(slides, deck_style))
 
     return issues
 
@@ -1494,6 +3493,17 @@ def _summary_to_stderr(issues: list[dict[str, Any]], error_count: int, warning_c
 def main() -> int:
     parser = argparse.ArgumentParser(description="Static preflight linter for presentation-skill outlines.")
     parser.add_argument("--outline", required=True, help="Path to outline.json.")
+    parser.add_argument(
+        "--design-brief",
+        help="Optional design_brief.json with readability_contract title/prose budgets.",
+    )
+    parser.add_argument(
+        "--asset-root",
+        help=(
+            "Directory for resolving local asset paths, asset_plan.json, and "
+            "assets/staged/staged_manifest.json. Defaults to the outline file's parent."
+        ),
+    )
     parser.add_argument(
         "--strict",
         action="store_true",
@@ -1567,7 +3577,51 @@ def main() -> int:
         print("[preflight] outline root is not an object", file=sys.stderr)
         return 3
 
-    issues = lint_outline(outline, outline_path.parent)
+    design_brief: Any | None = None
+    design_brief_issues: list[dict[str, Any]] = []
+    if args.design_brief:
+        design_brief_path = Path(args.design_brief).expanduser().resolve()
+        if not design_brief_path.exists():
+            design_brief_issues.append(
+                _make_issue(
+                    None,
+                    "design_brief_missing",
+                    "warning",
+                    f"Design brief not found: {design_brief_path}",
+                    "Pass the correct design_brief.json path or omit --design-brief.",
+                )
+            )
+        else:
+            try:
+                design_brief = json.loads(design_brief_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as exc:
+                design_brief_issues.append(
+                    _make_issue(
+                        None,
+                        "design_brief_malformed",
+                        "warning",
+                        f"Design brief JSON is malformed: {exc}",
+                        "Fix design_brief.json so readability_contract can be applied.",
+                    )
+                )
+            if design_brief is not None and not isinstance(design_brief, dict):
+                design_brief_issues.append(
+                    _make_issue(
+                        None,
+                        "design_brief_malformed",
+                        "warning",
+                        "Design brief root is not a JSON object.",
+                        "Wrap design_brief.json in a top-level object.",
+                    )
+                )
+                design_brief = None
+
+    asset_root = (
+        Path(args.asset_root).expanduser().resolve()
+        if args.asset_root
+        else outline_path.parent
+    )
+    issues = [*design_brief_issues, *lint_outline(outline, asset_root, design_brief)]
 
     error_count = sum(1 for it in issues if it["severity"] == "error")
     warning_count = sum(1 for it in issues if it["severity"] == "warning")

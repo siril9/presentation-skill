@@ -15,6 +15,12 @@ from typing import Any
 
 from pptx import Presentation
 
+WHITESPACE_WARNING_TYPES = {
+    "empty_ratio_too_high",
+    "content_span_too_short",
+    "content_span_too_narrow",
+}
+
 
 def _run_capture(cmd: list[str]) -> tuple[int, str]:
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -189,6 +195,15 @@ def _args() -> argparse.Namespace:
         help="In strict mode, also fail warning-severity geometry violations",
     )
     parser.add_argument(
+        "--fail-on-whitespace-warnings",
+        action="store_true",
+        help=(
+            "Fail on layout_lint whitespace warnings such as empty_ratio_too_high, "
+            "content_span_too_short, or content_span_too_narrow without failing "
+            "all geometry warnings."
+        ),
+    )
+    parser.add_argument(
         "--skip-render",
         action="store_true",
         help="Skip rendering slides to images",
@@ -241,6 +256,13 @@ def _args() -> argparse.Namespace:
         "--fail-on-design-warnings",
         action="store_true",
         help="Fail when targeted design QA emits warning-level findings",
+    )
+    parser.add_argument(
+        "--design-brief",
+        help=(
+            "Optional design_brief.json. Passed to design_rules_qa.py so "
+            "rendered text can be checked against readability_contract."
+        ),
     )
     parser.add_argument(
         "--keep-artifacts",
@@ -346,16 +368,17 @@ def main() -> int:
     visual_rc, visual_out = _run_capture(
         [py, str(base / "visual_qa.py"), "--input", str(input_path), "--json"]
     )
-    design_rc, _ = _run_capture(
-        [
-            py,
-            str(base / "design_rules_qa.py"),
-            "--input",
-            str(input_path),
-            "--report",
-            str(design_report),
-        ]
-    )
+    design_cmd = [
+        py,
+        str(base / "design_rules_qa.py"),
+        "--input",
+        str(input_path),
+        "--report",
+        str(design_report),
+    ]
+    if args.design_brief:
+        design_cmd.extend(["--design-brief", str(Path(args.design_brief).expanduser().resolve())])
+    design_rc, _ = _run_capture(design_cmd)
     visual_review_rc = 0
     visual_review_stdout = ""
     visual_review_payload: dict[str, Any] = {}
@@ -394,6 +417,9 @@ def main() -> int:
     geometry_warnings = [
         item for item in geometry_violations if item.get("severity") == "warning"
     ]
+    whitespace_warnings = [
+        item for item in geometry_warnings if item.get("type") in WHITESPACE_WARNING_TYPES
+    ]
     visual_warnings, visual_infos = _visual_summary(visual_payload)
     design_errors, design_warnings = _design_summary(design_payload)
     visual_review_warning_count = int(visual_review_payload.get("warning_count", 0) or 0)
@@ -420,6 +446,8 @@ def main() -> int:
         "geometry_violations": geometry_violations,
         "geometry_error_count": len(geometry_errors),
         "geometry_warning_count": len(geometry_warnings),
+        "whitespace_warning_count": len(whitespace_warnings),
+        "whitespace_warnings": whitespace_warnings,
         "visual_warning_count": len(visual_warnings),
         "visual_info_count": len(visual_infos),
         "visual_report": str(visual_report),
@@ -441,6 +469,7 @@ def main() -> int:
         "design_warning_count": len(design_warnings),
         "design_report": str(design_report),
         "design_rc": design_rc,
+        "design_brief": str(Path(args.design_brief).expanduser().resolve()) if args.design_brief else "",
         "density_score_by_slide": density_score_by_slide,
         "font_families": families,
         "manual_review_passed": manual_review_passed,
@@ -457,6 +486,7 @@ def main() -> int:
     print(f"Overlap count: {overlap_count}")
     print(f"Placeholder hits: {len(placeholder_hits)}")
     print(f"Geometry violations: {len(geometry_violations)}")
+    print(f"Whitespace warnings: {len(whitespace_warnings)}")
     print(f"Visual warnings: {len(visual_warnings)}")
     if not args.skip_render:
         print(f"Rendered slides: {rendered_slide_count}/{expected_slide_count} (rc={render_rc})")
@@ -490,6 +520,9 @@ def main() -> int:
         failed = True
     if args.strict_geometry and args.fail_on_geometry_warnings and geometry_warnings:
         print("FAIL: strict geometry mode found warning-level layout violations.")
+        failed = True
+    if args.fail_on_whitespace_warnings and whitespace_warnings:
+        print("FAIL: layout lint found awkward whitespace warnings.")
         failed = True
     if design_errors:
         print("FAIL: design rules QA found error-level issues.")

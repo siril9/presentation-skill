@@ -5,13 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import posixpath
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from pptx import Presentation
 
-NS = {"c": "http://schemas.openxmlformats.org/drawingml/2006/chart"}
+NS = {
+    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
+    "r": "http://schemas.openxmlformats.org/package/2006/relationships",
+}
 DEFAULT_BANNED = [
     "follow previous tool",
     "external pptx",
@@ -20,6 +25,14 @@ DEFAULT_BANNED = [
     "sample deck",
     "placeholder",
 ]
+
+DEFAULT_READABILITY = {
+    "min_title_pt": 24.0,
+    "min_body_pt": 11.0,
+    "min_caption_pt": 7.5,
+    "chart_label_min_pt": 8.0,
+    "footer_reserved_inches": 0.25,
+}
 
 
 def _box(shape):
@@ -59,6 +72,64 @@ def _shape_text(shape):
     if not getattr(shape, "has_text_frame", False):
         return ""
     return (shape.text or "").strip()
+
+
+def _load_json(path: Path):
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _readability_contract(design_brief_path: Path | None):
+    contract = dict(DEFAULT_READABILITY)
+    if design_brief_path is None:
+        return contract, False
+    payload = _load_json(design_brief_path)
+    if not isinstance(payload, dict):
+        return contract, False
+    brief_contract = payload.get("readability_contract")
+    if not isinstance(brief_contract, dict):
+        return contract, False
+    for key in (
+        "min_title_pt",
+        "min_body_pt",
+        "min_caption_pt",
+        "chart_label_min_pt",
+        "footer_reserved_inches",
+    ):
+        value = brief_contract.get(key)
+        if isinstance(value, (int, float)):
+            contract[key] = float(value)
+    return contract, True
+
+
+def _font_sizes(shape):
+    if not getattr(shape, "has_text_frame", False):
+        return []
+    sizes = []
+    for paragraph in shape.text_frame.paragraphs:
+        if paragraph.font.size is not None:
+            sizes.append(float(paragraph.font.size.pt))
+        for run in paragraph.runs:
+            if run.font.size is not None:
+                sizes.append(float(run.font.size.pt))
+    return sizes
+
+
+def _text_role(shape, text, slide_h):
+    box = _box(shape)
+    top = box[1]
+    height = box[3]
+    lower = text.lower()
+    if top >= slide_h - 0.75:
+        return "caption"
+    if height <= 0.36:
+        return "caption"
+    if lower.startswith(("source", "sources", "ref", "refs")):
+        return "caption"
+    if top <= 1.15 and len(text) <= 160:
+        return "title"
+    return "body"
 
 
 def _shape_kind(shape):
@@ -110,7 +181,7 @@ def check_branding(slide_idx, text_shapes, banned):
     return issues
 
 
-def check_footer_overlap(slide_idx, text_shapes, slide_h):
+def check_footer_overlap(slide_idx, text_shapes, slide_h, contract):
     issues = []
     footer_top = max(0.0, slide_h - 0.70)
     bottom_band = [
@@ -133,11 +204,69 @@ def check_footer_overlap(slide_idx, text_shapes, slide_h):
                         "delta_inches": round(min(overlap_x, overlap_y), 3),
                     }
                 )
+    try:
+        footer_reserved = float(contract.get("footer_reserved_inches", DEFAULT_READABILITY["footer_reserved_inches"]))
+    except (TypeError, ValueError):
+        footer_reserved = float(DEFAULT_READABILITY["footer_reserved_inches"])
+    reserve_top = max(0.0, slide_h - max(0.0, footer_reserved))
+    for shape_id, shape, text in text_shapes:
+        if getattr(shape, "has_table", False):
+            continue
+        box = _box(shape)
+        bottom = box[1] + box[3]
+        if bottom <= reserve_top + 0.02:
+            continue
+        role = _text_role(shape, text, slide_h)
+        if role == "caption":
+            continue
+        issues.append(
+            {
+                "slide_index": slide_idx,
+                "shape_id": f"shape-{shape_id}",
+                "type": "footer_reserved_space_intrusion",
+                "severity": "warning",
+                "reserved_inches": round(footer_reserved, 2),
+                "intrusion_inches": round(bottom - reserve_top, 3),
+                "text": text[:120],
+            }
+        )
     return issues
 
 
-def check_table_readability(slide_idx, slide):
+def check_text_readability(slide_idx, text_shapes, slide_h, contract):
     issues = []
+    thresholds = {
+        "title": float(contract["min_title_pt"]),
+        "body": float(contract["min_body_pt"]),
+        "caption": float(contract["min_caption_pt"]),
+    }
+    for shape_id, shape, text in text_shapes:
+        if getattr(shape, "has_table", False):
+            continue
+        sizes = _font_sizes(shape)
+        if not sizes:
+            continue
+        min_font = min(sizes)
+        role = _text_role(shape, text, slide_h)
+        threshold = thresholds[role]
+        if min_font + 0.05 < threshold:
+            issues.append(
+                {
+                    "slide_index": slide_idx,
+                    "shape_id": f"shape-{shape_id}",
+                    "type": f"{role}_font_too_small",
+                    "severity": "warning",
+                    "font_pt": round(min_font, 1),
+                    "min_allowed_pt": round(threshold, 1),
+                    "text": text[:120],
+                }
+            )
+    return issues
+
+
+def check_table_readability(slide_idx, slide, contract):
+    issues = []
+    min_table_font = max(7.8, float(contract["min_caption_pt"]))
     for shape_id, shape in enumerate(slide.shapes, start=1):
         if not getattr(shape, "has_table", False):
             continue
@@ -164,7 +293,7 @@ def check_table_readability(slide_idx, slide):
                     for run in paragraph.runs:
                         if run.font.size is not None:
                             min_font = min(min_font, float(run.font.size.pt))
-        if min_font != 99.0 and min_font < 7.8:
+        if min_font != 99.0 and min_font < min_table_font:
             issues.append(
                 {
                     "slide_index": slide_idx,
@@ -172,6 +301,7 @@ def check_table_readability(slide_idx, slide):
                     "type": "table_font_too_small",
                     "severity": "warning",
                     "font_pt": round(min_font, 1),
+                    "min_allowed_pt": round(min_table_font, 1),
                 }
             )
     return issues
@@ -255,8 +385,39 @@ def check_marker_centering(slide_idx, auto_shapes, text_shapes):
     return issues
 
 
-def check_chart_headroom(pptx_path: Path):
+def _chart_slide_index_map(pptx_path: Path):
+    chart_to_slide: dict[str, int] = {}
+    with zipfile.ZipFile(pptx_path, "r") as archive:
+        rel_names = [
+            name
+            for name in archive.namelist()
+            if name.startswith("ppt/slides/_rels/slide") and name.endswith(".xml.rels")
+        ]
+        for rel_name in rel_names:
+            slide_name = Path(rel_name).name
+            raw_number = slide_name.removeprefix("slide").removesuffix(".xml.rels")
+            try:
+                slide_index = int(raw_number) - 1
+            except ValueError:
+                continue
+            root = ET.fromstring(archive.read(rel_name))
+            for rel in root.findall(".//r:Relationship", NS):
+                target = rel.attrib.get("Target", "")
+                rel_type = rel.attrib.get("Type", "")
+                if "chart" not in rel_type and "charts/" not in target:
+                    continue
+                chart_part = posixpath.normpath(posixpath.join("ppt/slides", target)).lstrip("/")
+                if chart_part.startswith("../"):
+                    chart_part = posixpath.normpath(posixpath.join("ppt", chart_part[3:]))
+                if chart_part.startswith("charts/"):
+                    chart_part = f"ppt/{chart_part}"
+                chart_to_slide[chart_part] = slide_index
+    return chart_to_slide
+
+
+def check_chart_headroom(pptx_path: Path, chart_slide_indexes: dict[str, int] | None = None):
     issues = []
+    chart_slide_indexes = chart_slide_indexes or {}
     with zipfile.ZipFile(pptx_path, "r") as archive:
         for name in archive.namelist():
             if not name.startswith("ppt/charts/chart") or not name.endswith(".xml"):
@@ -287,10 +448,81 @@ def check_chart_headroom(pptx_path: Path):
                         "chart_part": name,
                         "type": "chart_value_label_headroom_risk",
                         "severity": "warning",
+                        **({"slide_index": chart_slide_indexes[name]} if name in chart_slide_indexes else {}),
                         "axis_max": axis_max,
                         "max_value": max(point_values),
                     }
                 )
+    return issues
+
+
+def _ooxml_font_pt(node: ET.Element) -> float | None:
+    raw = node.attrib.get("sz")
+    if raw is None:
+        return None
+    try:
+        return float(raw) / 100.0
+    except ValueError:
+        return None
+
+
+def _chart_text_sizes(root: ET.Element, xpath: str) -> list[float]:
+    sizes: list[float] = []
+    for node in root.findall(xpath, NS):
+        value = _ooxml_font_pt(node)
+        if value is not None:
+            sizes.append(value)
+    return sizes
+
+
+def check_chart_readability(
+    pptx_path: Path,
+    contract: dict[str, float],
+    chart_slide_indexes: dict[str, int] | None = None,
+):
+    issues = []
+    chart_slide_indexes = chart_slide_indexes or {}
+    min_chart_font = float(contract.get("chart_label_min_pt", DEFAULT_READABILITY["chart_label_min_pt"]))
+    role_paths = {
+        "axis_label": [
+            ".//c:catAx/c:txPr//a:defRPr",
+            ".//c:valAx/c:txPr//a:defRPr",
+            ".//c:serAx/c:txPr//a:defRPr",
+            ".//c:dateAx/c:txPr//a:defRPr",
+        ],
+        "axis_title": [
+            ".//c:catAx/c:title/c:txPr//a:defRPr",
+            ".//c:valAx/c:title/c:txPr//a:defRPr",
+            ".//c:serAx/c:title/c:txPr//a:defRPr",
+            ".//c:dateAx/c:title/c:txPr//a:defRPr",
+        ],
+        "legend_label": [".//c:legend/c:txPr//a:defRPr"],
+        "data_label": [".//c:dLbls/c:txPr//a:defRPr"],
+    }
+    with zipfile.ZipFile(pptx_path, "r") as archive:
+        for name in archive.namelist():
+            if not name.startswith("ppt/charts/chart") or not name.endswith(".xml"):
+                continue
+            root = ET.fromstring(archive.read(name))
+            for role, paths in role_paths.items():
+                sizes: list[float] = []
+                for xpath in paths:
+                    sizes.extend(_chart_text_sizes(root, xpath))
+                if not sizes:
+                    continue
+                min_font = min(sizes)
+                if min_font + 0.05 < min_chart_font:
+                    issues.append(
+                        {
+                            "chart_part": name,
+                            "type": "chart_label_font_too_small",
+                            "severity": "warning",
+                            **({"slide_index": chart_slide_indexes[name]} if name in chart_slide_indexes else {}),
+                            "role": role,
+                            "font_pt": round(min_font, 1),
+                            "min_allowed_pt": round(min_chart_font, 1),
+                        }
+                    )
     return issues
 
 
@@ -304,10 +536,19 @@ def main() -> int:
         default=[],
         help="Additional banned phrase to flag",
     )
+    parser.add_argument(
+        "--design-brief",
+        help=(
+            "Optional design_brief.json. When present, design QA uses its "
+            "readability_contract thresholds for title/body/caption/table/chart text."
+        ),
+    )
     args = parser.parse_args()
 
     pptx_path = Path(args.input).expanduser().resolve()
     prs = Presentation(str(pptx_path))
+    design_brief_path = Path(args.design_brief).expanduser().resolve() if args.design_brief else None
+    readability_contract, enforce_text_readability = _readability_contract(design_brief_path)
 
     banned = [item.lower() for item in (DEFAULT_BANNED + args.banned_phrase)]
     issues = []
@@ -319,21 +560,28 @@ def main() -> int:
         slide_h = prs.slide_height.inches
         slide_issues = []
         slide_issues.extend(check_branding(slide_idx, text_shapes, banned))
-        slide_issues.extend(check_footer_overlap(slide_idx, text_shapes, slide_h))
-        slide_issues.extend(check_table_readability(slide_idx, slide))
+        slide_issues.extend(check_footer_overlap(slide_idx, text_shapes, slide_h, readability_contract))
+        if enforce_text_readability:
+            slide_issues.extend(check_text_readability(slide_idx, text_shapes, slide_h, readability_contract))
+        slide_issues.extend(check_table_readability(slide_idx, slide, readability_contract))
         slide_issues.extend(check_stacked_text_gaps(slide_idx, auto_shapes, text_shapes))
         slide_issues.extend(check_marker_centering(slide_idx, auto_shapes, text_shapes))
         issues.extend(slide_issues)
         slide_summaries.append({"slide_index": slide_idx, "issue_count": len(slide_issues)})
 
-    chart_issues = check_chart_headroom(pptx_path)
+    chart_slide_indexes = _chart_slide_index_map(pptx_path)
+    chart_issues = check_chart_headroom(pptx_path, chart_slide_indexes)
     issues.extend(chart_issues)
+    chart_readability_issues = check_chart_readability(pptx_path, readability_contract, chart_slide_indexes)
+    issues.extend(chart_readability_issues)
 
     payload = {
         "input": str(pptx_path),
         "issue_count": len(issues),
         "error_count": sum(1 for item in issues if item.get("severity") == "error"),
         "warning_count": sum(1 for item in issues if item.get("severity") == "warning"),
+        "readability_contract": readability_contract,
+        "readability_contract_enforced": enforce_text_readability,
         "slides": slide_summaries,
         "issues": issues,
         "passed": not issues,

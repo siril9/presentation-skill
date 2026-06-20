@@ -23,6 +23,8 @@ when to pick each one.
 | `charcoal-safety` | Dark + safety red — incident reports, risk reviews |
 | `lavender-ops` | Muted purple — ops dashboards, internal tooling |
 | `warm-terracotta` | Earthy reds + sand — social impact, hospitality, heritage |
+| `lab-report` | Restrained white/navy report — lab meetings, assay readouts, scientific figures |
+| `editorial-minimal` | Spare editorial system — minimal reports and qualitative narratives |
 
 Run `python3 -c "from scripts.design_tokens import available_presets; print(available_presets())"`
 to confirm the current set if this list drifts.

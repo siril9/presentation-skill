@@ -54,6 +54,9 @@ If `deck_style`/`compliance` are omitted, current behavior remains:
 - `deck_style.research_visual_mode`: `false`
 - `deck_style.header_mode`: preset treatment (`bar`, `stack`, `eyebrow`, or
   clean lab/report modes)
+- `deck_style.header_variant`: optional content-header accent treatment
+  (`auto`, `left-accent`, `split-rule`, `title-rule`, `side-rail`,
+  `top-bottom-rule`, or `plain`)
 - `deck_style.title_layout`: preset treatment (`split-hero`, `lab-plate`,
   `command-center`, `poster`, `masthead`, or `light-atlas`)
 - `deck_style.title_motif`: preset treatment (`orbit`, `network`, `editorial`, or `none`)
@@ -62,8 +65,12 @@ If `deck_style`/`compliance` are omitted, current behavior remains:
   `open-events`, `bands`, or `chapter-spread`)
 - `deck_style.matrix_mode`: preset treatment (`cards` or `open-quadrants`)
 - `deck_style.stats_mode`: preset treatment (`tiles`, `feature-left`, or `policy-bands`)
+- `deck_style.chart_treatment`: chart layout treatment (`standard`,
+  `facts-below`, `facts-right`, or `minimal`)
 - `deck_style.footer_mode`: preset treatment (`standard` or `source-line`)
 - `deck_style.summary_callout_mode`: preset treatment (`default` or `lab-box`)
+- `deck_style.figure_table_treatment`: evidence-layout treatment
+  (`figure-first`, `table-first`, `stats-strip`, or `image-sidebar`)
 - `deck_style.footer_page_numbers`: optional boolean for slide index in footer
 - `compliance.attribution_file`: `assets/attribution.csv`
 - `compliance.require_attribution`: `false` unless external CC assets are detected
@@ -74,6 +81,10 @@ If `deck_style`/`compliance` are omitted, current behavior remains:
 
 - `font_pair`: `system_clean_v1 | editorial_serif_v1 | clean_modern_v1`
 - `palette_key`: optional palette override key (for example `climate_coastal_v1`)
+- `style_seed`: optional stable string used to vary deterministic `auto`
+  treatments, especially `lab-clean` header variants. Use a short deck-specific
+  seed from the design contract so repeated builds match while different lab
+  reports can have different treatment rhythm.
 - `visual_density`: `low | medium | high`
 - `emoji_mode`: `none | selective`
 - `research_visual_mode`: boolean. Use `true` when a deck should actively use
@@ -83,6 +94,20 @@ If `deck_style`/`compliance` are omitted, current behavior remains:
   clinical/board decks, `stack` for editorial/report decks, `eyebrow` for
   minimal civic/product briefs, `lab-clean` for plain lab/report slides, and
   slide-level `lab-card` when a small colored heading card is useful.
+- `header_variant`: optional renderer treatment for `lab-clean` headers.
+  Use `auto` to deterministically vary report slides across `left-accent`,
+  `split-rule`, `title-rule`, `side-rail`, `top-bottom-rule`, and `plain`;
+  use a named value when a slide needs one specific heading/accent-line
+  combination. `top-bottom-rule` adds a top rule with a subtle shaded band plus
+  the header-bottom rule. `plain` omits the header rule entirely.
+- `header_variants`: optional array limiting the `auto` pool to a smaller set
+  of the supported `header_variant` values.
+- `resolved_treatments`: generated only in `build/outline_resolved.json`, not
+  an authoring field. For lab/report slides it records the concrete
+  `header_variant` selected from `auto` plus the pool/source used, so seeded
+  heading chrome can be audited before render.
+- `header_rule_color`: optional color token or hex override for the lab/report
+  accent rule, for example `accent_secondary`.
 - `title_layout`: optional cover archetype override. Supported values:
   `split-hero`, `lab-plate`, `command-center`, `poster`, `masthead`,
   `light-atlas`. Prefer preset defaults unless the design brief needs a
@@ -102,15 +127,37 @@ If `deck_style`/`compliance` are omitted, current behavior remains:
 - `stats_mode`: optional stats composition override. Use `tiles` for equal
   KPIs, `feature-left` when one metric dominates, and `policy-bands` for
   civic/report scorecards.
+- `chart_treatment`: optional chart composition override. Use `standard` or
+  `facts-below` when a chart should own the slide with compact readout cards
+  below it, `facts-right` when the chart needs a side evidence rail, and
+  `minimal` when the figure needs maximum plot area and the caption/source line
+  carries interpretation.
 - `footer_mode`: optional footer override. Use `source-line` for a thin rule
   above sources and page number, especially in academic/lab decks.
+- `footer_source_label` / `footer_refs_label`: optional labels for compact
+  source-line provenance. Slide-level `sources`, `refs`, and `references`
+  render below the footer rule with the page number reserved at bottom right.
+  Keep these footer entries short. Preflight warns when the combined source-line
+  text, a single source/ref item, or the number of footer provenance items is
+  likely to force unreadably small text; move full citations to a final
+  References/Image Sources slide and cite short IDs in the footer.
 - `summary_callout_mode`: optional bottom callout treatment. Use `lab-box` for
   a simple rectangular key-takeaway box instead of a colorful pill.
+- `figure_table_treatment`: optional evidence-layout bias for scientific and
+  report slides. Use `figure-first` when plots/images carry the proof,
+  `table-first` when structured results dominate, `stats-strip` for compact
+  numeric readouts, and `image-sidebar` for one large figure plus interpretation.
 - `footer_page_numbers`: boolean. Use `true` for source-line/report decks.
 
 Only override renderer treatments when the design brief requires it. The
 renderer already applies sensible preset-specific treatments so decks do not
-all share the same cover, card, timeline, or dark-bar house style.
+all share the same cover, card, timeline, or dark-bar house style. Preflight
+validates enum-like `deck_style` values and slide-level treatment overrides
+against the supported lists above; misspelled values such as
+`left-accented` or `cover-card` are errors. The direct `pptxgenjs` renderer
+also enforces these treatment names for quick decks, so invalid values fail
+before a `.pptx` is written instead of being silently ignored or routed to a
+fallback.
 
 ## `compliance` Fields
 
@@ -141,6 +188,9 @@ If `type` is omitted, `content` is used.
 
 - `slide_intent`: `message | evidence | decision | section | process`
 - `visual_intent`: `hero | timeline | comparison | flow | data`
+- Evidence/data intent should be paired with a concrete chart, table, figure,
+  image, diagram, stats/KPI, flow, or structured comparison anchor; preflight
+  warns when it is left as generic prose/cards.
 - `assets`: optional visual assets block:
 
 ```json
@@ -254,7 +304,25 @@ Notes:
   the result on a standalone `generated-image` slide so it is labeled and easy
   to delete.
 - Chart data can be inline under `chart`, or referenced from a staged JSON file with `chart:name` or `assets.chart_data`.
-- Asset aliases can be resolved from `assets/staged/staged_manifest.json` using `asset:name`, `image:name`, `background:name`, `chart:name`, or `generated:name`.
+- Table data can be inline under `table`/`tables`, or referenced from staged JSON with `table:name`, `assets.table_data`, or `tables: ["table:name"]`.
+- Asset aliases can be resolved from `assets/staged/staged_manifest.json` using `asset:name`, `image:name`, `background:name`, `chart:name`, `table:name`, or `generated:name`.
+  The fast `pptxgenjs` renderer also reads `asset_plan.json` as a local
+  fallback for declared image paths and inline chart/table specs, but
+  `build_workspace.py`/`asset_stage.py` remains the validated final path.
+  Staging validates chart and table JSON before aliases are written: chart
+  payloads need numeric values plus labels/categories, and table payloads need
+  non-empty headers/rows with every row matching the header width. Preflight and
+  staging require staged asset names to be unique after normalization across
+  images, backgrounds, charts, tables, and generated images so `asset:name`
+  stays deterministic.
+- Preflight inspects inline, local, and staged chart JSON for slide readability
+  pressure. It warns when a native chart has too many categories, too many
+  series, too many plotted values, or long category labels; split the chart,
+  abbreviate labels, summarize categories, or export a purpose-built figure for
+  dense exploratory results.
+- Preflight also reads local and staged table JSON referenced by `table:name`,
+  `asset:name`, `assets.table_data`, or `tables: ["table:name"]` and applies
+  the same row/column/cell-budget warnings as inline editable tables.
 
 ## Content Variants (`type: "content"`)
 
@@ -285,11 +353,17 @@ Use `variant` to force layout family:
   Optional `caption` (muted line below table) and
   `column_weights: [...]` (numeric proportions; equal widths if omitted).
   `headers`/`rows` may be top-level or nested under `"table": {...}`.
+  A staged table JSON artifact can also be used with `"table": "table:name"`
+  or `"assets": {"table_data": "table:name"}`.
   Use optional `cell_styles` to highlight individual body cells; each entry
   may include `fill`, `color`, `bold`, `italic`, `align`, and `fontSize`.
   Reach for `table` over `cards-3` when rows share parallel fields
   (entity + date + role, or feature + option A + option B + option C).
-  Cap at ~8 rows for readability; preflight warns past 10.
+  Cap at ~8 rows for readability; preflight warns past 10 rows, past
+  6 columns, or when row x column count is likely to force cramped editable
+  cells. It also warns when headers or body cells carry long sentence-style
+  text; keep editable table cells to compact labels, values, and calls, then
+  move explanation to captions, footnotes, sidebars, or a companion figure.
 - `lab-run-results`: table-first lab/data dashboard modeled after clean
   lab and data-dashboard decks. Accepts `tables: [{title, headers, rows,
   column_weights, cell_styles, caption, footnotes}, ...]` and places one
@@ -298,7 +372,8 @@ Use `variant` to force layout family:
   sequencing QC tables, and POC validation slides. Add `interpretation` or
   `takeaway` for the bottom readout strip. Use green/red/yellow fills in
   `cell_styles` for agreement/discordance/borderline states; do not use icons
-  as a substitute for the actual result table.
+  as a substitute for the actual result table. Split wide or high-cell-count
+  lab tables across slides, or pair a chart with a compact summary table.
 - `generated-image`: standalone image slide for optional AI-generated concept
   visuals. Requires `assets.generated_image`, `assets.hero_image`, or
   `assets.image`; prefer `assets.generated_image: "generated:<name>"`.
@@ -311,7 +386,9 @@ Use `variant` to force layout family:
   `assets.hero_image` or `assets.image`; add `image_side: "left"|"right"`,
   `caption`, and `sidebar_sections`. Use this for lab results, methods
   figures, LOD plots, gel/trace/readout images, microscopy, maps, and
-  workflow screenshots before falling back to generic card grids.
+  workflow screenshots before falling back to generic card grids. Preflight
+  warns when an image-sidebar lacks caption, footer, or sources because
+  figure/image provenance should stay visible in report decks.
 - `scientific-figure`: multi-panel academic figure slide. Use `figures` or
   `assets.figures` with 1-4 entries such as
   `{ "path": "assets/panel_a.png", "label": "A", "title": "...", "caption": "..." }`.
@@ -319,6 +396,18 @@ Use `variant` to force layout family:
   panel titles/captions, and a bottom caption/interpretation strip. Use this
   for LOD panels, multi-plot summaries, gels, microscopy grids, and figure
   evidence slides where a sidebar would waste space.
+  Preflight errors if more than 4 panels are supplied, because the renderer
+  only lays out the first 4 panels.
+  Keep the bottom `caption`/`figure_caption` plus `interpretation`/`takeaway`
+  compact; preflight warns when that fixed synthesis strip is too dense to
+  remain readable.
+  Do not use it as a default for every lab plot. If three or four detailed
+  panels make axes/labels unreadable, split the slide or use `image-sidebar`
+  for one large figure plus interpretation. Generated plots should be exported
+  at the target slide aspect ratio and trimmed before insertion. Preflight warns
+  when local or staged scientific/image-sidebar figure assets appear to contain
+  large exterior blank borders; fix the figure script or run
+  `scripts/trim_image_whitespace.py` before rendering.
 
 ### Hybrid Cases (Map Before Going Inline)
 
@@ -372,8 +461,9 @@ Variant-specific fields:
   - `footnotes` (optional) is an array of small notes below the table.
 - `tables`, `interpretation` / `takeaway` (for `lab-run-results`):
   - `tables` is an array of compact table objects with the same table fields
-    above. One table uses the full width, two tables split the canvas, three
-    tables render one large table left and two stacked tables right.
+    above, or staged table aliases such as `"table:run_summary"`. One table
+    uses the full width, two tables split the canvas, three tables render one
+    large table left and two stacked tables right.
   - `interpretation` or `takeaway` is a one-line bottom synthesis. Keep it
     short; move caveats into table `footnotes`.
 - `left`, `right`, `verdict` (for `comparison-2col`):
@@ -390,12 +480,18 @@ Variant-specific fields:
     a string or array of short bullet strings. Keep titles short
     (`"Readout"`, `"Interpretation"`, `"Caveat"`). Add `caption` for figure
     provenance or assay/run metadata.
+- `sidebar_body_font_size` (for `image-sidebar`):
+  - optional numeric body-text override for sidebar bullets. Use it when the
+    deck's readability contract needs a larger floor, especially for generated
+    lab/data figure slides.
 - `figures` / `assets.figures` (for `scientific-figure`):
   - array of 1-4 figure objects. Each figure needs `path` or `image`; optional
     `label`, `title`, and `caption` render inside the figure panel.
   - slide-level `caption`, `figure_caption`, `interpretation`, or `takeaway`
     renders beneath the panel grid. Keep this compact and move long methods
     text into notes or an appendix.
+  - the image file should already be slide-ready: tight crop, compact legend,
+    and enough plotted/image content to remain readable at panel size.
 - `facts` / `stats` / `evidence` (for `stats` or `chart`):
   - array of `{ "value": "...", "label": "...", "detail": "...", "source": "...", "accent": "accent_primary|accent_secondary" }`
   - **`value` must be numeric** with optional unit suffix: `"14"`, `"14%"`,
@@ -627,6 +723,10 @@ Variant-specific fields:
 
 ## Common Slide Fields
 
+- `slide_id` / `id` / `slug` (string; optional stable identifier for
+  `content_plan.json`, evidence registries, and repeatable edits. Fresh
+  workspaces scaffold `slide_id` values such as `s1` and `s2`; keep explicit
+  identifiers unique across slides.)
 - `title` (string)
 - `subtitle` (string)
 - `notes` (string)
@@ -638,7 +738,20 @@ Variant-specific fields:
 - `caption` (string; used on flow/visual slides)
 - `message` (string; recommended for decision-oriented flow slides)
 - `chart` (object|string; inline chart data or staged `chart:name` alias)
+- `table` (object|string; inline table data or staged `table:name` alias)
+- `tables` (array; inline compact table objects or staged `table:name` aliases)
 - `facts` / `stats` / `evidence` (array; fact/evidence blocks for stats or chart slides)
+
+Preflight estimates wrapped title lines before rendering. In reusable
+workspaces, `design_brief.readability_contract.max_title_lines` controls the
+allowed title line count; shorten long headings or move qualifiers to
+`subtitle`, body text, notes, or references instead of forcing dense headers.
+It also warns when a title is inside the line budget but the estimated final
+heading line is a single short orphan word. Prose density budgets apply to
+single long paragraphs as well as bullet lists. Content-slide subtitles are
+checked separately and should fit within two estimated header lines.
+Evidence-first chart slides should include compact chart provenance in
+`caption`, `footer`, `sources`, or `refs`.
 
 ## Text Fields
 
@@ -647,6 +760,11 @@ Variant-specific fields:
   - object form: `{ "text": "Indented text", "level": 1 }`
 - `paragraphs`: array of strings
 - `body`: string
+
+Visible outline text must be final slide copy. Static preflight warns on common
+placeholder markers such as `TODO`, `TBD`, `XXX`, `lorem/ipsum`,
+`[insert ...]`, `[placeholder ...]`, and PowerPoint prompt text. Keep
+unresolved authoring tasks in `notes.md` instead of visible slide fields.
 
 ## Policy Notes
 

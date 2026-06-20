@@ -1,0 +1,143 @@
+{
+  "topic": "Presentation Skill v1.1 Release Gallery",
+  "audience": "HN and GitHub release readers",
+  "objective": "Show actual before/after slide improvements across multiple styles.",
+  "thesis": "v1.1 adds structure, taste constraints, reproducible style variation, and QA-visible cleanliness.",
+  "slide_plan": [
+    {
+      "slide_id": "s1",
+      "role": "evidence",
+      "variant": "title",
+      "message": "Presentation Skill v1.1 Release Gallery",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s2",
+      "role": "evidence",
+      "variant": "table",
+      "message": "Release claim: structured taste, reproducible builds, cleaner slides",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s3",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Lab report: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s4",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Risk memo: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s5",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Startup: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s6",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Editorial: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s7",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Policy: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s8",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Ops dashboard: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s9",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Clinical exec: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s10",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Arctic minimal: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s11",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Midnight neon: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s12",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Investor: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s13",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Lavender ops: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s14",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Terracotta: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    },
+    {
+      "slide_id": "s15",
+      "role": "evidence",
+      "variant": "scientific-figure",
+      "message": "Editorial minimal: native vs v1 vs v1.1",
+      "visual_strategy": "rendered composite slide screenshots",
+      "evidence_needs": [],
+      "asset_needs": []
+    }
+  ]
+}

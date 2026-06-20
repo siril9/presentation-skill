@@ -241,13 +241,20 @@ _VARIANT_DENSITY_MULTIPLIER = {
     "matrix": 1.25,
     "timeline": 1.15,
     "stats": 1.15,
-    "chart": 1.25,
     "split": 1.25,
     "generated-image": 1.25,
-    "image-sidebar": 1.18,
+    # Figure-plus-sidebar evidence slides intentionally fill the main content
+    # zone with a large figure panel and interpretation rail.
+    "image-sidebar": 1.22,
     "scientific-figure": 1.22,
     "lab-run-results": 1.22,
     "table": 1.18,
+}
+
+_WHITESPACE_BALANCE_EXEMPT_VARIANTS = {
+    # These variants use deliberate open space as the composition.
+    "kpi-hero",
+    "pull-quote",
 }
 
 
@@ -255,10 +262,122 @@ def _effective_max_density(base: float, outline_slide: dict[str, Any] | None) ->
     if not outline_slide:
         return base
     variant = str(outline_slide.get("variant", "")).strip().lower()
-    if variant == "scientific-figure":
+    if variant in {"chart", "scientific-figure"}:
         return 1.0
     multiplier = _VARIANT_DENSITY_MULTIPLIER.get(variant, 1.0)
     return min(0.96, base * multiplier)
+
+
+def _content_balance_issues(
+    shapes: list[ShapeInfo],
+    *,
+    slide_w: float,
+    slide_h: float,
+    margin_x: float,
+    top_safe: float,
+    bottom_safe: float,
+    slide_type: str,
+    variant: str,
+) -> list[dict[str, Any]]:
+    """Flag valid-but-awkward slides where content is stranded in a small band.
+
+    Empty-ratio catches broadly sparse slides, but it does not explain whether
+    the problem is a dead lower band, a single cramped side, or a genuinely
+    intentional open composition. This check is outline-aware and advisory by
+    default so authors get a concrete source-level fix without blocking normal
+    fast QA unless warning failure is requested.
+    """
+    if slide_type in {"title", "section"}:
+        return []
+    if variant in _WHITESPACE_BALANCE_EXEMPT_VARIANTS:
+        return []
+
+    region_left = margin_x
+    region_top = top_safe
+    region_right = slide_w - margin_x
+    region_bottom = slide_h - bottom_safe
+    region_w = max(0.01, region_right - region_left)
+    region_h = max(0.01, region_bottom - region_top)
+
+    boxes: list[tuple[float, float, float, float, str]] = []
+    for shape in shapes:
+        if shape.area < 0.08 or shape.is_line_like:
+            continue
+        if _is_full_bleed_background(shape, slide_w, slide_h):
+            continue
+        if shape.bottom <= region_top + 0.03:
+            continue
+        if shape.top >= region_bottom - 0.03:
+            continue
+
+        left = max(shape.left, region_left)
+        top = max(shape.top, region_top)
+        right = min(shape.right, region_right)
+        bottom = min(shape.bottom, region_bottom)
+        if right - left < 0.12 or bottom - top < 0.12:
+            continue
+        boxes.append((left, top, right, bottom, shape.shape_id))
+
+    if not boxes:
+        return []
+
+    union_left = min(item[0] for item in boxes)
+    union_top = min(item[1] for item in boxes)
+    union_right = max(item[2] for item in boxes)
+    union_bottom = max(item[3] for item in boxes)
+    span_w_ratio = (union_right - union_left) / region_w
+    span_h_ratio = (union_bottom - union_top) / region_h
+
+    left_dead = max(0.0, union_left - region_left)
+    right_dead = max(0.0, region_right - union_right)
+    top_dead = max(0.0, union_top - region_top)
+    bottom_dead = max(0.0, region_bottom - union_bottom)
+    max_horizontal_dead_ratio = max(left_dead, right_dead) / region_w
+    max_vertical_dead_ratio = max(top_dead, bottom_dead) / region_h
+    shape_ids = [item[4] for item in boxes[:4]]
+
+    issues: list[dict[str, Any]] = []
+    if span_h_ratio < 0.38 and max_vertical_dead_ratio > 0.42:
+        issues.append(
+            _violation(
+                "content_span_too_short",
+                shape_ids,
+                "warning",
+                0.38 - span_h_ratio,
+                (
+                    "Content occupies a short vertical band with a large dead zone; "
+                    "enlarge the evidence block, add a visual/table/sidebar, or switch "
+                    "to a deliberate sparse variant."
+                ),
+                slide_type=slide_type,
+                extra={
+                    "variant": variant,
+                    "content_span_height_ratio": round(span_h_ratio, 4),
+                    "max_vertical_dead_ratio": round(max_vertical_dead_ratio, 4),
+                },
+            )
+        )
+    if span_w_ratio < 0.52 and max_horizontal_dead_ratio > 0.42:
+        issues.append(
+            _violation(
+                "content_span_too_narrow",
+                shape_ids,
+                "warning",
+                0.52 - span_w_ratio,
+                (
+                    "Content is clustered into a narrow side of the safe area; "
+                    "use the opposing column for evidence, widen the primary block, "
+                    "or choose a one-column sparse variant intentionally."
+                ),
+                slide_type=slide_type,
+                extra={
+                    "variant": variant,
+                    "content_span_width_ratio": round(span_w_ratio, 4),
+                    "max_horizontal_dead_ratio": round(max_horizontal_dead_ratio, 4),
+                },
+            )
+        )
+    return issues
 
 
 def _lint_slide(
@@ -572,6 +691,19 @@ def _lint_slide(
                 extra={"effective_max_empty_ratio": round(effective_max_empty_ratio, 4)},
             )
         )
+
+    violations.extend(
+        _content_balance_issues(
+            shapes,
+            slide_w=slide_w,
+            slide_h=slide_h,
+            margin_x=margin_x,
+            top_safe=top_safe,
+            bottom_safe=bottom_safe,
+            slide_type=slide_type,
+            variant=variant,
+        )
+    )
 
     # Bug 2: flag non-numeric stats KPI values. The outline tells us
     # which slides are stats variants and what the declared `value`

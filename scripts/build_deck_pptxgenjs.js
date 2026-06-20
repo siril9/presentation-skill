@@ -18,8 +18,9 @@
  *     kpi-hero, table, lab-run-results, comparison-2col, matrix, flow,
  *     image-sidebar, scientific-figure, generated-image.
  *
- * Native chart slides are still routed to build_deck.py by workspace auto
- * selection because python-pptx owns the OOXML chart path.
+ * Native chart slides are rendered by this path for common bar/line/pie
+ * payloads. Use the Python renderer only when a deck needs python-pptx-only
+ * behavior.
  */
 
 'use strict';
@@ -83,6 +84,7 @@ function parseArgs(argv) {
     outline: '',
     output: '',
     stylePreset: DEFAULT_PRESET_NAME,
+    assetRoot: '',
   };
   for (let i = 2; i < argv.length; i += 1) {
     const tok = argv[i];
@@ -106,10 +108,14 @@ function parseArgs(argv) {
       case '--style-preset':
         args.stylePreset = next();
         break;
+      case '--asset-root':
+        args.assetRoot = next();
+        break;
       default:
         if (tok.startsWith('--outline=')) args.outline = tok.slice('--outline='.length);
         else if (tok.startsWith('--output=')) args.output = tok.slice('--output='.length);
         else if (tok.startsWith('--style-preset=')) args.stylePreset = tok.slice('--style-preset='.length);
+        else if (tok.startsWith('--asset-root=')) args.assetRoot = tok.slice('--asset-root='.length);
         else {
           console.error(`Unknown argument: ${tok}`);
           printUsage();
@@ -125,7 +131,8 @@ function printUsage() {
     'Usage: node scripts/build_deck_pptxgenjs.js \\',
     '         --outline <path/to/outline.json> \\',
     '         --output  <path/to/out.pptx> \\',
-    '         [--style-preset executive-clinical]',
+    '         [--style-preset executive-clinical] \\',
+    '         [--asset-root <workspace>]',
     '',
     `Presets: ${listPresets().join(' | ')}`,
   ].join('\n');
@@ -163,55 +170,307 @@ function loadOutline(outlinePath) {
 }
 
 const STAGED_LOOKUP_CACHE = new Map();
+const JSON_PAYLOAD_CACHE = new Map();
+const ASSET_ALIAS_SECTIONS = [
+  ['images', ['asset', 'image']],
+  ['backgrounds', ['asset', 'background']],
+  ['charts', ['asset', 'chart']],
+  ['tables', ['asset', 'table']],
+  ['generated_images', ['asset', 'image', 'generated']],
+];
 
-function stagedAssetLookup(outlineDir) {
-  const manifestPath = path.resolve(outlineDir, 'assets', 'staged', 'staged_manifest.json');
-  if (STAGED_LOOKUP_CACHE.has(manifestPath)) return STAGED_LOOKUP_CACHE.get(manifestPath);
-  const lookup = new Map();
-  if (fs.existsSync(manifestPath)) {
-    try {
-      const payload = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-      const sections = [
-        ['images', ['asset', 'image']],
-        ['backgrounds', ['asset', 'background']],
-        ['charts', ['asset', 'chart']],
-        ['generated_images', ['asset', 'image', 'generated']],
-      ];
-      for (const [section, prefixes] of sections) {
-        const entries = Array.isArray(payload[section]) ? payload[section] : [];
-        for (const entry of entries) {
-          if (!entry || typeof entry !== 'object') continue;
-          const name = String(entry.name || '').trim().toLowerCase();
-          const assetPath = String(entry.path || '').trim();
-          if (!name || !assetPath) continue;
-          for (const prefix of prefixes) {
-            lookup.set(`${prefix}:${name}`, assetPath);
-          }
+function normalizedAliasRef(value) {
+  const raw = String(value || '').trim();
+  const normalized = raw.toLowerCase();
+  return /^(asset|image|background|chart|table|generated):/.test(normalized) ? normalized : '';
+}
+
+function safeAliasName(value) {
+  return String(value || '')
+    .replace(/[^A-Za-z0-9_-]/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLowerCase();
+}
+
+function addAssetLookupEntries(lookup, payload, baseDir, sourceLabel) {
+  if (!payload || typeof payload !== 'object') return;
+  for (const [section, prefixes] of ASSET_ALIAS_SECTIONS) {
+    const entries = Array.isArray(payload[section]) ? payload[section] : [];
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue;
+      const name = safeAliasName(entry.name);
+      const rawPath = String(entry.path || entry.file_path || entry.output_path || entry.image_path || '').trim();
+      const assetPath = rawPath
+        ? (path.isAbsolute(rawPath) ? rawPath : path.resolve(baseDir, rawPath))
+        : '';
+      if (!name) continue;
+      for (const prefix of prefixes) {
+        const key = `${prefix}:${name}`;
+        if (!lookup.has(key)) {
+          lookup.set(key, {
+            path: assetPath,
+            entry,
+            section,
+            source: sourceLabel,
+          });
         }
       }
-    } catch (err) {
-      console.warn(`[pptxgenjs] failed to read staged manifest ${manifestPath}: ${err.message}`);
     }
   }
-  STAGED_LOOKUP_CACHE.set(manifestPath, lookup);
+}
+
+function stagedAssetLookup(outlineDir) {
+  const cacheKey = path.resolve(outlineDir);
+  if (STAGED_LOOKUP_CACHE.has(cacheKey)) return STAGED_LOOKUP_CACHE.get(cacheKey);
+  const lookup = new Map();
+  const sources = [
+    {
+      sourcePath: path.resolve(outlineDir, 'assets', 'staged', 'staged_manifest.json'),
+      baseDir: outlineDir,
+      label: 'staged_manifest.json',
+    },
+    {
+      sourcePath: path.resolve(outlineDir, 'asset_plan.json'),
+      baseDir: outlineDir,
+      label: 'asset_plan.json',
+    },
+  ];
+  for (const source of sources) {
+    if (!fs.existsSync(source.sourcePath)) continue;
+    try {
+      const payload = JSON.parse(fs.readFileSync(source.sourcePath, 'utf8'));
+      addAssetLookupEntries(lookup, payload, source.baseDir, source.label);
+    } catch (err) {
+      console.warn(`[pptxgenjs] failed to read asset lookup ${source.sourcePath}: ${err.message}`);
+    }
+  }
+  STAGED_LOOKUP_CACHE.set(cacheKey, lookup);
   return lookup;
+}
+
+function lookupAssetAlias(value, outlineDir) {
+  const normalized = normalizedAliasRef(value);
+  if (!normalized) return null;
+  return stagedAssetLookup(outlineDir).get(normalized) || null;
+}
+
+function readJsonPayload(resolved) {
+  const cacheKey = path.resolve(resolved);
+  if (JSON_PAYLOAD_CACHE.has(cacheKey)) return JSON_PAYLOAD_CACHE.get(cacheKey);
+  let result;
+  try {
+    result = { payload: JSON.parse(fs.readFileSync(cacheKey, 'utf8')), error: '' };
+  } catch (err) {
+    result = { payload: undefined, error: err.message };
+  }
+  JSON_PAYLOAD_CACHE.set(cacheKey, result);
+  return result;
 }
 
 // Resolve an image path or staged alias against the outline directory.
 function resolveAssetPath(p, outlineDir) {
   if (!p) return '';
   const raw = String(p).trim();
-  const normalized = raw.toLowerCase();
-  if (/^(asset|image|background|chart|generated):/.test(normalized)) {
-    const staged = stagedAssetLookup(outlineDir).get(normalized);
+  const normalized = normalizedAliasRef(raw);
+  if (normalized) {
+    const staged = lookupAssetAlias(raw, outlineDir);
     if (!staged) {
       console.warn(`[pptxgenjs] staged asset alias not found: ${raw}`);
       return '';
     }
-    return path.isAbsolute(staged) ? staged : path.resolve(outlineDir, staged);
+    if (!staged.path) {
+      console.warn(`[pptxgenjs] staged asset alias has no file path: ${raw}`);
+      return '';
+    }
+    return staged.path;
   }
   const abs = path.isAbsolute(raw) ? raw : path.resolve(outlineDir, raw);
   return abs;
+}
+
+function safeNumber(value) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim().replace(/,/g, '').replace(/%$/, '');
+  if (!text) return null;
+  const n = Number(text);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeChartPayload(raw) {
+  if (!raw || typeof raw !== 'object') return {};
+  const chartType = String(raw.type || 'bar').trim().toLowerCase();
+  const options = raw.options && typeof raw.options === 'object' ? raw.options : {};
+  const chartLevelCategories = Array.isArray(raw.categories) && raw.categories.length
+    ? raw.categories
+    : Array.isArray(raw.labels) && raw.labels.length
+      ? raw.labels
+      : null;
+  const invalid = [];
+  const normalizedSeries = [];
+
+  const pushSeries = (item, index, fallbackLabels) => {
+    if (!item || typeof item !== 'object') {
+      invalid.push(`series[${index}] is not an object`);
+      return;
+    }
+    const labels = Array.isArray(item.labels) && item.labels.length ? item.labels : fallbackLabels;
+    const values = Array.isArray(item.values) ? item.values : null;
+    if (!Array.isArray(labels) || labels.length === 0) {
+      invalid.push(`series[${index}] missing labels/categories`);
+      return;
+    }
+    if (!values || values.length === 0) {
+      invalid.push(`series[${index}] missing values`);
+      return;
+    }
+    if (labels.length !== values.length) {
+      invalid.push(`series[${index}] length mismatch: ${labels.length} labels vs ${values.length} values`);
+      return;
+    }
+    const pairs = [];
+    labels.forEach((label, idx) => {
+      const parsed = safeNumber(values[idx]);
+      const labelText = String(label || '').trim();
+      if (labelText && parsed !== null) pairs.push([labelText, parsed]);
+    });
+    if (!pairs.length) {
+      invalid.push(`series[${index}] has no usable label/value pairs`);
+      return;
+    }
+    normalizedSeries.push({
+      name: String(item.name || `Series ${index + 1}`),
+      labels: pairs.map((item) => item[0]),
+      values: pairs.map((item) => item[1]),
+    });
+  };
+
+  if (Array.isArray(raw.series) && raw.series.length) {
+    raw.series.forEach((item, idx) => pushSeries(item, idx, chartLevelCategories));
+  } else if (chartLevelCategories && Array.isArray(raw.values)) {
+    pushSeries({ name: raw.series_name || 'Series A', labels: chartLevelCategories, values: raw.values }, 0, null);
+  } else {
+    invalid.push('chart payload has no series and no flat labels/values');
+  }
+
+  const base = {
+    type: chartType,
+    title: String(raw.title || ''),
+    subtitle: String(raw.subtitle || ''),
+    notes: String(raw.notes || raw.message || raw.caption || ''),
+    sources: Array.isArray(raw.sources) ? raw.sources : [],
+    facts: Array.isArray(raw.facts) ? raw.facts : raw.stats,
+    options,
+    color1: String(raw.color1 || ''),
+    color2: String(raw.color2 || ''),
+    color3: String(raw.color3 || ''),
+    color4: String(raw.color4 || ''),
+  };
+  if (raw.__error__) {
+    return Object.assign(base, {
+      __error__: String(raw.__error__),
+      series: [],
+    });
+  }
+  if (!normalizedSeries.length) {
+    return Object.assign(base, {
+      __error__: invalid.join('; ') || 'chart payload present but produced no series',
+      series: [],
+    });
+  }
+  return Object.assign(base, { series: normalizedSeries });
+}
+
+function loadChartPayload(spec, outlineDir) {
+  const assets = spec && spec.assets && typeof spec.assets === 'object' ? spec.assets : {};
+  const candidates = [spec.chart, assets.chart_data, assets.chart];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+      return normalizeChartPayload(candidate);
+    }
+    const alias = lookupAssetAlias(candidate, outlineDir);
+    if (alias && !alias.path && alias.entry) {
+      return normalizeChartPayload(alias.entry);
+    }
+    const resolved = alias && alias.path ? alias.path : resolveAssetPath(candidate, outlineDir);
+    if (!resolved || !fs.existsSync(resolved)) continue;
+    const result = readJsonPayload(resolved);
+    if (result.error) {
+      return normalizeChartPayload({ __error__: `failed to read chart JSON: ${result.error}` });
+    }
+    if (result.payload && typeof result.payload === 'object' && !Array.isArray(result.payload)) {
+      return normalizeChartPayload(result.payload);
+    }
+    return normalizeChartPayload({ __error__: `chart JSON must be an object: ${resolved}` });
+  }
+  return {};
+}
+
+function normalizeTablePayload(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  return {
+    title: String(raw.title || ''),
+    headers: Array.isArray(raw.headers) ? raw.headers : [],
+    rows: Array.isArray(raw.rows) ? raw.rows : [],
+    column_weights: Array.isArray(raw.column_weights) ? raw.column_weights : null,
+    caption: String(raw.caption || ''),
+    footnotes: Array.isArray(raw.footnotes) ? raw.footnotes : [],
+    cell_styles: raw.cell_styles || null,
+    row_styles: raw.row_styles || null,
+    header_style: raw.header_style || null,
+    source_path: String(raw.source_path || ''),
+    source_label: String(raw.source_label || ''),
+    provenance: String(raw.provenance || ''),
+  };
+}
+
+function loadTablePayload(candidate, outlineDir) {
+  if (!candidate) return {};
+  if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+    return normalizeTablePayload(candidate);
+  }
+  const alias = lookupAssetAlias(candidate, outlineDir);
+  if (alias && !alias.path && alias.entry) {
+    return normalizeTablePayload(alias.entry);
+  }
+  const resolved = alias && alias.path ? alias.path : resolveAssetPath(candidate, outlineDir);
+  if (!resolved || !fs.existsSync(resolved)) return {};
+  const result = readJsonPayload(resolved);
+  if (!result.error) return normalizeTablePayload(result.payload);
+  try {
+    throw new Error(result.error);
+  } catch (err) {
+    return normalizeTablePayload({
+      title: 'Table artifact could not be read',
+      headers: ['Error'],
+      rows: [[`failed to read table JSON: ${err.message}`]],
+      caption: String(candidate),
+    });
+  }
+}
+
+function loadTablePayloads(spec, outlineDir) {
+  const assets = (spec && spec.assets && typeof spec.assets === 'object') ? spec.assets : {};
+  const rawTables = Array.isArray(spec.tables)
+    ? spec.tables
+    : Array.isArray(spec.table_groups)
+      ? spec.table_groups
+      : Array.isArray(assets.tables)
+        ? assets.tables
+        : [];
+  const tables = rawTables
+    .map((item) => loadTablePayload(item, outlineDir))
+    .filter((item) => Array.isArray(item.headers) && item.headers.length && Array.isArray(item.rows) && item.rows.length);
+  if (tables.length) return { tables };
+
+  const candidates = [spec.table, spec.table_data, assets.table_data, assets.table];
+  for (const candidate of candidates) {
+    const table = loadTablePayload(candidate, outlineDir);
+    if (Array.isArray(table.headers) && table.headers.length && Array.isArray(table.rows) && table.rows.length) {
+      return { table };
+    }
+  }
+  return {};
 }
 
 function parseCsvLine(line) {
@@ -354,6 +613,7 @@ const CONTENT_VARIANTS = new Set([
   'comparison-2col',
   'matrix',
   'flow',
+  'chart',
   'image-sidebar',
   'scientific-figure',
   'generated-image',
@@ -361,7 +621,6 @@ const CONTENT_VARIANTS = new Set([
 
 // Variants we know we don't handle in v1. Fall back to 'standard' with a warn.
 const UNSUPPORTED_VARIANTS = new Set([
-  'chart',
   'hero',
   'comparison',
 ]);
@@ -378,6 +637,39 @@ const FONT_PAIRS = {
   clean_modern_v1: {
     font_heading: 'Helvetica Neue',
     font_body: 'Helvetica Neue',
+  },
+};
+
+const PALETTE_LIBRARY = {
+  climate_coastal_v1: {
+    bg: 'ECFEFF',
+    bg_dark: '082F49',
+    surface: 'FFFFFF',
+    text: '0C4A6E',
+    text_muted: '155E75',
+    accent_primary: '0EA5E9',
+    accent_secondary: '14B8A6',
+    line: 'BAE6FD',
+  },
+  energy_sunset_v1: {
+    bg: 'FFF7ED',
+    bg_dark: '431407',
+    surface: 'FFFFFF',
+    text: '7C2D12',
+    text_muted: '9A3412',
+    accent_primary: 'EA580C',
+    accent_secondary: 'F59E0B',
+    line: 'FED7AA',
+  },
+  enterprise_graphite_v1: {
+    bg: 'F8FAFC',
+    bg_dark: '111827',
+    surface: 'FFFFFF',
+    text: '111827',
+    text_muted: '4B5563',
+    accent_primary: '2563EB',
+    accent_secondary: '0891B2',
+    line: 'D1D5DB',
   },
 };
 
@@ -496,8 +788,13 @@ const PRESET_TREATMENTS = {
   },
   'lab-report': {
     header_mode: 'lab-clean',
+    header_variant: 'auto',
+    header_variants: ['left-accent', 'split-rule', 'title-rule', 'side-rail', 'top-bottom-rule', 'plain'],
+    header_rule_color: 'accent_secondary',
     footer_mode: 'source-line',
     footer_page_numbers: true,
+    footer_source_label: 'Sources',
+    footer_refs_label: 'Refs',
     summary_callout_mode: 'lab-box',
     title_layout: 'lab-plate',
     title_motif: 'none',
@@ -507,14 +804,141 @@ const PRESET_TREATMENTS = {
   },
 };
 
+const STYLE_ENUM_VALUES = {
+  visual_density: new Set(['low', 'medium', 'high']),
+  header_mode: new Set(['bar', 'stack', 'eyebrow', 'lab-clean', 'lab-card']),
+  header_variant: new Set([
+    'auto',
+    'left-accent',
+    'split-rule',
+    'title-rule',
+    'side-rail',
+    'top-bottom-rule',
+    'plain',
+  ]),
+  title_layout: new Set([
+    'split-hero',
+    'lab-plate',
+    'command-center',
+    'poster',
+    'masthead',
+    'light-atlas',
+  ]),
+  title_motif: new Set(['orbit', 'network', 'editorial', 'none']),
+  section_motif: new Set(['rail-dots', 'numbered-tabs', 'plain', 'none']),
+  timeline_mode: new Set(['rail-cards', 'staggered', 'open-events', 'bands', 'chapter-spread']),
+  matrix_mode: new Set(['cards', 'open-quadrants']),
+  stats_mode: new Set(['tiles', 'feature-left', 'policy-bands']),
+  cards_mode: new Set(['feature-left', 'staggered-row']),
+  chart_treatment: new Set(['standard', 'facts-below', 'facts-right', 'minimal']),
+  footer_mode: new Set(['standard', 'source-line', 'none']),
+  summary_callout_mode: new Set(['default', 'lab-box']),
+  figure_table_treatment: new Set(['figure-first', 'table-first', 'stats-strip', 'image-sidebar']),
+};
+
+const ROOT_STYLE_ENUM_KEYS = Object.keys(STYLE_ENUM_VALUES);
+const SLIDE_STYLE_ENUM_KEYS = [
+  'header_mode',
+  'header_variant',
+  'title_layout',
+  'timeline_mode',
+  'matrix_mode',
+  'stats_mode',
+  'cards_mode',
+  'chart_treatment',
+  'footer_mode',
+  'summary_callout_mode',
+  'figure_table_treatment',
+];
+
+function sortedSetValues(values) {
+  return Array.from(values).sort().join(', ');
+}
+
+function canonicalStyleValue(payload, key, pathLabel) {
+  if (!Object.prototype.hasOwnProperty.call(payload, key)) return '';
+  const value = payload[key];
+  if (typeof value !== 'string') {
+    throw new Error(`${pathLabel}.${key} must be a string when present.`);
+  }
+  const text = value.trim();
+  if (!text) return '';
+  const allowed = STYLE_ENUM_VALUES[key];
+  if (!allowed) return text;
+  const normalized = text.toLowerCase();
+  if (!allowed.has(normalized)) {
+    throw new Error(
+      `Unsupported ${pathLabel}.${key} value '${text}'. Valid values: ${sortedSetValues(allowed)}.`
+    );
+  }
+  return normalized;
+}
+
+function canonicalHeaderVariants(payload, pathLabel) {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'header_variants')) return [];
+  if (!Array.isArray(payload.header_variants)) {
+    throw new Error(`${pathLabel}.header_variants must be an array when present.`);
+  }
+  const allowed = STYLE_ENUM_VALUES.header_variant;
+  return payload.header_variants
+    .map((item, idx) => {
+      if (typeof item !== 'string') {
+        throw new Error(`${pathLabel}.header_variants[${idx}] must be a string.`);
+      }
+      const text = item.trim();
+      if (!text) return '';
+      const normalized = text.toLowerCase();
+      if (!allowed.has(normalized)) {
+        throw new Error(
+          `Unsupported ${pathLabel}.header_variants[${idx}] value '${text}'. ` +
+            `Valid values: ${sortedSetValues(allowed)}.`
+        );
+      }
+      return normalized;
+    })
+    .filter(Boolean);
+}
+
+function validateStyleTreatmentPayload(payload, pathLabel, keys) {
+  if (payload === undefined || payload === null) return;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error(`${pathLabel} must be an object when present.`);
+  }
+  keys.forEach((key) => {
+    canonicalStyleValue(payload, key, pathLabel);
+  });
+  canonicalHeaderVariants(payload, pathLabel);
+}
+
+function validateOutlineStyleTreatments(data) {
+  validateStyleTreatmentPayload(data.deck_style, 'deck_style', ROOT_STYLE_ENUM_KEYS);
+  const slideList = Array.isArray(data.slides) ? data.slides : [];
+  slideList.forEach((slide, idx) => {
+    if (!slide || typeof slide !== 'object' || Array.isArray(slide)) return;
+    validateStyleTreatmentPayload(slide, `slides[${idx}]`, SLIDE_STYLE_ENUM_KEYS);
+  });
+}
+
 function applyDeckStyle(basePreset, data, presetName) {
   const preset = Object.assign({}, basePreset);
   const treatment = PRESET_TREATMENTS[String(presetName || '').trim().toLowerCase()] || {};
   Object.assign(preset, treatment);
+  if (!preset.header_variant) {
+    preset.header_variant = 'auto';
+  }
+  if (!Array.isArray(preset.header_variants)) {
+    preset.header_variants = ['left-accent', 'split-rule', 'title-rule', 'side-rail', 'top-bottom-rule', 'plain'];
+  }
 
   const deckStyle = (data && data.deck_style && typeof data.deck_style === 'object')
     ? data.deck_style
     : {};
+  const paletteKey = String(deckStyle.palette_key || '').trim().toLowerCase();
+  const palette = PALETTE_LIBRARY[paletteKey];
+  if (palette) {
+    Object.assign(preset, palette);
+  }
+
   const fontPairKey = String(deckStyle.font_pair || '').trim();
   const fontPair = FONT_PAIRS[fontPairKey];
   if (fontPair) {
@@ -524,13 +948,14 @@ function applyDeckStyle(basePreset, data, presetName) {
     preset.font_caption = fontPair.font_body;
   }
 
-  const visualDensity = String(deckStyle.visual_density || 'medium').trim().toLowerCase();
-  if (['low', 'medium', 'high'].includes(visualDensity)) {
+  const visualDensity = canonicalStyleValue(deckStyle, 'visual_density', 'deck_style') || 'medium';
+  if (visualDensity) {
     preset.visual_density = visualDensity;
   }
 
   for (const key of [
     'header_mode',
+    'header_variant',
     'title_layout',
     'title_motif',
     'section_motif',
@@ -538,10 +963,29 @@ function applyDeckStyle(basePreset, data, presetName) {
     'matrix_mode',
     'stats_mode',
     'cards_mode',
+    'chart_treatment',
     'footer_mode',
     'summary_callout_mode',
+    'figure_table_treatment',
   ]) {
-    if (deckStyle[key]) preset[key] = String(deckStyle[key]).trim().toLowerCase();
+    const value = canonicalStyleValue(deckStyle, key, 'deck_style');
+    if (value) preset[key] = value;
+  }
+  const headerVariants = canonicalHeaderVariants(deckStyle, 'deck_style');
+  if (headerVariants.length) {
+    preset.header_variants = headerVariants;
+  }
+  if (deckStyle.header_rule_color) {
+    preset.header_rule_color = String(deckStyle.header_rule_color).trim();
+  }
+  if (deckStyle.style_seed) {
+    preset.style_seed = String(deckStyle.style_seed).trim();
+  }
+  if (deckStyle.footer_source_label) {
+    preset.footer_source_label = String(deckStyle.footer_source_label).trim();
+  }
+  if (deckStyle.footer_refs_label) {
+    preset.footer_refs_label = String(deckStyle.footer_refs_label).trim();
   }
   if (deckStyle.footer_page_numbers !== undefined) {
     preset.footer_page_numbers = Boolean(deckStyle.footer_page_numbers);
@@ -606,6 +1050,37 @@ function normalizeSlide(spec, outlineDir) {
     const p = resolveAssetPath(assets.diagram, outlineDir);
     if (p && fs.existsSync(p)) out.__diagramPath = p;
   }
+  const chartPayload = loadChartPayload(spec, outlineDir);
+  if (chartPayload && Object.keys(chartPayload).length) {
+    out.__chartPayload = chartPayload;
+    if (!Array.isArray(out.facts) && !Array.isArray(out.stats) && Array.isArray(chartPayload.facts)) {
+      out.facts = chartPayload.facts;
+    }
+    if (!Array.isArray(out.sources) && Array.isArray(chartPayload.sources)) {
+      out.sources = chartPayload.sources;
+    }
+    if (!out.message && chartPayload.notes) {
+      out.message = chartPayload.notes;
+    }
+  }
+  const tablePayloads = loadTablePayloads(spec, outlineDir);
+  if (Array.isArray(tablePayloads.tables) && tablePayloads.tables.length) {
+    out.tables = tablePayloads.tables;
+    if (!Array.isArray(out.sources)) {
+      const tableSources = tablePayloads.tables
+        .map((table) => table.source_label || table.source_path || table.provenance)
+        .filter(Boolean);
+      if (tableSources.length) out.sources = tableSources;
+    }
+  } else if (tablePayloads.table && Object.keys(tablePayloads.table).length) {
+    out.table = tablePayloads.table;
+    if (!Array.isArray(out.sources)) {
+      const tableSource = tablePayloads.table.source_label ||
+        tablePayloads.table.source_path ||
+        tablePayloads.table.provenance;
+      if (tableSource) out.sources = [tableSource];
+    }
+  }
   const figureSpecs = Array.isArray(spec.figures)
     ? spec.figures
     : Array.isArray(assets.figures)
@@ -646,6 +1121,8 @@ function normalizeSlide(spec, outlineDir) {
       (Array.isArray(out.rows) && out.rows.length)
     ) {
       out.variant = 'table';
+    } else if (Array.isArray(out.tables) && out.tables.length) {
+      out.variant = 'lab-run-results';
     } else if (visualIntent === 'timeline' && Array.isArray(out.milestones) && out.milestones.length >= 2) {
       out.variant = 'timeline';
     } else if (
@@ -659,6 +1136,10 @@ function normalizeSlide(spec, outlineDir) {
       (Array.isArray(out.headers) || (out.table && Array.isArray(out.table.headers)))
     ) {
       out.variant = 'table';
+    } else if (visualIntent === 'data' && Array.isArray(out.tables) && out.tables.length) {
+      out.variant = 'lab-run-results';
+    } else if (visualIntent === 'data' && out.__chartPayload) {
+      out.variant = 'chart';
     }
   }
   if (
@@ -753,6 +1234,9 @@ function renderSlide(pptx, pSlide, slide, preset) {
       break;
     case 'flow':
       slides.renderFlow(pptx, pSlide, slide, preset);
+      break;
+    case 'chart':
+      slides.renderChart(pptx, pSlide, slide, preset);
       break;
     case 'image-sidebar':
       slides.renderImageSidebar(pptx, pSlide, slide, preset);
@@ -892,6 +1376,8 @@ async function main() {
   }
 
   const { data, slideList, outlineDir } = loadOutline(args.outline);
+  const assetRoot = args.assetRoot ? path.resolve(args.assetRoot) : outlineDir;
+  validateOutlineStyleTreatments(data);
   const preset = applyDeckStyle(getPreset(args.stylePreset), data, args.stylePreset);
 
   const pptx = new PptxGenJS();
@@ -900,8 +1386,8 @@ async function main() {
   pptx.title = String(data.title || 'Deck');
   pptx.subject = String(data.subtitle || '');
 
-  const slidesWithSources = withAutoImageSourcesSlide(slideList, data, outlineDir);
-  const normalized = slidesWithSources.map((s) => normalizeSlide(s, outlineDir));
+  const slidesWithSources = withAutoImageSourcesSlide(slideList, data, assetRoot);
+  const normalized = slidesWithSources.map((s) => normalizeSlide(s, assetRoot));
   normalized.forEach((slide, idx) => {
     slide.__slideIndex = idx + 1;
     slide.__slideCount = normalized.length;
@@ -911,7 +1397,7 @@ async function main() {
   // "fa6:FaLightbulb") are react-icons that we rasterize on-the-fly using
   // declared npm dependencies. Plain filenames pass through unchanged — the
   // python path's workspace lookup still works if Codex staged files.
-  await resolveIconsForSlides(normalized, outlineDir, preset);
+  await resolveIconsForSlides(normalized, assetRoot, preset);
 
   for (const slide of normalized) {
     const pSlide = pptx.addSlide();

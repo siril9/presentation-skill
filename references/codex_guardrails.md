@@ -30,13 +30,13 @@ instead.
 ### 2. "I'll force --renderer python to be safe"
 
 **Symptom:** Agent passes `--renderer python` to `build_workspace.py`,
-or invokes `build_deck.py` directly for a deck that doesn't use `chart`.
+or invokes `build_deck.py` directly for a normal editable deck.
 
 **Why it fails:** pptxgenjs is the default and produces richer typography
 on timeline, hero, scientific-figure, image-sidebar, lab-run-results,
-comparison, cards, stats, kpi-hero, table, and section dividers. Forcing python silently downgrades the deck. The
-auto-picker in `build_workspace.py` already routes native chart variants to
-python; everything else should go through pptxgenjs.
+comparison, cards, stats, kpi-hero, table, common native charts, and section
+dividers. Forcing python silently downgrades the deck. The auto-picker in
+`build_workspace.py` already keeps normal editable decks on pptxgenjs.
 
 **Counter-move:** Let the auto-picker choose. Use `build_workspace.py`
 without `--renderer`, or invoke `build_deck_pptxgenjs.js` directly:
@@ -45,8 +45,9 @@ without `--renderer`, or invoke `build_deck_pptxgenjs.js` directly:
 node scripts/build_deck_pptxgenjs.js --outline deck.json --output out.pptx --style-preset <preset>
 ```
 
-Only reach for `build_deck.py` when the outline actually needs `chart`.
-Do not invent a new renderer or fall back to inline pptxgenjs API calls.
+Only reach for `build_deck.py` when the outline needs legacy or
+python-pptx-specific behavior the fast path does not cover. Do not invent a new
+renderer or fall back to inline pptxgenjs API calls.
 
 ### 3. "I'll skip the QA gate, the draft looks fine"
 

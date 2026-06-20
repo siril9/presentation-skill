@@ -64,6 +64,11 @@ Look for:
 - Low-contrast icons (e.g., dark icons on dark backgrounds without
   a contrasting circle)
 - Text boxes too narrow causing excessive wrapping
+- Title-slide motifs/chips/tags that do not continue anywhere else in the deck
+- Figure panels where the plotted/image content is tiny because the PNG has
+  large whitespace, legends, or aspect-ratio mismatch
+- Multi-panel scientific figures that should be split or converted to one
+  large figure plus sidebar
 - Leftover placeholder content
 
 For each slide, list issues or areas of concern, even if minor.

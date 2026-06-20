@@ -95,8 +95,26 @@ Use a 16:9 canvas with disciplined side margins and repeatable gutters. Content 
 
 For reusable workspaces, capture the taste decision in `design_brief.json`
 before writing `outline.json`: audience posture, cover archetype, grid policy,
-container/card policy, and the rhythm-break plan. The outline should implement
-that brief rather than cycling through every available variant.
+container/card policy, evidence continuity, figure export rules, and the
+rhythm-break plan. The outline should implement that brief rather than cycling
+through every available variant.
+
+For reproducible first-turn setup, use `scripts/emit_deck_start_packet.py`.
+It emits the compact user-question payload, the design-contract scout prompt,
+and staged handoff commands for style routing, data analysis, content research,
+outline critique, and visual QA. Use it before outline authoring when the deck
+needs to be rebuildable, sourced, or personalized.
+
+When user preferences are underspecified and personalization matters, ask the
+optional intake questions with `scripts/emit_deck_intake_prompt.py`. Store
+answers or assumptions in `design_brief.user_intake`, then translate them into
+the actual taste layer: `visual_system`, `design_modulation`,
+`title_page_concept`, `deck_style`, `asset_plan`, and `notes.md`.
+Before writing the outline, use `scripts/emit_design_contract_prompt.py` to
+lock a reproducible design contract: preset, palette, background system,
+header/footer treatment, slide sequence, asset posture, source policy,
+continuity rules, analysis artifacts, readability thresholds, speed policy, and
+QA gates.
 
 ## Design DNA
 
@@ -119,6 +137,9 @@ slides:
 Use `deck_style.header_mode`, `title_layout`, `title_motif`,
 `section_motif`, `timeline_mode`, `matrix_mode`, and `stats_mode` only to
 reinforce the chosen DNA. Do not mix multiple DNA patterns in one short deck.
+If the cover uses chips, tags, or stage labels, carry them forward as a small
+system on later slides; a motif that appears only on slide 1 reads as a
+template artifact.
 
 ## Elevation & Depth
 
@@ -162,14 +183,35 @@ footer rule, sources, and page number. Use a bottom takeaway box only when it
 helps the presenter state the result without editing formatting manually. Use
 9-11pt captions for assay/run/source metadata, navy headers, and semantic
 red/green/blue/orange accents for genotype, control, pass/fail, or risk states.
+For any `lab-clean` report slide, use `header_variant: "auto"` unless a
+specific slide needs a fixed treatment; the renderer rotates among restrained
+left-accent, split-rule, title-rule, side-rail, top-bottom-rule, and plain
+heading/rule combinations. Set a short deck-level `style_seed` in
+`deck_style` or `style_system` when two similar lab reports should keep
+different but reproducible treatment rhythm. When a `style_mix_matrix` is
+present, the same seed resolves compatible title, footer, section, timeline,
+matrix, stats, cards, chart, and callout pools before rendering. Use
+`top-bottom-rule` for a light report-page chrome with a subtle shaded band
+under the top rule, and `plain` when figures or tables need no header rule at
+all.
+Keep provenance compact with `footer_mode: "source-line"` so sources, refs, and
+page numbers sit below the bottom rule without crowding the evidence region.
 Use `variant: scientific-figure` for 2-4 figure-panel slides with subfigure
 labels and compact captions. Use `variant: image-sidebar` for one large figure
 plus interpretation, and `variant: lab-run-results` for compact
 result dashboards with multiple editable tables, semantic green/red/yellow
 cell fills, small footnotes, and a short interpretation strip. Then use
 `table`, `flow`, `stats`, and `comparison-2col` before generic card grids.
+Preflight errors on more than 4 scientific-figure panels because the renderer
+lays out only the first 4.
 Icons are optional; use them for conceptual cards or timelines, not as
 substitutes for evidence figures or result tables.
+
+Generated plots should be exported for the slide, not for a manuscript page.
+The figure script should set aspect ratio for the target layout, use tight
+Matplotlib bounding boxes, trim exterior whitespace, and keep the actual data
+region large. If three or four detailed panels make plots tiny, use one large
+`image-sidebar` figure or split the evidence across slides.
 
 Flow diagrams are optional and should not be used as a generic rhythm break.
 Use `flow` only when a method, architecture, assay path, or operating sequence
@@ -197,3 +239,6 @@ again. Use `scripts/visual_review.py` after the normal QA gate to create a
 contact sheet and flag orphan-word, title-wrap, safe-area, footer-clearance, and
 variant-rhythm risks. Treat it as a punch list for source edits, not a reason to
 patch the generated `.pptx` directly.
+Also inspect for motif continuity and figure readability: evidence tags from
+the opener should recur intentionally, and figure panels should not contain
+small islands of plotted data inside large white fields.

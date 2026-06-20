@@ -25,6 +25,45 @@ from pathlib import Path
 from typing import Any
 
 
+def _read_optional(path: Path) -> str:
+    if not path.exists():
+        return ""
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _load_json(path: Path) -> Any | None:
+    text = _read_optional(path)
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
+def _compact_json(value: Any, limit: int = 5000) -> str:
+    if value is None:
+        return "<missing or malformed>"
+    text = json.dumps(value, indent=2, ensure_ascii=False)
+    return text if len(text) <= limit else text[:limit] + f"\n... [truncated at {limit} chars]"
+
+
+def _workspace_context(workspace: Path, limit: int) -> str:
+    files = {
+        "design_brief.json": _load_json(workspace / "design_brief.json"),
+        "content_plan.json": _load_json(workspace / "content_plan.json"),
+        "evidence_plan.json": _load_json(workspace / "evidence_plan.json"),
+        "asset_plan.json": _load_json(workspace / "asset_plan.json"),
+    }
+    blocks = [f"Workspace: {workspace}"]
+    for name, payload in files.items():
+        blocks.append(f"\n{name}:\n{_compact_json(payload, limit)}")
+    return "\n".join(blocks)
+
+
 def _summarize_outline(outline: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     title = outline.get("title", "<untitled>")
@@ -97,9 +136,10 @@ Read these refs FIRST (they're the skill's authoritative rules — apply
 them, don't invent your own criteria):
 - {design_philosophy}
 - {outline_schema}
+- {planning_schema}
 - {subagent_patterns}
 
-Then analyze the outline below.
+Then analyze the outline and workspace planning context below.
 
 Look specifically for:
 
@@ -133,7 +173,29 @@ Look specifically for:
    deck has a clear visual anchor (a product, a geography, a specific
    dataset), suggest staging a hero image.
 7. Source citations. If 3+ consecutive evidence slides have no `sources`
-   array, flag them (parallels preflight's `sources_missing_streak`).
+   array, flag them (parallels preflight's `sources_missing_streak`). Also
+   flag source-line footers that pack long full references into a single
+   footer; recommend short citation IDs plus a References/Image Sources slide.
+8. Evidence and artifact wiring. For slides with `slide_intent: evidence`,
+   `visual_intent`, or `evidence_needs`, check that the outline has a real
+   anchor: chart, table, figure, image, diagram, stats, KPI, flow, or
+   structured comparison. For `image:`, `chart:`, `table:`, or `asset:`
+   aliases, check that asset_plan or the staged manifest is expected to
+   declare the alias, and that generated figures/charts/tables are represented
+   in `analysis_artifact_plan.artifact_registry`.
+9. Reproducible artifact metadata. If design_brief declares
+   `analysis_artifact_plan` or `figure_export_contract`, check that generated
+   artifacts carry `used_on_slides`, `producer`, `analysis_metadata`,
+   `target_box`, `figure_size_inches`, `figure_dpi`, and `axis_label_min_pt`,
+   and that each target slide/variant matches the outline. Recommend the
+   scaffold or figure script path instead of hand-wired one-off assets.
+10. Readability and whitespace. Compare dense prose against
+   `readability_contract.max_slide_text_lines`, `max_slide_words`,
+   `max_slide_chars`, and `max_title_lines` when those are present. Flag
+   slides that will likely trigger `content_span_too_short`,
+   `content_span_too_narrow`, or table/chart density warnings; recommend a
+   larger evidence object, `image-sidebar`, `lab-run-results`, `table`,
+   `chart`, `scientific-figure`, or a split slide.
 
 For each issue, output:
 - slide index (or "deck" for deck-level issues)
@@ -148,6 +210,10 @@ sentence.
 
 {summary}
 
+--- Workspace planning context ---
+
+{workspace_context}
+
 --- Full outline.json for reference ---
 
 {outline_json}
@@ -160,6 +226,11 @@ def main() -> int:
     )
     parser.add_argument("--outline", required=True, help="Path to outline.json")
     parser.add_argument(
+        "--workspace",
+        default="",
+        help="Optional deck workspace directory. Defaults to outline.json's parent.",
+    )
+    parser.add_argument(
         "--output",
         help="Write the prompt to this file instead of stdout.",
     )
@@ -169,6 +240,12 @@ def main() -> int:
         default=8000,
         help="Max chars of outline.json to inline (default 8000; large "
         "decks get truncated with a pointer to the full path).",
+    )
+    parser.add_argument(
+        "--truncate-plans",
+        type=int,
+        default=5000,
+        help="Max chars per planning JSON file to inline.",
     )
     args = parser.parse_args()
 
@@ -183,11 +260,17 @@ def main() -> int:
         return 2
 
     summary = "\n".join(_summarize_outline(outline))
+    workspace = (
+        Path(args.workspace).expanduser().resolve()
+        if args.workspace
+        else outline_path.parent
+    )
 
     repo_root = Path(__file__).resolve().parent.parent
     refs = {
         "design_philosophy": str(repo_root / "references" / "design_philosophy.md"),
         "outline_schema": str(repo_root / "references" / "outline_schema.md"),
+        "planning_schema": str(repo_root / "references" / "planning_schema.md"),
         "subagent_patterns": str(repo_root / "references" / "subagent_patterns.md"),
     }
 
@@ -200,6 +283,7 @@ def main() -> int:
 
     prompt = _PROMPT_HEADER.format(
         summary=summary,
+        workspace_context=_workspace_context(workspace, args.truncate_plans),
         outline_json=outline_text,
         **refs,
     )

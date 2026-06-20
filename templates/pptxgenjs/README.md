@@ -5,7 +5,30 @@ Template modules for the default pptxgenjs renderer
 `require()` from the builder pulls them in without a bundler.
 
 The renderer is the default path. `scripts/build_deck.py` remains the fallback
-for variants that need python-pptx features such as native charts.
+only for legacy or python-pptx-specific behavior that the fast editable path
+does not cover.
+
+Lab/report decks use `deck_style.header_variant` to vary the clean content
+header without changing the evidence-first layout. Supported values are
+`auto`, `left-accent`, `split-rule`, `title-rule`, `side-rail`,
+`top-bottom-rule`, and `plain`; the `lab-report` preset defaults to `auto`.
+Set `deck_style.style_seed` to a short stable deck-specific string when auto
+header variation should be reproducible but not identical across similar lab
+reports.
+Workspace builds record the resulting per-slide `resolved_treatments` and
+`resolved_treatment_summary` in `build/outline_resolved.json`, and readiness
+Markdown summarizes the selected header-variant counts before render.
+The same `header_mode: "lab-clean"` report chrome can be layered over other
+presets when a deck needs a boardroom, editorial, research, or journal palette
+but still wants restrained heading/accent-rule rhythm.
+Chart slides can use `deck_style.chart_treatment` or slide-level
+`chart_treatment` to choose `standard`, `facts-below`, `facts-right`, or
+`minimal` chart compositions while keeping chart JSON and captions editable.
+`footer_mode: source-line` reserves a compact provenance line for `sources`,
+`refs`/`references`, and the page number.
+The builder validates enum-like `deck_style` and slide-level treatment values
+before writing a `.pptx`, so quick-deck calls fail on misspellings instead of
+silently falling back to the default renderer treatment.
 
 ## Modules
 
@@ -32,11 +55,12 @@ for variants that need python-pptx features such as native charts.
 | `content / comparison-2col`    | `renderComparison2col` | Two-column contrast with optional verdict.          |
 | `content / matrix`             | `renderMatrix`    | 2x2 quadrant grid.                                        |
 | `content / flow`               | `renderFlow`      | Mermaid/diagram image as the body.                        |
+| `content / chart`              | `renderChart`     | Native editable bar/line/pie chart from inline or staged chart JSON. |
 | `content / scientific-figure`  | `renderScientificFigure` | Multi-panel academic figure slide with labels/captions. |
 | `content / generated-image`    | `renderGeneratedImage` | Standalone generated visual with metadata.           |
 
-Variant `chart` is intentionally routed to `build_deck.py` by workspace auto
-selection because native OOXML chart generation is stronger there.
+Use the Python renderer only for legacy or python-pptx-specific chart behavior
+outside the fast path's common bar/line/pie payloads.
 
 ## Style presets
 

@@ -1,0 +1,1306 @@
+{
+  "cases": [
+    {
+      "slug": "lab-report-assay",
+      "title": "Assay Readout Triage",
+      "short": "Lab report",
+      "preset": "lab-report",
+      "dna": "lab results dashboard",
+      "topic": "Synthetic assay readout triage for a 96-sample plate",
+      "key_title": "Borderline calls need repeat wells, not a new protocol",
+      "key_subtitle": "Same synthetic run summary; style is the variable under test.",
+      "left_title": "Raw screen",
+      "left_body": [
+        "96 samples loaded",
+        "3 controls pass",
+        "7 borderline wells"
+      ],
+      "right_title": "Report-ready readout",
+      "right_body": [
+        "Repeat only borderline wells",
+        "Keep source IDs in footer",
+        "Move full protocol to refs"
+      ],
+      "verdict": "Decision: repeat 7 wells and keep the run valid.",
+      "metrics": [
+        [
+          "96",
+          "Samples",
+          "Single synthetic plate"
+        ],
+        [
+          "7",
+          "Borderline",
+          "Repeat queue"
+        ],
+        [
+          "3/3",
+          "Controls",
+          "Passed"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Repeat wells",
+          "Borderline signal",
+          "Next run"
+        ],
+        [
+          "Keep plate",
+          "Controls pass",
+          "No rerun"
+        ],
+        [
+          "Compact refs",
+          "Footer stays readable",
+          "Use IDs"
+        ]
+      ],
+      "v11_header": "top-bottom-rule"
+    },
+    {
+      "slug": "board-risk-memo",
+      "title": "Factory Line Risk Memo",
+      "short": "Risk memo",
+      "preset": "charcoal-safety",
+      "dna": "board risk memo",
+      "topic": "Synthetic factory-line risk review",
+      "key_title": "Downtime risk concentrates in one inspection step",
+      "key_subtitle": "The board needs the owner, trigger, and mitigation in one view.",
+      "left_title": "Current exposure",
+      "left_body": [
+        "Inspection queue spikes after shift change",
+        "Manual signoff adds delay",
+        "Escalation path is unclear"
+      ],
+      "right_title": "Controlled response",
+      "right_body": [
+        "Assign single owner",
+        "Trigger review at 18 min queue age",
+        "Add daily exception table"
+      ],
+      "verdict": "Decision: make inspection queue age the control metric.",
+      "metrics": [
+        [
+          "18m",
+          "Queue trigger",
+          "Escalate"
+        ],
+        [
+          "2",
+          "Owner roles",
+          "Named"
+        ],
+        [
+          "24h",
+          "Review loop",
+          "Daily"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Queue trigger",
+          "18 minutes",
+          "Line lead"
+        ],
+        [
+          "Exception log",
+          "Daily",
+          "Ops analyst"
+        ],
+        [
+          "Board update",
+          "Weekly",
+          "Plant GM"
+        ]
+      ],
+      "v11_header": "split-rule"
+    },
+    {
+      "slug": "startup-launch",
+      "title": "Battery Recycling Launch",
+      "short": "Startup",
+      "preset": "bold-startup-narrative",
+      "dna": "product/investor reveal",
+      "topic": "Synthetic launch brief for a battery recycling pilot",
+      "key_title": "Pilot economics improve when intake is sorted upstream",
+      "key_subtitle": "The same business case should feel like a launch story, not a report template.",
+      "left_title": "Unsorted intake",
+      "left_body": [
+        "Wide chemistry mix",
+        "Lower recovery consistency",
+        "More manual triage"
+      ],
+      "right_title": "Sorted intake",
+      "right_body": [
+        "Cleaner feedstock",
+        "Higher recovery confidence",
+        "Faster partner onboarding"
+      ],
+      "verdict": "Decision: launch with sorted partner intake first.",
+      "metrics": [
+        [
+          "14%",
+          "Yield lift",
+          "Synthetic model"
+        ],
+        [
+          "6wk",
+          "Pilot window",
+          "Phase 1"
+        ],
+        [
+          "3",
+          "Partners",
+          "Initial lane"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Partner A",
+          "Sorted intake",
+          "Start"
+        ],
+        [
+          "Partner B",
+          "Chemistry audit",
+          "Prep"
+        ],
+        [
+          "Partner C",
+          "Volume forecast",
+          "Hold"
+        ]
+      ],
+      "v11_header": "left-accent"
+    },
+    {
+      "slug": "editorial-field-note",
+      "title": "Rooftop Field Notes",
+      "short": "Editorial",
+      "preset": "paper-journal",
+      "dna": "editorial report",
+      "topic": "Synthetic urban rooftop field-note summary",
+      "key_title": "Three roof surfaces create three different microclimates",
+      "key_subtitle": "The editorial style should stay warm without becoming a brochure.",
+      "left_title": "Observed pattern",
+      "left_body": [
+        "Black membrane heats fastest",
+        "Gravel roof holds evening warmth",
+        "Planter zone buffers peak heat"
+      ],
+      "right_title": "Design implication",
+      "right_body": [
+        "Shade high-heat surfaces",
+        "Stage planters near access paths",
+        "Use simple monitoring tags"
+      ],
+      "verdict": "Decision: prioritize planter placement over new hardware.",
+      "metrics": [
+        [
+          "3",
+          "Roof zones",
+          "Compared"
+        ],
+        [
+          "11F",
+          "Peak spread",
+          "Synthetic"
+        ],
+        [
+          "2",
+          "Low-cost fixes",
+          "Near term"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Planter zone",
+          "Cooler peak",
+          "Expand"
+        ],
+        [
+          "Black membrane",
+          "Hot peak",
+          "Shade"
+        ],
+        [
+          "Gravel edge",
+          "Warm evening",
+          "Monitor"
+        ]
+      ],
+      "v11_header": "plain"
+    },
+    {
+      "slug": "civic-policy",
+      "title": "Watershed Policy Brief",
+      "short": "Policy",
+      "preset": "forest-research",
+      "dna": "civic science policy",
+      "topic": "Synthetic watershed restoration policy brief",
+      "key_title": "Small upstream fixes reduce downstream intervention load",
+      "key_subtitle": "The policy deck needs plain-language tradeoffs and visible evidence structure.",
+      "left_title": "Reactive plan",
+      "left_body": [
+        "Downstream treatment remains overloaded",
+        "Costs arrive late",
+        "Benefits are harder to attribute"
+      ],
+      "right_title": "Preventive plan",
+      "right_body": [
+        "Upstream buffers reduce sediment load",
+        "Monitoring is simpler",
+        "Benefits show earlier"
+      ],
+      "verdict": "Decision: fund upstream buffer pilots before plant expansion.",
+      "metrics": [
+        [
+          "22%",
+          "Load cut",
+          "Synthetic estimate"
+        ],
+        [
+          "4",
+          "Pilot sites",
+          "Phase 1"
+        ],
+        [
+          "9mo",
+          "Signal window",
+          "Review"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Pilot buffers",
+          "4 sites",
+          "Watershed team"
+        ],
+        [
+          "Sensor check",
+          "Monthly",
+          "Field ops"
+        ],
+        [
+          "Council memo",
+          "Quarterly",
+          "Policy lead"
+        ]
+      ],
+      "v11_header": "title-rule"
+    },
+    {
+      "slug": "ops-dashboard",
+      "title": "Support Queue Ops Review",
+      "short": "Ops dashboard",
+      "preset": "data-heavy-boardroom",
+      "dna": "operational dashboard",
+      "topic": "Synthetic support queue operations review",
+      "key_title": "Backlog drops only when triage rules are explicit",
+      "key_subtitle": "A dense operations deck still needs readable hierarchy and clean whitespace.",
+      "left_title": "Loose triage",
+      "left_body": [
+        "Priority tags drift",
+        "Aging tickets hide in the queue",
+        "Escalations arrive late"
+      ],
+      "right_title": "Structured triage",
+      "right_body": [
+        "Priority tags map to SLA",
+        "Aging tickets surface daily",
+        "Escalation has a named owner"
+      ],
+      "verdict": "Decision: lock triage rules before hiring more coverage.",
+      "metrics": [
+        [
+          "31%",
+          "Backlog cut",
+          "Synthetic"
+        ],
+        [
+          "48h",
+          "Age trigger",
+          "Escalate"
+        ],
+        [
+          "5",
+          "SLA bands",
+          "Defined"
+        ]
+      ],
+      "action_rows": [
+        [
+          "SLA tags",
+          "Define",
+          "Ops lead"
+        ],
+        [
+          "Age trigger",
+          "48 hours",
+          "Queue owner"
+        ],
+        [
+          "Review table",
+          "Daily",
+          "Support manager"
+        ]
+      ],
+      "v11_header": "side-rail"
+    },
+    {
+      "slug": "clinical-pathway",
+      "title": "Care Pathway Review",
+      "short": "Clinical exec",
+      "preset": "executive-clinical",
+      "dna": "executive clinical operating review",
+      "topic": "Synthetic outpatient follow-up pathway review",
+      "key_title": "Missed follow-ups concentrate after discharge handoff",
+      "key_subtitle": "The clinical executive style should feel precise, calm, and operational.",
+      "left_title": "Current handoff",
+      "left_body": [
+        "Discharge tasks split across teams",
+        "Follow-up reminders arrive late",
+        "Owner is unclear after day 3"
+      ],
+      "right_title": "Closed-loop handoff",
+      "right_body": [
+        "Assign pathway owner",
+        "Trigger reminder within 48 hours",
+        "Escalate unresolved calls daily"
+      ],
+      "verdict": "Decision: make post-discharge ownership explicit.",
+      "metrics": [
+        [
+          "48h",
+          "Reminder trigger",
+          "Synthetic pathway"
+        ],
+        [
+          "12%",
+          "Missed follow-up",
+          "Review cohort"
+        ],
+        [
+          "3",
+          "Owner roles",
+          "Named"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Owner map",
+          "Handoff gap",
+          "Clinic ops"
+        ],
+        [
+          "Reminder trigger",
+          "48 hours",
+          "Care team"
+        ],
+        [
+          "Escalation log",
+          "Daily misses",
+          "Program lead"
+        ]
+      ],
+      "v11_header": "top-bottom-rule"
+    },
+    {
+      "slug": "arctic-postmortem",
+      "title": "Incident Postmortem Brief",
+      "short": "Arctic minimal",
+      "preset": "arctic-minimal",
+      "dna": "minimal technical postmortem",
+      "topic": "Synthetic service incident postmortem",
+      "key_title": "Recovery slowed because ownership changed mid-incident",
+      "key_subtitle": "The arctic style should preserve white space while staying concrete.",
+      "left_title": "Unclear response",
+      "left_body": [
+        "Alert context was split",
+        "Triage owner changed twice",
+        "Rollback criteria were implicit"
+      ],
+      "right_title": "Clear response",
+      "right_body": [
+        "Single incident owner",
+        "Pinned rollback rule",
+        "Status cadence every 20 minutes"
+      ],
+      "verdict": "Decision: publish an owner-first incident checklist.",
+      "metrics": [
+        [
+          "20m",
+          "Status cadence",
+          "Synthetic incident"
+        ],
+        [
+          "2",
+          "Owner changes",
+          "Avoid next time"
+        ],
+        [
+          "1",
+          "Rollback rule",
+          "Pinned"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Owner handoff",
+          "Avoid drift",
+          "SRE lead"
+        ],
+        [
+          "Rollback rule",
+          "Reduce debate",
+          "Platform"
+        ],
+        [
+          "Status cadence",
+          "Every 20 min",
+          "Incident owner"
+        ]
+      ],
+      "v11_header": "plain"
+    },
+    {
+      "slug": "midnight-cyber-triage",
+      "title": "Cyber Triage Console",
+      "short": "Midnight neon",
+      "preset": "midnight-neon",
+      "dna": "security operations console",
+      "topic": "Synthetic security alert triage review",
+      "key_title": "Alert volume falls when enrichment happens before escalation",
+      "key_subtitle": "The neon style should feel energetic without hiding operational detail.",
+      "left_title": "Raw alerts",
+      "left_body": [
+        "Rules fire before enrichment",
+        "Analysts chase duplicate hosts",
+        "Escalation notes vary"
+      ],
+      "right_title": "Enriched alerts",
+      "right_body": [
+        "Host context is attached",
+        "Duplicates collapse automatically",
+        "Escalation note format is fixed"
+      ],
+      "verdict": "Decision: enrich before analyst escalation.",
+      "metrics": [
+        [
+          "37%",
+          "Alert cut",
+          "Synthetic queue"
+        ],
+        [
+          "14m",
+          "Triage saved",
+          "Per incident"
+        ],
+        [
+          "5",
+          "Fields",
+          "Required"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Enrich hosts",
+          "Reduce duplicates",
+          "SOC engineer"
+        ],
+        [
+          "Note template",
+          "Faster handoff",
+          "IR lead"
+        ],
+        [
+          "Queue review",
+          "Daily drift",
+          "Detection owner"
+        ]
+      ],
+      "v11_header": "side-rail"
+    },
+    {
+      "slug": "sunset-investor-memo",
+      "title": "Solar Storage Investor Memo",
+      "short": "Investor",
+      "preset": "sunset-investor",
+      "dna": "investor memo",
+      "topic": "Synthetic solar storage expansion memo",
+      "key_title": "Margin expands when storage dispatch is software-led",
+      "key_subtitle": "The investor style should feel confident but still evidence-led.",
+      "left_title": "Hardware-led plan",
+      "left_body": [
+        "Dispatch rules stay static",
+        "Peak pricing capture varies",
+        "Field ops owns too much tuning"
+      ],
+      "right_title": "Software-led plan",
+      "right_body": [
+        "Dispatch rules update weekly",
+        "Peak windows are forecasted",
+        "Ops gets exception reports"
+      ],
+      "verdict": "Decision: fund software dispatch before adding capacity.",
+      "metrics": [
+        [
+          "19%",
+          "Margin lift",
+          "Synthetic model"
+        ],
+        [
+          "8wk",
+          "Pilot length",
+          "Phase 1"
+        ],
+        [
+          "4",
+          "Sites",
+          "Initial cohort"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Dispatch model",
+          "Margin lever",
+          "Product"
+        ],
+        [
+          "Pilot sites",
+          "4 locations",
+          "Ops"
+        ],
+        [
+          "Investor update",
+          "After 8 weeks",
+          "Finance"
+        ]
+      ],
+      "v11_header": "title-rule"
+    },
+    {
+      "slug": "lavender-renewal-ops",
+      "title": "SaaS Renewal Ops Review",
+      "short": "Lavender ops",
+      "preset": "lavender-ops",
+      "dna": "customer operations review",
+      "topic": "Synthetic SaaS renewal operations review",
+      "key_title": "Renewal risk shows up in usage decay before ticket volume",
+      "key_subtitle": "The lavender style should stay polished, calm, and workflow-focused.",
+      "left_title": "Ticket-led view",
+      "left_body": [
+        "Escalations arrive late",
+        "Usage decay hides in dashboards",
+        "CSM notes are inconsistent"
+      ],
+      "right_title": "Usage-led view",
+      "right_body": [
+        "Decay flags weekly",
+        "CSM action is triggered early",
+        "Renewal notes follow one schema"
+      ],
+      "verdict": "Decision: trigger renewal work from usage decay.",
+      "metrics": [
+        [
+          "16%",
+          "Risk drop",
+          "Synthetic cohort"
+        ],
+        [
+          "30d",
+          "Early signal",
+          "Before renewal"
+        ],
+        [
+          "6",
+          "Fields",
+          "CSM schema"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Usage flag",
+          "Early signal",
+          "RevOps"
+        ],
+        [
+          "CSM schema",
+          "Cleaner handoff",
+          "Success lead"
+        ],
+        [
+          "Renewal review",
+          "Weekly",
+          "Account team"
+        ]
+      ],
+      "v11_header": "split-rule"
+    },
+    {
+      "slug": "terracotta-membership",
+      "title": "Museum Membership Plan",
+      "short": "Terracotta",
+      "preset": "warm-terracotta",
+      "dna": "cultural membership planning",
+      "topic": "Synthetic museum membership growth plan",
+      "key_title": "Membership growth improves when visits become return rituals",
+      "key_subtitle": "The terracotta style should feel warm without becoming decorative.",
+      "left_title": "Single-visit push",
+      "left_body": [
+        "Campaigns emphasize discounts",
+        "Return visits are not sequenced",
+        "Member events feel generic"
+      ],
+      "right_title": "Return ritual",
+      "right_body": [
+        "Visit two is scheduled",
+        "Member nights match interests",
+        "Renewal copy references attendance"
+      ],
+      "verdict": "Decision: build membership around the second visit.",
+      "metrics": [
+        [
+          "24%",
+          "Return lift",
+          "Synthetic cohort"
+        ],
+        [
+          "2",
+          "Visit trigger",
+          "Core ritual"
+        ],
+        [
+          "5",
+          "Event themes",
+          "Pilot"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Second visit",
+          "Return ritual",
+          "Membership"
+        ],
+        [
+          "Theme nights",
+          "Interest match",
+          "Programs"
+        ],
+        [
+          "Renewal copy",
+          "Attendance cue",
+          "Comms"
+        ]
+      ],
+      "v11_header": "left-accent"
+    },
+    {
+      "slug": "editorial-minimal-brief",
+      "title": "Magazine Audience Brief",
+      "short": "Editorial minimal",
+      "preset": "editorial-minimal",
+      "dna": "minimal editorial strategy",
+      "topic": "Synthetic magazine audience strategy brief",
+      "key_title": "Reader loyalty rises when recurring columns anchor discovery",
+      "key_subtitle": "The minimal editorial style should feel sharp, spacious, and deliberate.",
+      "left_title": "Loose discovery",
+      "left_body": [
+        "Feature mix changes weekly",
+        "Readers lack a return habit",
+        "Newsletter links are broad"
+      ],
+      "right_title": "Column-led discovery",
+      "right_body": [
+        "Recurring columns set cadence",
+        "Newsletter links map to habits",
+        "Editors track repeat reads"
+      ],
+      "verdict": "Decision: anchor discovery around recurring columns.",
+      "metrics": [
+        [
+          "28%",
+          "Repeat read lift",
+          "Synthetic audience"
+        ],
+        [
+          "4",
+          "Columns",
+          "Weekly anchors"
+        ],
+        [
+          "2",
+          "Signals",
+          "Track"
+        ]
+      ],
+      "action_rows": [
+        [
+          "Column slate",
+          "Cadence",
+          "Editorial"
+        ],
+        [
+          "Newsletter map",
+          "Return path",
+          "Audience"
+        ],
+        [
+          "Repeat reads",
+          "Loyalty signal",
+          "Analytics"
+        ]
+      ],
+      "v11_header": "plain"
+    }
+  ],
+  "outputs": [
+    {
+      "case": "lab-report-assay",
+      "style": "Lab report",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lab-report-assay/native/lab-report-assay-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "lab-report-assay",
+      "style": "Lab report",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lab-report-assay/v1/build/assay-readout-triage.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 1,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "lab-report-assay",
+      "style": "Lab report",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lab-report-assay/v1.1/build/assay-readout-triage.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "board-risk-memo",
+      "style": "Risk memo",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/board-risk-memo/native/board-risk-memo-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "board-risk-memo",
+      "style": "Risk memo",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/board-risk-memo/v1/build/factory-line-risk-memo.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "board-risk-memo",
+      "style": "Risk memo",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/board-risk-memo/v1.1/build/factory-line-risk-memo.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "startup-launch",
+      "style": "Startup",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/startup-launch/native/startup-launch-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "startup-launch",
+      "style": "Startup",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/startup-launch/v1/build/battery-recycling-launch.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "startup-launch",
+      "style": "Startup",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/startup-launch/v1.1/build/battery-recycling-launch.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "editorial-field-note",
+      "style": "Editorial",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-field-note/native/editorial-field-note-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "editorial-field-note",
+      "style": "Editorial",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-field-note/v1/build/rooftop-field-notes.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "editorial-field-note",
+      "style": "Editorial",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-field-note/v1.1/build/rooftop-field-notes.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "civic-policy",
+      "style": "Policy",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/civic-policy/native/civic-policy-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "civic-policy",
+      "style": "Policy",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/civic-policy/v1/build/watershed-policy-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "civic-policy",
+      "style": "Policy",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/civic-policy/v1.1/build/watershed-policy-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "ops-dashboard",
+      "style": "Ops dashboard",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/ops-dashboard/native/ops-dashboard-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "ops-dashboard",
+      "style": "Ops dashboard",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/ops-dashboard/v1/build/support-queue-ops-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "ops-dashboard",
+      "style": "Ops dashboard",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/ops-dashboard/v1.1/build/support-queue-ops-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "clinical-pathway",
+      "style": "Clinical exec",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/clinical-pathway/native/clinical-pathway-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "clinical-pathway",
+      "style": "Clinical exec",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/clinical-pathway/v1/build/care-pathway-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "clinical-pathway",
+      "style": "Clinical exec",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/clinical-pathway/v1.1/build/care-pathway-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "arctic-postmortem",
+      "style": "Arctic minimal",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/arctic-postmortem/native/arctic-postmortem-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "arctic-postmortem",
+      "style": "Arctic minimal",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/arctic-postmortem/v1/build/incident-postmortem-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "arctic-postmortem",
+      "style": "Arctic minimal",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/arctic-postmortem/v1.1/build/incident-postmortem-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "midnight-cyber-triage",
+      "style": "Midnight neon",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/midnight-cyber-triage/native/midnight-cyber-triage-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "midnight-cyber-triage",
+      "style": "Midnight neon",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/midnight-cyber-triage/v1/build/cyber-triage-console.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "midnight-cyber-triage",
+      "style": "Midnight neon",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/midnight-cyber-triage/v1.1/build/cyber-triage-console.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "sunset-investor-memo",
+      "style": "Investor",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/sunset-investor-memo/native/sunset-investor-memo-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "sunset-investor-memo",
+      "style": "Investor",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/sunset-investor-memo/v1/build/solar-storage-investor-memo.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "sunset-investor-memo",
+      "style": "Investor",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/sunset-investor-memo/v1.1/build/solar-storage-investor-memo.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "lavender-renewal-ops",
+      "style": "Lavender ops",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lavender-renewal-ops/native/lavender-renewal-ops-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "lavender-renewal-ops",
+      "style": "Lavender ops",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lavender-renewal-ops/v1/build/saas-renewal-ops-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "lavender-renewal-ops",
+      "style": "Lavender ops",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/lavender-renewal-ops/v1.1/build/saas-renewal-ops-review.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "terracotta-membership",
+      "style": "Terracotta",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/terracotta-membership/native/terracotta-membership-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "terracotta-membership",
+      "style": "Terracotta",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/terracotta-membership/v1/build/museum-membership-plan.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "terracotta-membership",
+      "style": "Terracotta",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/terracotta-membership/v1.1/build/museum-membership-plan.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "editorial-minimal-brief",
+      "style": "Editorial minimal",
+      "version": "native",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-minimal-brief/native/editorial-minimal-brief-native.pptx",
+      "rendered_slides": 4,
+      "overflow_count": null,
+      "overlap_count": null,
+      "geometry_warning_count": null,
+      "geometry_error_count": null,
+      "visual_warning_count": null,
+      "design_error_count": null,
+      "design_warning_count": null
+    },
+    {
+      "case": "editorial-minimal-brief",
+      "style": "Editorial minimal",
+      "version": "v1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-minimal-brief/v1/build/magazine-audience-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 1,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    },
+    {
+      "case": "editorial-minimal-brief",
+      "style": "Editorial minimal",
+      "version": "v1.1",
+      "pptx": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/release-v1.1-showcase-20260619/cases/editorial-minimal-brief/v1.1/build/magazine-audience-brief.pptx",
+      "rendered_slides": 4,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "geometry_warning_count": 0,
+      "geometry_error_count": 0,
+      "visual_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0
+    }
+  ]
+}

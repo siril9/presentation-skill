@@ -1,0 +1,62 @@
+{
+  "workspace_version": 1,
+  "deck_title": "Presentation Skill v1.1 Release Gallery",
+  "deck_slug": "presentation-skill-v1-1-release-gallery",
+  "build": {
+    "style_preset": "lab-report",
+    "font_pair": null,
+    "palette_key": null,
+    "output_pptx": "build/presentation-skill-v1-1-release-gallery.pptx",
+    "qa_dir": "build/qa",
+    "qa_report": "build/qa/report.json"
+  },
+  "layout_rules": {
+    "alignment_first": true,
+    "zero_overlap_required": true,
+    "title_subtitle_stack_dynamic": true,
+    "footer_safe_region_required": true,
+    "cards_use_measured_text_fit": true
+  },
+  "preset_tokens": {
+    "name": "lab-report",
+    "palette": {
+      "bg_primary": "FFFFFF",
+      "bg_dark": "0B2545",
+      "surface": "FFFFFF",
+      "text_primary": "1B2838",
+      "text_muted": "4B5563",
+      "accent_primary": "0B2545",
+      "accent_secondary": "C9302C",
+      "line": "D1D5DB"
+    },
+    "typography": {
+      "title_max": 32,
+      "title_min": 22,
+      "section_max": 22,
+      "section_min": 15,
+      "body_max": 14,
+      "body_min": 10,
+      "caption_max": 11,
+      "caption_min": 9
+    },
+    "layout": {
+      "margin_x": 0.4,
+      "top_safe": 1.2,
+      "bottom_safe": 0.3,
+      "gutter": 0.24,
+      "rhythm": 0.22,
+      "rail_height": 0.04,
+      "radius_style": "rectangle",
+      "edge_tolerance": 0.05,
+      "gutter_tolerance": 0.05,
+      "max_density": 0.78,
+      "max_empty_ratio": 0.55
+    },
+    "allowed_layout_families": [
+      "card-grid",
+      "split-panel",
+      "timeline",
+      "closing-summary"
+    ]
+  }
+}

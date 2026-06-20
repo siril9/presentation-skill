@@ -13,6 +13,8 @@ from typing import Any
 from pptx import Presentation
 
 from design_tokens import PRESETS
+from emit_deck_start_packet import build_packet
+from style_treatment_profiles import preset_treatment_profile
 
 
 def _slugify(value: str) -> str:
@@ -75,6 +77,32 @@ def _extract_outline(reference_pptx: Path) -> dict[str, Any]:
     return {"slides": slides}
 
 
+def _ensure_outline_slide_ids(outline: dict[str, Any]) -> list[dict[str, str]]:
+    """Add stable slide IDs where missing and return IDs/variants for planning stubs."""
+    refs: list[dict[str, str]] = []
+    slides = outline.get("slides")
+    if not isinstance(slides, list):
+        return refs
+    for index, slide in enumerate(slides, start=1):
+        if not isinstance(slide, dict):
+            continue
+        slide_id = ""
+        for key in ("slide_id", "id", "slug"):
+            text = str(slide.get(key) or "").strip()
+            if text:
+                slide_id = text
+                break
+        if not slide_id:
+            slide_id = f"s{index}"
+            slide["slide_id"] = slide_id
+        variant = str(slide.get("variant") or "").strip()
+        slide_type = str(slide.get("type") or "").strip()
+        if not variant and slide_type and slide_type != "content":
+            variant = slide_type
+        refs.append({"slide_id": slide_id, "variant": variant})
+    return refs
+
+
 def _font_families(reference_pptx: Path) -> list[str]:
     prs = Presentation(str(reference_pptx))
     families: set[str] = set()
@@ -123,24 +151,25 @@ def _starter_outline(title: str, style_preset: str, font_pair: str | None, palet
         "deck_style": deck_style,
         "slides": [
             {
+                "slide_id": "s1",
                 "type": "title",
                 "title": title,
                 "subtitle": "Prepare notes, assets, and outline before building",
             },
             {
+                "slide_id": "s2",
                 "type": "content",
                 "variant": "split",
                 "title": "Core message",
                 "subtitle": "Start from the decision or takeaway",
                 "bullets": [
-                    "Add the main narrative in short lines.",
-                    "Keep source-backed claims explicit.",
-                    "Split dense material into focused slides.",
-                    "Vary layouts when the story needs rhythm.",
+                    "State the main decision, result, or recommendation first.",
+                    "Use one evidence object per content slide when data is available.",
+                    "Keep source-backed claims explicit and traceable to the planning files.",
+                    "Convert dense prose into a chart, table, figure, or short comparison.",
                 ],
                 "highlights": [
                     "Alignment and readability are release gates.",
-                    "Titles and subtitles use dynamic vertical spacing.",
                     "Assets stay source-backed and optional.",
                     "QA blocks overlap, overflow, and sparse layouts.",
                 ],
@@ -168,10 +197,21 @@ This workspace is the saved authoring source for the `{slug}` deck.
 - `style_contract.json`: stable style + layout contract for later slide additions
 - `asset_plan.json`: source-backed imagery/background/chart staging plan
 - `notes.md`: deck-specific data sources, decisions, and manual design notes
+- `data/`: local datasets copied or linked for reproducible analysis
+- `assets/data/`: smaller data extracts or tables staged with the deck
+- `assets/figures/`: generated slide-ready figures
+- `assets/charts/`: generated editable chart JSON specs
 - `assets/`: local images, diagrams, logos, and tables used by the deck
 - `build/`: generated `.pptx` output plus QA reports
 
 ## Commands
+
+Emit the first-turn packet during initialization for reproducible intake and
+design-contract handoff:
+
+```bash
+python3 ../../scripts/init_deck_workspace.py --workspace . --title "{title}" --style-preset <preset> --user-prompt "Original user request"
+```
 
 Build the deck:
 
@@ -185,10 +225,28 @@ Build and run strict QA:
 python3 ../../scripts/build_workspace.py --workspace . --qa --overwrite
 ```
 
+Final reusable/report build with planning and whitespace gates:
+
+```bash
+python3 ../../scripts/build_workspace.py --workspace . --qa --fail-on-planning-warnings --fail-on-whitespace-warnings --overwrite
+```
+
 Use non-render QA when LibreOffice is unavailable:
 
 ```bash
 python3 ../../scripts/build_workspace.py --workspace . --qa --skip-render --overwrite
+```
+
+Build, scaffold local data artifacts, and run QA:
+
+```bash
+python3 ../../scripts/build_workspace.py --workspace . --scaffold-data-artifacts --auto-bind-artifacts --qa --fail-on-planning-warnings --fail-on-whitespace-warnings --overwrite
+```
+
+Fail final polish on accidental dead whitespace:
+
+```bash
+python3 ../../scripts/build_workspace.py --workspace . --qa --fail-on-whitespace-warnings --overwrite
 ```
 
 Allow Wikimedia Commons fetches while staging assets:
@@ -204,11 +262,17 @@ python3 ../../scripts/build_workspace.py --workspace . --allow-network-assets --
 3. Fill `evidence_plan.json` with sourced claims, metrics, and chart candidates.
 4. Update `notes.md` with data rules and unresolved assumptions.
 5. Add source-backed image/background/chart requests to `asset_plan.json`.
-6. Stage local assets inside `assets/` when needed.
-7. Edit `outline.json` to add, replace, or reorder slides.
-8. Reference staged assets with aliases such as `asset:hero_name`, `image:crew_portrait`, or `generated:concept_visual`.
-9. Re-run `build_workspace.py`.
-10. Keep the source files. Do not rely on inline heredoc generation if you want to extend the deck later.
+6. Put local CSV/TSV/XLSX/JSON data in `data/` or `assets/data/`.
+7. Run `python3 ../../scripts/build_workspace.py --workspace . --scaffold-data-artifacts --auto-bind-artifacts --qa --fail-on-planning-warnings --fail-on-whitespace-warnings --overwrite`
+   when a dataset should become a repeatable chart/figure artifact as part of the build, or run
+   `python3 ../../scripts/scaffold_figure_artifacts.py --workspace . --run`
+   when you want a separate scaffold/refine step.
+8. Stage local assets inside `assets/` when needed.
+9. Edit `outline.json` to add, replace, or reorder slides.
+10. Reference staged assets with aliases such as `asset:hero_name`, `image:crew_portrait`, `chart:result_chart`, or `generated:concept_visual`.
+11. Re-run `build_workspace.py`.
+12. Before final delivery, run `python3 ../../scripts/build_workspace.py --workspace . --qa --fail-on-planning-warnings --fail-on-whitespace-warnings --overwrite`.
+13. Keep the source files. Do not rely on inline heredoc generation if you want to extend the deck later.
 """
 
 
@@ -264,7 +328,27 @@ connected to the staging plan yet.
 """
 
 
-def _content_plan_stub(title: str) -> dict[str, Any]:
+def _resolve_workspace_output(workspace: Path, raw: str) -> Path:
+    path = Path(str(raw or "")).expanduser()
+    if path.is_absolute():
+        return path.resolve()
+    return (workspace / path).resolve()
+
+
+def _display_path(workspace: Path, path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(workspace.resolve()))
+    except ValueError:
+        return str(path.resolve())
+
+
+def _content_plan_stub(title: str, slide_refs: list[dict[str, str]] | None = None) -> dict[str, Any]:
+    first_ref = slide_refs[0] if slide_refs else {}
+    second_ref = slide_refs[1] if slide_refs and len(slide_refs) > 1 else {}
+    first_slide_id = first_ref.get("slide_id") or "s1"
+    second_slide_id = second_ref.get("slide_id") or "s2"
+    first_variant = first_ref.get("variant") or "title"
+    second_variant = second_ref.get("variant") or "split"
     return {
         "topic": title,
         "audience": "Deck author using the presentation-skill workspace scaffold.",
@@ -274,12 +358,12 @@ def _content_plan_stub(title: str) -> dict[str, Any]:
             {
                 "act": "setup",
                 "purpose": "Frame why the topic matters.",
-                "slides": ["s1"],
+                "slides": [first_slide_id],
             },
             {
                 "act": "source-first setup",
                 "purpose": "Show how source-first authoring keeps later edits clean without prescribing a diagram.",
-                "slides": ["s2"],
+                "slides": [second_slide_id],
             },
             {
                 "act": "implication",
@@ -289,19 +373,19 @@ def _content_plan_stub(title: str) -> dict[str, Any]:
         ],
         "slide_plan": [
             {
-                "slide_id": "s1",
+                "slide_id": first_slide_id,
                 "role": "title",
                 "message": "Start from a durable workspace, not one-off inline code.",
-                "variant": "title",
+                "variant": first_variant,
                 "visual_strategy": "title opener with disciplined spacing",
                 "evidence_needs": [],
                 "asset_needs": [],
             },
             {
-                "slide_id": "s2",
+                "slide_id": second_slide_id,
                 "role": "setup",
                 "message": "The durable source files are the contract for future edits.",
-                "variant": "split",
+                "variant": second_variant,
                 "visual_strategy": "two-column split with dense highlight panel",
                 "evidence_needs": [],
                 "asset_needs": [],
@@ -317,6 +401,7 @@ def _content_plan_stub(title: str) -> dict[str, Any]:
 
 def _design_brief_stub(title: str, style_preset: str) -> dict[str, Any]:
     preset = PRESETS[style_preset]
+    treatment_profile = preset_treatment_profile(style_preset)
     return {
         "topic": title,
         "content_maturity": "serious/work",
@@ -350,6 +435,12 @@ def _design_brief_stub(title: str, style_preset: str) -> dict[str, Any]:
                 "muted": "captions and provenance",
             },
         },
+        "style_system": {
+            "style_preset": style_preset,
+            "style_seed": f"{_slugify(title)}-{style_preset}",
+            "preset_treatment_profile": treatment_profile,
+            "style_mix_matrix": treatment_profile["style_mix_matrix"],
+        },
         "title_page_concept": {
             "chosen_archetype": "topic-specific opener chosen from the preset and content",
             "dominant_element": "large topic-specific title",
@@ -382,6 +473,27 @@ def _design_brief_stub(title: str, style_preset: str) -> dict[str, Any]:
                 "rhythm. Do not add a timeline just because a slide has steps; "
                 "use report bands, a table, or a figure when those are clearer."
             ),
+        },
+        "readability_contract": {
+            "min_title_pt": 24,
+            "min_body_pt": 12,
+            "min_caption_pt": 7.5,
+            "max_title_lines": 2,
+            "max_slide_text_lines": 8,
+            "max_slide_words": 105,
+            "max_slide_chars": 700,
+            "footer_reserved_inches": 0.34,
+            "chart_label_min_pt": 8,
+            "table_density_rule": "split or summarize tables that force unreadable text",
+            "whitespace_rule": "avoid awkward empty regions; choose variants that fit actual evidence shape",
+            "figure_crop_rule": "tight bounding boxes and trimmed exterior whitespace",
+        },
+        "speed_contract": {
+            "renderer": "pptxgenjs by default; Python fallback only for legacy renderer-specific behavior",
+            "first_pass": "run validate_planning.py, preflight.py, and render-free QA before slide rendering",
+            "render_policy": "render only after source files are stable or when visual judgment matters",
+            "asset_policy": "reuse local/generated artifacts before network assets unless source-backed imagery is needed",
+            "conversion_hint": "use persistent LibreOffice/unoserver when available for repeated render QA",
         },
     }
 
@@ -435,6 +547,11 @@ def _asset_plan_stub(title: str) -> dict[str, Any]:
             #  "type": "line" | "bar" | "pie",
             #  "series": [{"name": "<series>", "labels": [...], "values": [...]}],
             #  "options": {"catAxisTitle": "...", "valAxisTitle": "..."}}
+        ],
+        "tables": [
+            # Example schema - delete and replace with real data:
+            # {"name": "run_summary", "path": "assets/tables/run_summary.json"}
+            # where the JSON contains {"headers": [...], "rows": [[...]], "caption": "..."}.
         ],
         "generated_images": [
             # Example schema - delete and replace with deliberate generated
@@ -503,6 +620,33 @@ def _args() -> argparse.Namespace:
     parser.add_argument("--reference-pptx", help="Optional reference deck to summarize and extract")
     parser.add_argument("--overwrite", action="store_true", help="Replace existing workspace files")
     parser.add_argument(
+        "--user-prompt",
+        default="",
+        help=(
+            "Original user request. When provided, init also writes a "
+            "reproducible deck-start packet for intake/design-contract handoff."
+        ),
+    )
+    parser.add_argument(
+        "--emit-start-packet",
+        action="store_true",
+        help=(
+            "Write deck_start_packet.json during initialization. If "
+            "--user-prompt is omitted, the deck title is used as the prompt."
+        ),
+    )
+    parser.add_argument(
+        "--start-packet",
+        default="deck_start_packet.json",
+        help="Workspace-relative or absolute path for the optional deck-start packet.",
+    )
+    parser.add_argument(
+        "--start-packet-mode",
+        choices=["concise", "full"],
+        default="concise",
+        help="Question set size for the optional deck-start packet.",
+    )
+    parser.add_argument(
         "--followup-edit",
         action="store_true",
         help=(
@@ -538,6 +682,9 @@ def main() -> int:
     workspace = Path(args.workspace).expanduser().resolve()
     source_outline = Path(args.source_outline).expanduser().resolve() if args.source_outline else None
     reference_pptx = Path(args.reference_pptx).expanduser().resolve() if args.reference_pptx else None
+    user_prompt = str(args.user_prompt or "").strip()
+    emit_start_packet = bool(args.emit_start_packet or user_prompt)
+    start_packet_path = _resolve_workspace_output(workspace, args.start_packet)
 
     if source_outline and not source_outline.exists():
         raise FileNotFoundError(f"Source outline not found: {source_outline}")
@@ -580,9 +727,21 @@ def main() -> int:
             )
 
     workspace.mkdir(parents=True, exist_ok=True)
-    for subdir in ("assets", "assets/diagrams", "build"):
+    for subdir in (
+        "assets",
+        "assets/charts",
+        "assets/data",
+        "assets/diagrams",
+        "assets/figures",
+        "build",
+        "data",
+    ):
         (workspace / subdir).mkdir(parents=True, exist_ok=True)
     _write_text(workspace / "assets" / ".gitkeep", "")
+    _write_text(workspace / "assets" / "charts" / ".gitkeep", "")
+    _write_text(workspace / "assets" / "data" / ".gitkeep", "")
+    _write_text(workspace / "assets" / "figures" / ".gitkeep", "")
+    _write_text(workspace / "data" / ".gitkeep", "")
     _write_text(workspace / "build" / ".gitkeep", "")
 
     slug = _slugify(args.title)
@@ -593,6 +752,7 @@ def main() -> int:
     else:
         outline = _starter_outline(args.title, args.style_preset, args.font_pair, args.palette_key)
 
+    slide_refs = _ensure_outline_slide_ids(outline)
     outline.setdefault("title", args.title)
     if args.font_pair or args.palette_key:
         deck_style = outline.setdefault("deck_style", {})
@@ -625,6 +785,8 @@ def main() -> int:
         "build_dir": "build",
         "reference_pptx": str(reference_pptx) if reference_pptx else None,
     }
+    if emit_start_packet:
+        workspace_manifest["deck_start_packet"] = _display_path(workspace, start_packet_path)
 
     _write_text(workspace / "outline.json", json.dumps(outline, indent=2, ensure_ascii=False) + "\n")
     _write_text(
@@ -633,7 +795,7 @@ def main() -> int:
     )
     _write_text(
         workspace / "content_plan.json",
-        json.dumps(_content_plan_stub(args.title), indent=2, ensure_ascii=False) + "\n",
+        json.dumps(_content_plan_stub(args.title, slide_refs), indent=2, ensure_ascii=False) + "\n",
     )
     _write_text(
         workspace / "design_brief.json",
@@ -647,10 +809,22 @@ def main() -> int:
     _write_text(workspace / "workspace.json", json.dumps(workspace_manifest, indent=2) + "\n")
     _write_text(workspace / "README.md", _workspace_readme(slug, args.title))
     _write_text(workspace / "notes.md", _workspace_notes(args.title, args.style_preset))
+    if emit_start_packet:
+        packet = build_packet(
+            workspace=workspace,
+            user_prompt=user_prompt or args.title,
+            mode=args.start_packet_mode,
+        )
+        _write_text(
+            start_packet_path,
+            json.dumps(packet, indent=2, ensure_ascii=False) + "\n",
+        )
 
     print(f"Workspace created: {workspace}")
     print(f"Outline: {workspace / 'outline.json'}")
     print(f"Style contract: {workspace / 'style_contract.json'}")
+    if emit_start_packet:
+        print(f"Deck start packet: {start_packet_path}")
     print(f"Build target: {workspace / 'build' / f'{slug}.pptx'}")
     return 0
 

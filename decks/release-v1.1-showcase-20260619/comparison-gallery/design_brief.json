@@ -1,0 +1,88 @@
+{
+  "topic": "Presentation Skill v1.1 Release Gallery",
+  "content_maturity": "serious/work",
+  "audience_posture": "execs/buyers",
+  "emotional_register": "trustworthy",
+  "design_dna": "custom release evidence gallery",
+  "format_promise": "A compact gallery showing actual slide outputs instead of abstract release claims.",
+  "anti_format": [
+    "unsupported marketing claims",
+    "tiny unreadable screenshots"
+  ],
+  "canvas_and_grid": {
+    "aspect": "16:9",
+    "margin_x_in": 0.5,
+    "footer_reserve_in": 0.34,
+    "header_policy": "compact lab-clean header"
+  },
+  "visual_system": {
+    "style_preset": "lab-report"
+  },
+  "style_system": {
+    "style_preset": "lab-report",
+    "style_seed": "release-v11-gallery-20260619",
+    "style_mix_matrix": {
+      "header_variant_pool": [
+        "top-bottom-rule",
+        "split-rule",
+        "left-accent",
+        "plain"
+      ],
+      "chart_treatment_pool": [
+        "minimal",
+        "facts-right"
+      ],
+      "figure_table_treatment_pool": [
+        "figure-first",
+        "image-sidebar"
+      ],
+      "footer_pool": [
+        "source-line",
+        "standard"
+      ],
+      "summary_callout_mode_pool": [
+        "lab-box",
+        "default"
+      ],
+      "mix_rule": "Keep the comparison frame restrained; let screenshots be the evidence.",
+      "do_not_mix": [
+        "Do not restyle screenshot panels."
+      ]
+    }
+  },
+  "title_page_concept": {
+    "chosen_archetype": "release evidence opener",
+    "dominant_element": "v1.1 release gallery",
+    "supporting_element": "native vs v1 vs v1.1 comparison",
+    "why_this_could_only_be_this_deck": "It shows real generated outputs from this release candidate."
+  },
+  "structure_strategy": {
+    "primary_scaffold": "title, summary table, six comparison-image slides",
+    "repeated_elements": [
+      "native panel",
+      "v1 panel",
+      "v1.1 panel"
+    ],
+    "allowed_variations": [
+      "title",
+      "table",
+      "scientific-figure"
+    ],
+    "container_policy": "Composite screenshots are the evidence containers.",
+    "rhythm_break_plan": "Use only one summary table; keep comparisons consistent."
+  },
+  "readability_contract": {
+    "min_title_pt": 24,
+    "min_body_pt": 12,
+    "min_caption_pt": 7.5,
+    "max_title_lines": 2,
+    "max_slide_text_lines": 7,
+    "max_slide_words": 95,
+    "max_slide_chars": 640,
+    "footer_reserved_inches": 0.34,
+    "chart_label_min_pt": 8,
+    "table_density_rule": "No dense tables in gallery.",
+    "whitespace_rule": "Three screenshot panels should fill the body.",
+    "figure_crop_rule": "Use rendered slide images as-is."
+  }
+}

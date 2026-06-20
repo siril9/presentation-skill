@@ -1,0 +1,16 @@
+{
+  "workspace_version": 1,
+  "deck_title": "Presentation Skill v1.1 Release Gallery",
+  "deck_slug": "presentation-skill-v1-1-release-gallery",
+  "style_contract": "style_contract.json",
+  "content_plan": "content_plan.json",
+  "design_brief": "design_brief.json",
+  "evidence_plan": "evidence_plan.json",
+  "outline": "outline.json",
+  "asset_plan": "asset_plan.json",
+  "notes": "notes.md",
+  "assets_dir": "assets",
+  "staged_assets_dir": "assets/staged",
+  "build_dir": "build",
+  "reference_pptx": null
+}

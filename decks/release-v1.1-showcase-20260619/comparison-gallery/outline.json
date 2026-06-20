@@ -1,0 +1,406 @@
+{
+  "title": "Presentation Skill v1.1 Release Gallery",
+  "subtitle": "Native vs v1 vs v1.1",
+  "deck_style": {
+    "style_seed": "release-v11-gallery-20260619",
+    "header_mode": "lab-clean",
+    "header_variant": "auto",
+    "header_variants": [
+      "top-bottom-rule",
+      "split-rule",
+      "left-accent",
+      "plain"
+    ],
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "footer_source_label": "Src",
+    "footer_refs_label": "Refs"
+  },
+  "slides": [
+    {
+      "slide_id": "s1",
+      "type": "title",
+      "title": "Presentation Skill v1.1 Release Gallery",
+      "subtitle": "Native vs v1 vs v1.1 across 13 deck styles"
+    },
+    {
+      "slide_id": "s2",
+      "type": "content",
+      "variant": "table",
+      "title": "Release claim: structured taste, reproducible builds, cleaner slides",
+      "subtitle": "This evidence packet compares the same content across three generators.",
+      "headers": [
+        "Signal",
+        "Value",
+        "Release meaning"
+      ],
+      "rows": [
+        [
+          "Styles",
+          "13",
+          "Report, clinical, ops, investor, editorial, policy, security, cultural"
+        ],
+        [
+          "Decks",
+          "39",
+          "Native, v1, and v1.1 for every case"
+        ],
+        [
+          "Evidence",
+          "Rendered",
+          "Actual slide images, not mockups"
+        ]
+      ],
+      "column_weights": [
+        0.75,
+        0.55,
+        1.8
+      ],
+      "caption": "Synthetic topics; local generated PPTX and render outputs.",
+      "sources": [
+        "local release fixtures"
+      ],
+      "refs": [
+        "synthetic cases"
+      ]
+    },
+    {
+      "slide_id": "s3",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "top-bottom-rule",
+      "title": "Lab report: native vs v1 vs v1.1",
+      "subtitle": "Borderline calls need repeat wells, not a new protocol",
+      "figures": [
+        {
+          "path": "assets/comparisons/lab-report-assay-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "lab-report-assay"
+      ]
+    },
+    {
+      "slide_id": "s4",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "split-rule",
+      "title": "Risk memo: native vs v1 vs v1.1",
+      "subtitle": "Downtime risk concentrates in one inspection step",
+      "figures": [
+        {
+          "path": "assets/comparisons/board-risk-memo-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "board-risk-memo"
+      ]
+    },
+    {
+      "slide_id": "s5",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "left-accent",
+      "title": "Startup: native vs v1 vs v1.1",
+      "subtitle": "Pilot economics improve when intake is sorted upstream",
+      "figures": [
+        {
+          "path": "assets/comparisons/startup-launch-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "startup-launch"
+      ]
+    },
+    {
+      "slide_id": "s6",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "plain",
+      "title": "Editorial: native vs v1 vs v1.1",
+      "subtitle": "Three roof surfaces create three different microclimates",
+      "figures": [
+        {
+          "path": "assets/comparisons/editorial-field-note-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "editorial-field-note"
+      ]
+    },
+    {
+      "slide_id": "s7",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "title-rule",
+      "title": "Policy: native vs v1 vs v1.1",
+      "subtitle": "Small upstream fixes reduce downstream intervention load",
+      "figures": [
+        {
+          "path": "assets/comparisons/civic-policy-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "civic-policy"
+      ]
+    },
+    {
+      "slide_id": "s8",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "side-rail",
+      "title": "Ops dashboard: native vs v1 vs v1.1",
+      "subtitle": "Backlog drops only when triage rules are explicit",
+      "figures": [
+        {
+          "path": "assets/comparisons/ops-dashboard-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "ops-dashboard"
+      ]
+    },
+    {
+      "slide_id": "s9",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "top-bottom-rule",
+      "title": "Clinical exec: native vs v1 vs v1.1",
+      "subtitle": "Missed follow-ups concentrate after discharge handoff",
+      "figures": [
+        {
+          "path": "assets/comparisons/clinical-pathway-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "clinical-pathway"
+      ]
+    },
+    {
+      "slide_id": "s10",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "plain",
+      "title": "Arctic minimal: native vs v1 vs v1.1",
+      "subtitle": "Recovery slowed because ownership changed mid-incident",
+      "figures": [
+        {
+          "path": "assets/comparisons/arctic-postmortem-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "arctic-postmortem"
+      ]
+    },
+    {
+      "slide_id": "s11",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "side-rail",
+      "title": "Midnight neon: native vs v1 vs v1.1",
+      "subtitle": "Alert volume falls when enrichment happens before escalation",
+      "figures": [
+        {
+          "path": "assets/comparisons/midnight-cyber-triage-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "midnight-cyber-triage"
+      ]
+    },
+    {
+      "slide_id": "s12",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "title-rule",
+      "title": "Investor: native vs v1 vs v1.1",
+      "subtitle": "Margin expands when storage dispatch is software-led",
+      "figures": [
+        {
+          "path": "assets/comparisons/sunset-investor-memo-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "sunset-investor-memo"
+      ]
+    },
+    {
+      "slide_id": "s13",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "split-rule",
+      "title": "Lavender ops: native vs v1 vs v1.1",
+      "subtitle": "Renewal risk shows up in usage decay before ticket volume",
+      "figures": [
+        {
+          "path": "assets/comparisons/lavender-renewal-ops-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "lavender-renewal-ops"
+      ]
+    },
+    {
+      "slide_id": "s14",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "left-accent",
+      "title": "Terracotta: native vs v1 vs v1.1",
+      "subtitle": "Membership growth improves when visits become return rituals",
+      "figures": [
+        {
+          "path": "assets/comparisons/terracotta-membership-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "terracotta-membership"
+      ]
+    },
+    {
+      "slide_id": "s15",
+      "type": "content",
+      "variant": "scientific-figure",
+      "header_mode": "lab-clean",
+      "header_variant": "plain",
+      "title": "Editorial minimal: native vs v1 vs v1.1",
+      "subtitle": "Reader loyalty rises when recurring columns anchor discovery",
+      "figures": [
+        {
+          "path": "assets/comparisons/editorial-minimal-brief-native-v1-v11.png",
+          "label": "A",
+          "title": "Rendered slide comparison",
+          "caption": "Slide 2 from the native, v1, and v1.1 generated decks."
+        }
+      ],
+      "interpretation": "Look for hierarchy, content fit, footer/source handling, and whether the slide feels intentionally designed.",
+      "sources": [
+        "native",
+        "v1",
+        "v1.1"
+      ],
+      "refs": [
+        "editorial-minimal-brief"
+      ]
+    }
+  ]
+}

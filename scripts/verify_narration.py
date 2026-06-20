@@ -23,6 +23,39 @@ import sys
 from pathlib import Path
 from typing import Any
 
+_ALIAS_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("images", ("asset", "image")),
+    ("backgrounds", ("asset", "background")),
+    ("charts", ("asset", "chart")),
+    ("tables", ("asset", "table")),
+    ("generated_images", ("asset", "image", "generated")),
+)
+
+
+def _staged_aliases(workspace: Path) -> set[str]:
+    manifest_path = workspace / "assets" / "staged" / "staged_manifest.json"
+    if not manifest_path.exists():
+        return set()
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    aliases: set[str] = set()
+    if not isinstance(payload, dict):
+        return aliases
+    for section, prefixes in _ALIAS_SECTIONS:
+        entries = payload.get(section)
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            name = str(entry.get("name") or "").strip().lower()
+            if not name:
+                continue
+            aliases.update(f"{prefix}:{name}" for prefix in prefixes)
+    return aliases
+
 
 def _resolve(workspace: Path, value: str) -> Path | None:
     if not value or not isinstance(value, str):
@@ -31,7 +64,7 @@ def _resolve(workspace: Path, value: str) -> Path | None:
     if not raw:
         return None
     # Alias prefixes are always OK (resolved via staged_manifest elsewhere).
-    if raw.startswith(("asset:", "image:", "background:", "chart:", "generated:")):
+    if raw.startswith(("asset:", "image:", "background:", "chart:", "table:", "generated:")):
         return None
     if raw.startswith(("fa6:", "fa:", "bi:", "bs:", "md:", "lu:")):
         return None
@@ -54,7 +87,12 @@ def _resolve(workspace: Path, value: str) -> Path | None:
     return None
 
 
-def _is_runtime_resolved(value: str) -> bool:
+def _is_staged_alias(value: str) -> bool:
+    raw = value.strip().lower()
+    return raw.startswith(("asset:", "image:", "background:", "chart:", "table:", "generated:"))
+
+
+def _is_runtime_resolved(value: str, workspace: Path) -> bool:
     """Return True for aliases resolved outside this filesystem probe.
 
     Staged asset aliases and react-icons slugs are valid references even
@@ -62,36 +100,72 @@ def _is_runtime_resolved(value: str) -> bool:
     renderer resolves them later from staged_manifest or rasterizes icons
     into a cache.
     """
-    raw = value.strip()
-    return raw.startswith(
-        (
-            "asset:",
-            "image:",
-            "background:",
-            "chart:",
-            "generated:",
-            "fa6:",
-            "fa:",
-            "bi:",
-            "bs:",
-            "md:",
-            "lu:",
-        )
-    )
+    raw = value.strip().lower()
+    if raw.startswith(("fa6:", "fa:", "bi:", "bs:", "md:", "lu:")):
+        return True
+    if _is_staged_alias(raw):
+        return raw in _staged_aliases(workspace)
+    return False
+
+
+def _alias_issue_if_missing(
+    workspace: Path,
+    value: str,
+    *,
+    idx: int | None,
+    field: str,
+) -> dict[str, Any] | None:
+    if not _is_staged_alias(value):
+        return None
+    if _is_runtime_resolved(value, workspace):
+        return None
+    return {
+        "slide_index": idx,
+        "rule": "staged_alias_missing",
+        "field": field,
+        "value": value,
+    }
 
 
 def _check_slide_assets(
     workspace: Path, slide: dict[str, Any], idx: int
 ) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
+    for field in ("chart", "table", "table_data"):
+        v = slide.get(field)
+        if isinstance(v, str) and v.strip():
+            alias_issue = _alias_issue_if_missing(workspace, v, idx=idx, field=field)
+            if alias_issue:
+                issues.append(alias_issue)
+    direct_tables = slide.get("tables") or slide.get("table_groups")
+    if isinstance(direct_tables, list):
+        for i, table in enumerate(direct_tables):
+            if isinstance(table, str) and table.strip():
+                alias_issue = _alias_issue_if_missing(workspace, table, idx=idx, field=f"tables[{i}]")
+                if alias_issue:
+                    issues.append(alias_issue)
     assets = slide.get("assets")
     if not isinstance(assets, dict):
         return issues
-    scalar_fields = ("hero_image", "image", "generated_image", "diagram", "mermaid_source", "logo", "chart_data")
+    scalar_fields = (
+        "hero_image",
+        "image",
+        "generated_image",
+        "diagram",
+        "mermaid_source",
+        "logo",
+        "chart_data",
+        "table_data",
+        "table",
+    )
     for field in scalar_fields:
         v = assets.get(field)
         if isinstance(v, str) and v.strip():
-            if _is_runtime_resolved(v):
+            alias_issue = _alias_issue_if_missing(workspace, v, idx=idx, field=f"assets.{field}")
+            if alias_issue:
+                issues.append(alias_issue)
+                continue
+            if _is_runtime_resolved(v, workspace):
                 continue
             if _resolve(workspace, v) is None:
                 issues.append(
@@ -106,7 +180,11 @@ def _check_slide_assets(
     if isinstance(icons, list):
         for i, icon in enumerate(icons):
             if isinstance(icon, str) and icon.strip():
-                if _is_runtime_resolved(icon):
+                alias_issue = _alias_issue_if_missing(workspace, icon, idx=idx, field=f"assets.icons[{i}]")
+                if alias_issue:
+                    issues.append(alias_issue)
+                    continue
+                if _is_runtime_resolved(icon, workspace):
                     continue
                 if _resolve(workspace, icon) is None:
                     issues.append(
@@ -115,6 +193,25 @@ def _check_slide_assets(
                             "rule": "asset_missing",
                             "field": f"assets.icons[{i}]",
                             "value": icon,
+                        }
+                    )
+    tables = assets.get("tables")
+    if isinstance(tables, list):
+        for i, table in enumerate(tables):
+            if isinstance(table, str) and table.strip():
+                alias_issue = _alias_issue_if_missing(workspace, table, idx=idx, field=f"assets.tables[{i}]")
+                if alias_issue:
+                    issues.append(alias_issue)
+                    continue
+                if _is_runtime_resolved(table, workspace):
+                    continue
+                if _resolve(workspace, table) is None:
+                    issues.append(
+                        {
+                            "slide_index": idx,
+                            "rule": "asset_missing",
+                            "field": f"assets.tables[{i}]",
+                            "value": table,
                         }
                     )
     return issues
@@ -127,7 +224,7 @@ def _check_asset_plan(
     only carry a `wikimedia_query` are intent, not claims of existence.
     """
     issues: list[dict[str, Any]] = []
-    for section in ("images", "backgrounds", "icons"):
+    for section in ("images", "backgrounds", "icons", "charts", "tables"):
         arr = plan.get(section)
         if not isinstance(arr, list):
             continue

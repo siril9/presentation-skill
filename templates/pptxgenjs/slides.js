@@ -271,6 +271,150 @@ function headerMetrics(title, subtitle, options) {
   };
 }
 
+const LAB_HEADER_VARIANTS = [
+  'left-accent',
+  'split-rule',
+  'title-rule',
+  'side-rail',
+  'top-bottom-rule',
+  'plain',
+];
+
+function hashString(value) {
+  const s = String(value || '');
+  let hash = 2166136261;
+  for (let i = 0; i < s.length; i += 1) {
+    hash ^= s.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function normalizeLabHeaderVariant(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  const aliases = {
+    auto: 'auto',
+    default: 'left-accent',
+    left: 'left-accent',
+    'left-rule': 'left-accent',
+    'left-accent': 'left-accent',
+    split: 'split-rule',
+    'split-rule': 'split-rule',
+    full: 'split-rule',
+    title: 'title-rule',
+    'title-rule': 'title-rule',
+    underline: 'title-rule',
+    rail: 'side-rail',
+    'side-rail': 'side-rail',
+    bracket: 'side-rail',
+    frame: 'top-bottom-rule',
+    'frame-rule': 'top-bottom-rule',
+    'top-bottom': 'top-bottom-rule',
+    'top-bottom-rule': 'top-bottom-rule',
+    top: 'top-bottom-rule',
+    plain: 'plain',
+    minimal: 'plain',
+    none: 'plain',
+    'no-line': 'plain',
+    'no-lines': 'plain',
+    'no-rule': 'plain',
+    'no-rules': 'plain',
+  };
+  return aliases[raw] || raw;
+}
+
+function pickLabHeaderVariant(slideData, preset) {
+  const requested = normalizeLabHeaderVariant(slideData.header_variant || preset.header_variant || 'left-accent');
+  const rawPool = Array.isArray(slideData.header_variants)
+    ? slideData.header_variants
+    : Array.isArray(preset.header_variants)
+      ? preset.header_variants
+      : LAB_HEADER_VARIANTS;
+  const pool = rawPool
+    .map(normalizeLabHeaderVariant)
+    .filter((item) => LAB_HEADER_VARIANTS.includes(item));
+  if (requested && requested !== 'auto' && LAB_HEADER_VARIANTS.includes(requested)) return requested;
+  const variants = pool.length ? pool : LAB_HEADER_VARIANTS;
+  const seed = [
+    safeText(slideData.style_seed || preset.style_seed),
+    slideData.__slideIndex || '',
+    safeText(slideData.title),
+    safeText(slideData.subtitle),
+  ].join('|');
+  return variants[hashString(seed) % variants.length];
+}
+
+function presetColor(preset, value, fallback) {
+  const raw = String(value || '').trim();
+  if (raw && Object.prototype.hasOwnProperty.call(preset, raw)) {
+    return cleanHex(preset[raw], fallback);
+  }
+  return cleanHex(raw || fallback, fallback);
+}
+
+function addLabHeaderRule(slide, options) {
+  const variant = options.variant;
+  const x = options.x;
+  const y = options.y;
+  const w = options.w;
+  const lineColor = options.lineColor;
+  const accent = options.accent;
+  const titleText = options.titleText;
+
+  const addLine = (lineX, lineY, lineW, lineH, color) => {
+    if (lineW <= 0 || lineH <= 0) return;
+    slide.addShape('rect', shapeOpts({
+      x: lineX,
+      y: lineY,
+      w: lineW,
+      h: lineH,
+      fill: { color },
+      line: { color, width: 0 },
+    }));
+  };
+
+  if (variant === 'plain') {
+    return;
+  }
+
+  if (variant === 'top-bottom-rule') {
+    addLine(x, 0.055, w, 0.022, accent);
+    slide.addShape('rect', shapeOpts({
+      x,
+      y: 0.077,
+      w,
+      h: 0.090,
+      fill: { color: lineColor, transparency: 74 },
+      line: { color: lineColor, transparency: 100, width: 0 },
+    }));
+    addLine(x, y, w, 0.014, lineColor);
+    return;
+  }
+
+  if (variant === 'split-rule') {
+    const accentW = Math.min(2.60, Math.max(1.45, w * 0.30));
+    addLine(x, y - 0.012, accentW, 0.034, accent);
+    addLine(x + accentW + 0.12, y, w - accentW - 0.12, 0.014, lineColor);
+    return;
+  }
+
+  if (variant === 'title-rule') {
+    const titleRuleW = Math.min(4.90, Math.max(1.20, safeText(titleText).length * 0.075));
+    addLine(x, y - 0.010, titleRuleW, 0.030, accent);
+    addLine(x + titleRuleW + 0.14, y, w - titleRuleW - 0.14, 0.014, lineColor);
+    return;
+  }
+
+  if (variant === 'side-rail') {
+    addLine(x, y, w, 0.014, lineColor);
+    addLine(x, y + 0.034, Math.min(1.20, w * 0.16), 0.026, accent);
+    return;
+  }
+
+  addLine(x, y, w, 0.018, lineColor);
+  addLine(x, y - 0.035, 0.85, 0.035, accent);
+}
+
 function imageDimensions(imagePath) {
   try {
     const buf = fs.readFileSync(imagePath);
@@ -364,8 +508,8 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
   const isLabHeader = headerMode === 'lab-clean' || headerMode === 'lab-card';
   const metrics = isLabHeader
     ? headerMetrics(title, subtitle, {
-      titleFont: Math.min(21, titleFontForLength(title)),
-      subtitleFont: 9.2,
+      titleFont: Math.max(26, Math.min(28, titleFontForLength(title))),
+      subtitleFont: 12.5,
       topPad: 0.20,
       bottomPad: 0.10,
     })
@@ -375,12 +519,34 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
     const titleColor = preset.text || preset.text_primary || '0F172A';
     const subtitleColor = preset.text_muted || '64748B';
     const accent = cleanHex(slideData.header_fill || preset.accent_primary, '0B2545');
+    const ruleAccent = presetColor(
+      preset,
+      slideData.header_rule_color || preset.header_rule_color ||
+        (preset.header_accent_stripe ? 'accent_secondary' : 'accent_primary'),
+      accent,
+    );
     const lineColor = cleanHex(preset.line, 'D1D5DB');
-    const titleW = metrics.textW;
+    const headerVariant = headerMode === 'lab-clean'
+      ? pickLabHeaderVariant(slideData, preset)
+      : 'left-accent';
+    const railInset = headerVariant === 'side-rail' ? 0.20 : 0;
+    const titleX = MARGIN_X + railInset;
+    const titleW = metrics.textW - railInset;
     const titleH = metrics.titleH;
     const subtitleH = metrics.subtitleH;
     const titleY = 0.19;
     let contentTop = 0.80;
+
+    if (headerVariant === 'side-rail' && headerMode === 'lab-clean') {
+      slide.addShape('rect', shapeOpts({
+        x: MARGIN_X,
+        y: titleY + 0.02,
+        w: 0.055,
+        h: Math.max(0.42, titleH + (metrics.subtitleText ? subtitleH + 0.09 : 0)),
+        fill: { color: ruleAccent },
+        line: { color: ruleAccent, width: 0 },
+      }));
+    }
 
     if (headerMode === 'lab-card') {
       const estimatedTitleW = Math.max(
@@ -422,7 +588,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
       contentTop = titleY + cardH + (metrics.subtitleText ? subtitleH + 0.24 : 0.22);
     } else {
       slide.addText(metrics.titleText, textOpts({
-        x: MARGIN_X,
+        x: titleX,
         y: titleY,
         w: titleW,
         h: titleH,
@@ -434,7 +600,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
       }));
       if (metrics.subtitleText) {
         slide.addText(metrics.subtitleText, textOpts({
-          x: MARGIN_X,
+          x: titleX,
           y: titleY + titleH + 0.04,
           w: titleW,
           h: subtitleH,
@@ -448,15 +614,25 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
     }
 
     const ruleY = Math.max(0.62, contentTop - 0.10);
-    slide.addShape('rect', shapeOpts({
-      x: MARGIN_X,
-      y: ruleY,
-      w: SLIDE_W - MARGIN_X * 2,
-      h: 0.018,
-      fill: { color: lineColor },
-      line: { color: lineColor, width: 0 },
-    }));
     if (headerMode === 'lab-clean') {
+      addLabHeaderRule(slide, {
+        variant: headerVariant,
+        x: MARGIN_X,
+        y: ruleY,
+        w: SLIDE_W - MARGIN_X * 2,
+        lineColor,
+        accent: ruleAccent,
+        titleText: metrics.titleText,
+      });
+    } else {
+      slide.addShape('rect', shapeOpts({
+        x: MARGIN_X,
+        y: ruleY,
+        w: SLIDE_W - MARGIN_X * 2,
+        h: 0.018,
+        fill: { color: lineColor },
+        line: { color: lineColor, width: 0 },
+      }));
       slide.addShape('rect', shapeOpts({
         x: MARGIN_X,
         y: ruleY - 0.035,
@@ -574,11 +750,23 @@ function extractSourceText(src) {
   return '';
 }
 
-function addFooter(slide, preset, slideData) {
-  const footer = safeText(slideData.footer);
-  const sources = Array.isArray(slideData.sources)
-    ? slideData.sources.map(extractSourceText).filter(Boolean)
+function footerTextList(value) {
+  return Array.isArray(value)
+    ? value.map(extractSourceText).filter(Boolean)
     : [];
+}
+
+function footerChromeModel(slideData, preset) {
+  const footer = safeText(slideData.footer);
+  const sources = footerTextList(slideData.sources);
+  const refs = footerTextList(slideData.refs).length
+    ? footerTextList(slideData.refs)
+    : footerTextList(slideData.references);
+  const sourceLabel = safeText(slideData.source_label || preset.footer_source_label, 'Sources');
+  const refsLabel = safeText(slideData.refs_label || preset.footer_refs_label, 'Refs');
+  const provenanceParts = [];
+  if (sources.length) provenanceParts.push(`${sourceLabel}: ` + sources.join('; '));
+  if (refs.length) provenanceParts.push(`${refsLabel}: ` + refs.join('; '));
   const footerMode = String(slideData.footer_mode || preset.footer_mode || '').trim().toLowerCase();
   const pageNumber = slideData.__slideIndex && slideData.__slideCount
     ? `${slideData.__slideIndex}/${slideData.__slideCount}`
@@ -586,7 +774,17 @@ function addFooter(slide, preset, slideData) {
   const showPageNumber = slideData.show_page_number === false
     ? false
     : Boolean(slideData.page_number || preset.footer_page_numbers || footerMode === 'source-line');
-  if (!footer && sources.length === 0 && !showPageNumber) return;
+  return { footer, sources, refs, provenanceParts, footerMode, pageNumber, showPageNumber };
+}
+
+function hasFooterChrome(slideData, preset) {
+  const model = footerChromeModel(slideData, preset);
+  return Boolean(model.footer || model.provenanceParts.length || model.showPageNumber);
+}
+
+function addFooter(slide, preset, slideData) {
+  const { footer, provenanceParts, footerMode, pageNumber, showPageNumber } = footerChromeModel(slideData, preset);
+  if (!footer && provenanceParts.length === 0 && !showPageNumber) return;
 
   const y = SLIDE_H - FOOTER_H;
   // Thin accent line above footer.
@@ -598,11 +796,11 @@ function addFooter(slide, preset, slideData) {
   if (footerMode === 'source-line') {
     const leftParts = [];
     if (footer) leftParts.push(footer);
-    if (sources.length) leftParts.push('Sources: ' + sources.join('; '));
+    leftParts.push(...provenanceParts);
     const leftText = leftParts.join(' · ');
     const pageW = showPageNumber && pageNumber ? 0.55 : 0;
     const textW = SLIDE_W - MARGIN_X * 2 - pageW - (pageW ? 0.16 : 0);
-    const fontSize = leftText.length > 170 ? 6.7 : leftText.length > 115 ? 7.5 : 8.4;
+    const fontSize = leftText.length > 170 ? 6.4 : leftText.length > 115 ? 7.2 : 8.0;
     if (leftText) {
       slide.addText(leftText, textOpts({
         x: MARGIN_X,
@@ -633,8 +831,9 @@ function addFooter(slide, preset, slideData) {
   }
 
   if (footer) {
-    const totalW = SLIDE_W - MARGIN_X * 2;
-    const hasSources = sources.length > 0;
+    const pageW = showPageNumber && pageNumber ? 0.55 : 0;
+    const totalW = SLIDE_W - MARGIN_X * 2 - pageW - (pageW ? 0.16 : 0);
+    const hasSources = provenanceParts.length > 0;
     const footerFont = hasSources
       ? (footer.length > 75 ? 7.2 : footer.length > 55 ? 8.0 : 9.0)
       : (footer.length > 105 ? 8.0 : footer.length > 75 ? 9.0 : 10);
@@ -650,9 +849,10 @@ function addFooter(slide, preset, slideData) {
       fit: 'shrink',
     }));
   }
-  if (sources.length) {
-    const sourceText = 'Sources: ' + sources.join('; ');
-    const totalW = SLIDE_W - MARGIN_X * 2;
+  if (provenanceParts.length) {
+    const sourceText = provenanceParts.join(' · ');
+    const pageW = showPageNumber && pageNumber ? 0.55 : 0;
+    const totalW = SLIDE_W - MARGIN_X * 2 - pageW - (pageW ? 0.16 : 0);
     const sourceOnly = !footer;
     const sourceX = sourceOnly ? MARGIN_X : MARGIN_X + totalW * 0.52;
     const sourceW = sourceOnly ? totalW : totalW * 0.48;
@@ -894,7 +1094,7 @@ function renderTitleLabPlate(pptx, slide, slideData, preset) {
       w: textW - 0.25,
       h: 0.82,
       fontFace: preset.font_body,
-      fontSize: hasHero ? 12.5 : 15,
+      fontSize: hasHero ? 13.5 : 16,
       color: preset.text_muted,
       fit: 'shrink',
     }));
@@ -908,13 +1108,19 @@ function renderTitleLabPlate(pptx, slide, slideData, preset) {
   }
 
   const labelY = 4.58;
-  const micro = ['Evidence', 'Readout', 'Next run'];
+  const rawChips = Array.isArray(slideData.chips)
+    ? slideData.chips
+    : (Array.isArray(slideData.evidence_chips) ? slideData.evidence_chips : ['Evidence', 'Readout', 'Next run']);
+  const micro = rawChips.map((label) => safeText(label)).filter(Boolean).slice(0, 5);
+  const chipGap = 0.13;
+  const chipRight = hasHero ? 5.58 : SLIDE_W - MARGIN_X;
+  const chipW = Math.min(1.82, (chipRight - MARGIN_X - chipGap * Math.max(0, micro.length - 1)) / Math.max(1, micro.length));
   micro.forEach((label, idx) => {
-    const x = MARGIN_X + idx * 2.15;
+    const x = MARGIN_X + idx * (chipW + chipGap);
     slide.addShape('rect', shapeOpts({
       x,
       y: labelY,
-      w: 1.82,
+      w: chipW,
       h: 0.34,
       fill: { color: idx === 0 ? dark : 'F8FAFC' },
       line: { color: idx === 0 ? dark : preset.line, width: 0.75 },
@@ -922,13 +1128,14 @@ function renderTitleLabPlate(pptx, slide, slideData, preset) {
     slide.addText(label.toUpperCase(), textOpts({
       x: x + 0.10,
       y: labelY + 0.06,
-      w: 1.62,
+      w: Math.max(0.4, chipW - 0.20),
       h: 0.22,
       fontFace: preset.font_heading,
-      fontSize: 7.5,
+      fontSize: 8.0,
       bold: true,
       color: idx === 0 ? 'FFFFFF' : dark,
       charSpacing: 1.2,
+      fit: 'shrink',
     }));
   });
 
@@ -3039,6 +3246,7 @@ function normalizeTableSpec(slideData) {
     cell_styles: get('cell_styles', null),
     row_styles: get('row_styles', null),
     header_style: get('header_style', null),
+    table_style: String(get('table_style', '') || '').trim(),
   };
 }
 
@@ -3236,6 +3444,11 @@ function renderTable(pptx, slide, slideData, preset) {
   const header = addDarkTitleBar(slide, preset, slideData.title, slideData.subtitle, slideData);
 
   const table = normalizeTableSpec(slideData);
+  const referenceTable = table.table_style === 'references' ||
+    (
+      slideData.source_footer_compaction &&
+      slideData.source_footer_compaction.generated_by === 'scripts/compact_source_footers.py'
+    );
   const headers = table.headers;
   const rows = table.rows;
   if (headers.length === 0 || rows.length === 0) {
@@ -3256,20 +3469,25 @@ function renderTable(pptx, slide, slideData, preset) {
   const usableW = SLIDE_W - MARGIN_X * 2;
   const captionLines = (table.caption ? 1 : 0) + table.footnotes.length;
   const captionGap = captionLines ? 0.12 : 0;
-  const captionH = captionLines ? Math.min(0.54, 0.18 + captionLines * 0.14) : 0;
+  const captionH = captionLines ? Math.min(referenceTable ? 0.38 : 0.54, 0.18 + captionLines * 0.14) : 0;
   const availableH = SLIDE_H - header.contentTop - 0.56 - captionH - captionGap;
-  const tableRows = buildTableRows(table, preset, { headerFontSize: 12, bodyFontSize: 10 });
+  const tableRows = buildTableRows(table, preset, {
+    headerFontSize: referenceTable ? 8.8 : 12,
+    bodyFontSize: referenceTable ? 7.8 : 10,
+  });
   const colW = tableColumnWidths(headers, table.column_weights, usableW);
   const tableY = header.contentTop + 0.2;
-  const tableH = Math.min(availableH, 0.55 + tableRows.length * 0.38);
+  const tableH = referenceTable
+    ? Math.max(0.75, availableH)
+    : Math.min(availableH, 0.55 + tableRows.length * 0.38);
   slide.addTable(tableRows, {
     x: MARGIN_X,
     y: tableY,
     w: usableW,
     h: tableH,
     colW,
-    fontSize: 11,
-    rowH: 0.42,
+    fontSize: referenceTable ? 7.8 : 11,
+    rowH: referenceTable ? Math.max(0.24, Math.min(0.42, tableH / Math.max(1, tableRows.length))) : 0.42,
   });
 
   if (captionLines) {
@@ -3283,7 +3501,7 @@ function renderTable(pptx, slide, slideData, preset) {
       tableY + tableH + captionGap,
       usableW,
       captionH,
-      { fontSize: 9 },
+      { fontSize: referenceTable ? 7.6 : 9 },
     );
   }
 
@@ -3415,7 +3633,7 @@ function renderComparison2col(pptx, slide, slideData, preset) {
   const usableW = SLIDE_W - MARGIN_X * 2;
   const colW = (usableW - gutter) / 2;
   const hasVerdict = verdict.length > 0;
-  const verdictH = hasVerdict ? (verdict.length > 80 ? 0.72 : 0.62) : 0;
+  const verdictH = hasVerdict ? (verdict.length > 80 ? 0.86 : 0.70) : 0;
   const verdictGap = hasVerdict ? 0.20 : 0;
 
   const colTop = header.contentTop + 0.20;
@@ -3458,10 +3676,10 @@ function renderComparison2col(pptx, slide, slideData, preset) {
         textOpts({
           x, y: bodyY, w: colW, h: bodyH,
           fontFace: preset.font_body,
-          fontSize: 14,
+          fontSize: 16,
           color: preset.text_primary,
           valign: 'top',
-          paraSpaceAfter: 6,
+          paraSpaceAfter: 5,
         }),
       );
     }
@@ -3500,7 +3718,7 @@ function renderComparison2col(pptx, slide, slideData, preset) {
       x: verdictX + 0.22, y: verdictY + 0.04,
       w: verdictW - 0.38, h: verdictH - 0.08,
       fontFace: preset.font_body,
-      fontSize: verdict.length > 80 ? 12 : 13,
+      fontSize: 16,
       bold: true,
       color: 'FFFFFF',
       align: 'center',
@@ -3752,7 +3970,7 @@ function renderFlow(pptx, slide, slideData, preset) {
 
   // Body region: below header, leaving space for footer/callout.
   const bodyTop = header.contentTop + 0.15;
-  const hasFooter = !!(String(slideData.footer || '').trim());
+  const hasFooter = hasFooterChrome(slideData, preset);
   const hasCallout = !!(String(slideData.summary_callout || '').trim());
   const bottomReserve = (hasFooter ? 0.40 : 0.20) + (hasCallout ? 0.75 : 0.0);
   const bodyH = SLIDE_H - bodyTop - bottomReserve;
@@ -3834,16 +4052,7 @@ function renderFlow(pptx, slide, slideData, preset) {
     });
   }
 
-  // Footer caption below diagram if provided.
-  const footer = safeText(slideData.footer);
-  if (footer) {
-    slide.addText(footer, textOpts({
-      x: MARGIN_X, y: SLIDE_H - 0.40,
-      w: SLIDE_W - MARGIN_X * 2, h: 0.30,
-      fontFace: preset.font_body, fontSize: 11,
-      color: preset.text_muted, valign: 'middle',
-    }));
-  }
+  addFooter(slide, preset, slideData);
   attachNotes(slide, slideData);
 }
 
@@ -3892,7 +4101,7 @@ function renderImageSidebar(pptx, slide, slideData, preset) {
     : 'left';
 
   const contentY = header.contentTop + 0.18;
-  const hasFooter = !!(safeText(slideData.footer) || (Array.isArray(slideData.sources) && slideData.sources.length));
+  const hasFooter = hasFooterChrome(slideData, preset);
   const caption = safeText(slideData.caption);
   const captionH = caption ? (caption.length > 95 ? 0.28 : 0.22) : 0;
   const footerReserve = hasFooter ? 0.55 : 0.18;
@@ -3959,9 +4168,13 @@ function renderImageSidebar(pptx, slide, slideData, preset) {
     }));
     if (lines.length) {
       const bodyText = lines.join('\n');
+      const requestedBodyFont = Number(slideData.sidebar_body_font_size || 12);
+      const bodyFontSize = Number.isFinite(requestedBodyFont) && requestedBodyFont > 0
+        ? requestedBodyFont
+        : 12;
       const bodyBoxH = Math.min(
-        Math.max(0.35, sectionH - 0.32),
-        Math.max(0.36, estimateTextHeight(bodyText, 8.8, sidebarW - 0.14, 1.25) + 0.14),
+        Math.max(0.50, sectionH - 0.32),
+        Math.max(0.50, estimateTextHeight(bodyText, bodyFontSize, sidebarW - 0.14, 1.25) + 0.18),
       );
       slide.addText(lines.map((line, i) => ({
         text: line,
@@ -3975,7 +4188,7 @@ function renderImageSidebar(pptx, slide, slideData, preset) {
         w: sidebarW - 0.14,
         h: bodyBoxH,
         fontFace: preset.font_body,
-        fontSize: 8.8,
+        fontSize: bodyFontSize,
         color: preset.text,
         valign: 'top',
         paraSpaceAfter: 3,
@@ -4033,7 +4246,7 @@ function renderScientificFigure(pptx, slide, slideData, preset) {
 
   const caption = safeText(slideData.caption || slideData.figure_caption);
   const interpretation = safeText(slideData.interpretation || slideData.takeaway);
-  const hasFooter = !!(safeText(slideData.footer) || (Array.isArray(slideData.sources) && slideData.sources.length));
+  const hasFooter = hasFooterChrome(slideData, preset);
   const bottomText = [caption, interpretation].filter(Boolean).join('\n');
   const bottomReserve = bottomText ? 0.62 : 0.18;
   const footerReserve = hasFooter ? 0.50 : 0.12;
@@ -4119,6 +4332,298 @@ function renderScientificFigure(pptx, slide, slideData, preset) {
       fontFace: preset.font_body,
       fontSize: 8.2,
       color: preset.text || preset.text_primary,
+      fit: 'shrink',
+    }));
+  }
+
+  addFooter(slide, preset, slideData);
+  attachNotes(slide, slideData);
+}
+
+function chartTypeForPayload(pptx, payload) {
+  const types = (pptx && pptx.ChartType) || {};
+  const raw = String((payload && payload.type) || 'bar').trim().toLowerCase();
+  if (raw === 'line') return types.line || 'line';
+  if (raw === 'pie' || raw === 'doughnut') return types.pie || 'pie';
+  return types.bar || 'bar';
+}
+
+function chartColors(payload, preset) {
+  const colors = [];
+  const options = payload && payload.options && typeof payload.options === 'object'
+    ? payload.options
+    : {};
+  if (Array.isArray(options.chartColors)) {
+    options.chartColors.forEach((value) => {
+      const color = cleanHex(value, '');
+      if (color && !colors.includes(color)) colors.push(color);
+    });
+  }
+  ['color1', 'color2', 'color3', 'color4'].forEach((key) => {
+    const color = cleanHex(payload && payload[key], '');
+    if (color && !colors.includes(color)) colors.push(color);
+  });
+  [preset.accent_primary, preset.accent_secondary, preset.text_muted, preset.bg_dark].forEach((value) => {
+    const color = cleanHex(value, '');
+    if (color && !colors.includes(color)) colors.push(color);
+  });
+  return colors.length ? colors : ['0B6B78', '1493A4', '64748B'];
+}
+
+function renderChartError(slide, preset, message, x, y, w, h) {
+  const bannerH = Math.min(0.68, Math.max(0.46, h * 0.22));
+  const bannerY = y + Math.max(0.10, (h - bannerH) / 2);
+  slide.addShape('rect', shapeOpts({
+    x: x + 0.20,
+    y: bannerY,
+    w: Math.max(1.0, w - 0.40),
+    h: bannerH,
+    fill: { color: 'B91C1C' },
+    line: { color: '7F1D1D', width: 1 },
+  }));
+  slide.addText(truncate(message || 'Chart data malformed - see QA report', 110), textOpts({
+    x: x + 0.32,
+    y: bannerY + 0.08,
+    w: Math.max(0.8, w - 0.64),
+    h: bannerH - 0.16,
+    fontFace: preset.font_heading,
+    fontSize: 12.5,
+    bold: true,
+    color: 'FFFFFF',
+    align: 'center',
+    valign: 'middle',
+    fit: 'shrink',
+  }));
+}
+
+function renderChartFactCards(slide, preset, facts, x, y, w, h) {
+  if (!facts.length) return;
+  const gap = 0.30;
+  const cols = Math.min(3, facts.length);
+  const cardW = (w - gap * (cols - 1)) / cols;
+  facts.slice(0, cols).forEach((fact, idx) => {
+    const cardX = x + idx * (cardW + gap);
+    const accent = preset[fact.accent || (idx % 2 ? 'accent_secondary' : 'accent_primary')] || preset.accent_primary;
+    slide.addShape('rect', shapeOpts({
+      x: cardX,
+      y,
+      w: cardW,
+      h,
+      fill: { color: preset.surface || 'FFFFFF' },
+      line: { color: preset.line || 'CBD5E1', width: 0.55 },
+    }));
+    slide.addShape('rect', shapeOpts({
+      x: cardX,
+      y,
+      w: 0.055,
+      h,
+      fill: { color: accent },
+      line: { color: accent, width: 0 },
+    }));
+    if (fact.value) {
+      slide.addText(truncate(fact.value, 12), textOpts({
+      x: cardX + 0.15,
+      y: y + 0.11,
+      w: cardW - 0.28,
+      h: 0.36,
+      fontFace: preset.font_heading,
+      fontSize: 16,
+        bold: true,
+        color: accent,
+        fit: 'shrink',
+      }));
+    }
+    slide.addText(truncate(fact.label || fact.caption || '', 54), textOpts({
+      x: cardX + 0.15,
+      y: y + (fact.value ? 0.56 : 0.13),
+      w: cardW - 0.28,
+      h: 0.26,
+      fontFace: preset.font_heading,
+      fontSize: 8.6,
+      bold: true,
+      color: preset.text || preset.text_primary || '0F172A',
+      fit: 'shrink',
+    }));
+    if (fact.caption && fact.value) {
+      slide.addText(truncate(fact.caption, 72), textOpts({
+        x: cardX + 0.15,
+        y: y + 0.96,
+        w: cardW - 0.28,
+        h: Math.max(0.16, h - 1.02),
+        fontFace: preset.font_body,
+        fontSize: 7.4,
+        color: preset.text_muted || '64748B',
+        fit: 'shrink',
+      }));
+    }
+  });
+}
+
+function renderChartFactRail(slide, preset, facts, x, y, w, h) {
+  if (!facts.length) return;
+  const gap = 0.16;
+  const rows = Math.min(3, facts.length);
+  const availableCardH = (h - gap * (rows - 1)) / rows;
+  const cardH = Math.min(1.24, Math.max(1.02, availableCardH));
+  facts.slice(0, rows).forEach((fact, idx) => {
+    const cardY = y + idx * (cardH + gap);
+    const accent = preset[fact.accent || (idx % 2 ? 'accent_secondary' : 'accent_primary')] || preset.accent_primary;
+    slide.addShape('rect', shapeOpts({
+      x,
+      y: cardY,
+      w,
+      h: cardH,
+      fill: { color: preset.surface || 'FFFFFF' },
+      line: { color: preset.line || 'CBD5E1', width: 0.55 },
+    }));
+    slide.addShape('rect', shapeOpts({
+      x,
+      y: cardY,
+      w: 0.055,
+      h: cardH,
+      fill: { color: accent },
+      line: { color: accent, width: 0 },
+    }));
+    if (fact.value) {
+      slide.addText(truncate(fact.value, 12), textOpts({
+        x: x + 0.16,
+        y: cardY + 0.11,
+        w: w - 0.32,
+        h: 0.30,
+        fontFace: preset.font_heading,
+        fontSize: fact.value.length > 8 ? 13 : 15,
+        bold: true,
+        color: accent,
+        fit: 'shrink',
+      }));
+    }
+    slide.addText(truncate(fact.label || fact.caption || '', 62), textOpts({
+      x: x + 0.16,
+      y: cardY + (fact.value ? 0.52 : 0.14),
+      w: w - 0.32,
+      h: 0.22,
+      fontFace: preset.font_heading,
+      fontSize: 8.2,
+      bold: true,
+      color: preset.text || preset.text_primary || '0F172A',
+      fit: 'shrink',
+    }));
+    if (fact.caption && fact.value) {
+      slide.addText(truncate(fact.caption, 72), textOpts({
+        x: x + 0.16,
+        y: cardY + 0.86,
+        w: w - 0.32,
+        h: Math.max(0.16, cardH - 0.94),
+        fontFace: preset.font_body,
+        fontSize: 7.2,
+        color: preset.text_muted || '64748B',
+        fit: 'shrink',
+      }));
+    }
+  });
+}
+
+function renderChart(pptx, slide, slideData, preset) {
+  paintBackground(slide, preset.bg);
+  const payload = slideData.__chartPayload || (slideData.chart && typeof slideData.chart === 'object' ? slideData.chart : {});
+  const header = addDarkTitleBar(slide, preset, slideData.title || payload.title, slideData.subtitle || payload.subtitle, slideData);
+  const facts = normalizeFacts(slideData.facts || slideData.stats || payload.facts).slice(0, 3);
+  const note = safeText(slideData.message || slideData.caption || payload.notes);
+  const rawTreatment = String(slideData.chart_treatment || preset.chart_treatment || 'standard').trim().toLowerCase();
+  const chartTreatment = ['standard', 'facts-below', 'facts-right', 'minimal'].includes(rawTreatment)
+    ? rawTreatment
+    : 'standard';
+  const hasFooter = hasFooterChrome(slideData, preset);
+  const contentY = header.contentTop + 0.22;
+  const usableW = SLIDE_W - MARGIN_X * 2;
+  const footerReserve = hasFooter ? 0.56 : 0.20;
+  const factsRight = chartTreatment === 'facts-right' && facts.length > 0;
+  const showFactCards = facts.length > 0 && chartTreatment !== 'minimal';
+  const noteH = note && (!facts.length || chartTreatment === 'minimal') ? 0.30 : 0;
+  const factH = showFactCards && !factsRight ? 1.22 : 0;
+  const gap = 0.20;
+  const chartH = Math.max(2.15, SLIDE_H - contentY - footerReserve - noteH - factH - (showFactCards && !factsRight ? gap : 0) - (note ? 0.10 : 0));
+  const chartY = contentY;
+  const railW = factsRight ? 2.15 : 0;
+  const chartW = factsRight ? usableW - railW - gap : usableW;
+
+  slide.addShape('rect', shapeOpts({
+    x: MARGIN_X,
+    y: chartY,
+    w: chartW,
+    h: chartH,
+    fill: { color: preset.surface || 'FFFFFF' },
+    line: {
+      color: preset.line || 'CBD5E1',
+      width: chartTreatment === 'minimal' ? 0.35 : 0.65,
+      transparency: chartTreatment === 'minimal' ? 45 : 0,
+    },
+  }));
+
+  if (payload.__error__ || !Array.isArray(payload.series) || !payload.series.length) {
+    renderChartError(
+      slide,
+      preset,
+      payload.__error__ || 'Provide chart data as inline chart JSON or a staged chart:<alias> file.',
+      MARGIN_X,
+      chartY,
+      chartW,
+      chartH,
+    );
+  } else {
+    const series = payload.series.map((item, idx) => ({
+      name: safeText(item.name, `Series ${idx + 1}`),
+      labels: Array.isArray(item.labels) ? item.labels.map((label) => safeText(label)) : [],
+      values: Array.isArray(item.values) ? item.values.map((value) => Number(value)) : [],
+    }));
+    const options = payload.options && typeof payload.options === 'object' ? payload.options : {};
+    const type = chartTypeForPayload(pptx, payload);
+    const chartOptions = {
+      x: MARGIN_X + 0.18,
+      y: chartY + 0.14,
+      w: chartW - 0.36,
+      h: chartH - 0.28,
+      showLegend: Boolean(options.showLegend ?? (series.length > 1 || String(payload.type).toLowerCase() === 'pie')),
+      legendPos: safeText(options.legendPos, 'r'),
+      chartColors: chartColors(payload, preset),
+      catAxisTitle: safeText(options.catAxisTitle),
+      valAxisTitle: safeText(options.valAxisTitle),
+      catAxisLabelFontFace: preset.font_body,
+      valAxisLabelFontFace: preset.font_body,
+      catAxisLabelFontSize: Number(options.catAxisLabelFontSize || 8),
+      valAxisLabelFontSize: Number(options.valAxisLabelFontSize || 8),
+      valGridLine: { color: cleanHex(preset.line, 'CBD5E1'), transparency: 40, size: 0.5 },
+      catGridLine: { style: 'none' },
+      showValue: Boolean(options.showValue),
+      showTitle: false,
+      showCatName: false,
+      showSerName: false,
+    };
+    if (String(payload.type || '').toLowerCase() === 'bar' && safeText(options.barDir)) {
+      chartOptions.barDir = safeText(options.barDir);
+    } else if (String(payload.type || '').toLowerCase() === 'bar') {
+      chartOptions.barDir = 'col';
+    }
+    slide.addChart(type, series, chartOptions);
+  }
+
+  let cursorY = chartY + chartH + gap;
+  if (showFactCards && factsRight) {
+    renderChartFactRail(slide, preset, facts, MARGIN_X + chartW + gap, chartY, railW, chartH);
+  } else if (showFactCards) {
+    renderChartFactCards(slide, preset, facts, MARGIN_X, cursorY, usableW, factH);
+    cursorY += factH + 0.10;
+  }
+  if (note && (!facts.length || chartTreatment === 'minimal')) {
+    slide.addText(note, textOpts({
+      x: MARGIN_X,
+      y: Math.min(cursorY, SLIDE_H - footerReserve - noteH),
+      w: usableW,
+      h: noteH,
+      fontFace: preset.font_body,
+      fontSize: 8.4,
+      italic: true,
+      color: preset.text_muted || '64748B',
       fit: 'shrink',
     }));
   }
@@ -4217,7 +4722,7 @@ function renderGeneratedImage(pptx, slide, slideData, preset) {
 function addSummaryCallout(pptx, slide, slideData, preset) {
   const text = String(slideData.summary_callout || slideData.key_summary || slideData.takeaway || '').trim();
   if (!text) return;
-  const hasFooter = !!(String(slideData.footer || '').trim());
+  const hasFooter = hasFooterChrome(slideData, preset);
   const mode = String(slideData.summary_callout_mode || preset.summary_callout_mode || '').trim().toLowerCase();
   const labBox = mode === 'lab-box';
   const footerReserve = hasFooter ? 0.40 : 0.36;
@@ -4302,6 +4807,7 @@ module.exports = {
   renderComparison2col,
   renderMatrix,
   renderFlow,
+  renderChart,
   renderImageSidebar,
   renderScientificFigure,
   renderGeneratedImage,
