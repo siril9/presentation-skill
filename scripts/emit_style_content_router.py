@@ -300,37 +300,24 @@ def _compact_large_corpus_router_context(payload: dict[str, Any]) -> dict[str, A
         return payload
     summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
     families: list[dict[str, Any]] = []
-    for item in payload.get("selected_family_summaries", [])[:3]:
+    for item in payload.get("selected_family_summaries", [])[:2]:
         if not isinstance(item, dict):
             continue
         descriptor = item.get("descriptor") if isinstance(item.get("descriptor"), dict) else {}
-        sample_sources = item.get("sample_sources") if isinstance(item.get("sample_sources"), list) else []
         families.append(
             {
                 "style_family": item.get("style_family"),
                 "record_count": item.get("record_count"),
-                "layout_tags": (descriptor.get("layout_tags") if isinstance(descriptor.get("layout_tags"), list) else [])[:4],
+                "layout_tags": (descriptor.get("layout_tags") if isinstance(descriptor.get("layout_tags"), list) else [])[:2],
                 "content_treatments": (
                     descriptor.get("content_treatments")
                     if isinstance(descriptor.get("content_treatments"), list)
                     else []
-                )[:4],
-                "top_deck_systems": item.get("top_deck_systems"),
-                "top_content_treatments": item.get("top_content_treatments"),
-                "sample_sources": [
-                    {
-                        "deck_id": sample.get("deck_id"),
-                        "deck_system": sample.get("deck_system"),
-                        "repository": sample.get("repository"),
-                        "path": sample.get("path"),
-                    }
-                    for sample in sample_sources[:2]
-                    if isinstance(sample, dict)
-                ],
+                )[:2],
             }
         )
     samples: list[dict[str, Any]] = []
-    for record in payload.get("sample_records", [])[:4]:
+    for record in payload.get("sample_records", [])[:2]:
         if not isinstance(record, dict):
             continue
         samples.append(
@@ -340,27 +327,24 @@ def _compact_large_corpus_router_context(payload: dict[str, Any]) -> dict[str, A
                 "primary_style_family": record.get("primary_style_family"),
                 "descriptor_tags": (
                     record.get("descriptor_tags") if isinstance(record.get("descriptor_tags"), list) else []
-                )[:5],
-                "content_treatments": (
-                    record.get("content_treatments") if isinstance(record.get("content_treatments"), list) else []
-                )[:5],
-                "source_url": record.get("source_url"),
+                )[:3],
             }
         )
     return {
         "catalog_version": payload.get("catalog_version"),
         "available": True,
-        "policy": payload.get("policy"),
+        "storage_rule": (
+            payload.get("policy", {}).get("storage_rule")
+            if isinstance(payload.get("policy"), dict)
+            else None
+        ),
         "summary": {
             "record_count": summary.get("record_count"),
             "unique_repository_count": summary.get("unique_repository_count"),
             "ai_agent_signal_count": summary.get("ai_agent_signal_count"),
-            "style_family_counts": summary.get("style_family_counts"),
-            "deck_system_counts": summary.get("deck_system_counts"),
         },
         "selected_family_summaries": families,
         "sample_records": samples,
-        "mixing_rule": payload.get("mixing_rule"),
     }
 
 
@@ -498,6 +482,7 @@ def _style_reference_match_context(text: str, *, limit: int = 22000) -> str:
                 "evidence; it is still descriptor-only and never permits copying source decks."
             ),
             "style_inspiration_corpus": inspiration_context,
+            "large_style_corpus": large_corpus_context,
             "preset_contact_collection_contract": {
                 "collection_version": "style_reference_preset_contact_collection_v1",
                 "required_use_cases": ["overview", "data_evidence", "decision_sources"],
@@ -509,7 +494,6 @@ def _style_reference_match_context(text: str, *, limit: int = 22000) -> str:
             },
             "matches": compact_matches,
             "mix_plan": compact_mix,
-            "large_style_corpus": large_corpus_context,
         },
         limit,
     )

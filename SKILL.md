@@ -134,6 +134,28 @@ generator, slides generator, deck builder, presentation generator.
 - `scripts/run_large_style_corpus_smoke.py`: focused fast smoke proving the
   large-corpus source manifest, descriptor schema, family coverage, compact
   context, and digest writer stay usable without network access.
+- `scripts/build_large_style_corpus_contact_sheets.py`: publish-safe visual
+  contact sheets generated from large-corpus descriptors. It draws synthetic
+  family and source-record cards from catalog metadata only; it does not fetch,
+  render, or screenshot source decks.
+- `scripts/run_large_style_corpus_leverage_smoke.py`: focused smoke proving
+  the 2,000-record corpus is actually used by router prompts and contact-sheet
+  evidence while preserving curated style-reference prompt tokens.
+- `scripts/design_catalog_selector.py`: reusable v0.5 design-catalog selection
+  layer that maps prompts to topic cases, corpus families, treatment DNA,
+  generated data recipes, and reproducible release-evidence scope.
+- `scripts/build_random_topic_comparison_decks.py`: release-evidence builder
+  for eight random synthetic topics, each built as a baseline deck and a
+  descriptor-corpus-guided deck across eight visibly different corpus families,
+  plus rendered contact sheets, a gallery deck, generated data/chart/table
+  artifacts, manifest metrics, structural-delta signatures, and concise release
+  notes.
+- `scripts/run_random_topic_comparison_smoke.py`: reproducibility smoke that
+  rebuilds the random-topic comparison evidence in a temporary directory and
+  fails if the 16 decks, gallery, manifest, release notes, nonblank contact
+  sheets, corpus-context metrics, eight-family coverage, three generated data
+  examples, structural QA gates, zero visual/readability warnings, or
+  baseline-vs-corpus structural deltas are missing.
 - `scripts/build_style_reference_gallery.py`: generated reference-gallery
   decks that turn the synthetic style catalog into actual title, dashboard,
   comparison, chart, table, figure, decision, and references slides without
@@ -966,7 +988,12 @@ When changing prompt-to-style routing, style/content scout output shape, or
 router subagent guidance, run `npm run check:style-router`.
 When changing the large public deck corpus source manifest, descriptor schema,
 overlap balancing, compact LLM context, or digest writer, run
-`npm run check:large-style-corpus`.
+`npm run check:large-style-corpus`. When changing corpus contact sheets or
+router leverage evidence, run `npm run check:large-style-corpus-leverage`.
+When changing design-catalog selection, random-topic corpus comparison decks,
+release-evidence manifests, generated data examples, or baseline-vs-corpus
+contact sheets, run `npm run check:design-catalog` and
+`npm run check:random-topic-comparison`.
 When changing style pools, header variants, or seed handling, run
 `npm run check:style-mix` for a fast init/validate/build/readiness smoke plus
 lab-report header-variant gallery build/QA coverage before the full

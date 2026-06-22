@@ -3529,7 +3529,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
       w: Math.max(0.5, w - labelW - 0.44),
       h: Math.max(0.26, h - 0.26),
       fontFace: preset.font_body,
-      fontSize: 9.0,
+      fontSize: 12,
       color: dark ? 'FFFFFF' : (preset.text || preset.text_primary),
       fit: 'shrink',
       valign: 'middle',
@@ -3550,11 +3550,11 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
   }));
   slide.addText(text, textOpts({
     x: x + 0.18,
-    y: y + 0.52,
+    y: y + 0.48,
     w: w - 0.34,
-    h: Math.max(0.35, h - 0.68),
+    h: Math.max(0.50, h - 0.56),
     fontFace: preset.font_body,
-    fontSize: dark ? 10.2 : 9.8,
+    fontSize: 12,
     color: dark ? 'FFFFFF' : (preset.text || preset.text_primary),
     fit: 'shrink',
     valign: 'top',
@@ -3674,7 +3674,7 @@ function renderTable(pptx, slide, slideData, preset) {
   const tableX = journalGrid ? MARGIN_X + usableW * 0.06 : MARGIN_X;
   const tableW = journalGrid ? usableW * 0.88 : usableW - sidecarW - gap;
   const colW = tableColumnWidths(headers, table.column_weights, tableW);
-  const stripH = decisionStrip ? 0.66 : 0;
+  const stripH = decisionStrip ? 1.10 : 0;
   const tableAvailableH = Math.max(0.75, availableH - stripH - (decisionStrip ? 0.14 : 0));
   const rowH = treatmentOpts.rowH || (referenceTable ? Math.max(0.24, Math.min(0.42, tableAvailableH / Math.max(1, tableRows.length))) : 0.42);
   const tableH = referenceTable
@@ -3766,7 +3766,7 @@ function renderLabRunResults(pptx, slide, slideData, preset) {
 
   const usableW = SLIDE_W - MARGIN_X * 2;
   const callout = String(slideData.interpretation || slideData.takeaway || '').trim();
-  const calloutReserve = callout ? 0.50 : 0;
+  const calloutReserve = callout ? 0.68 : 0;
   const usableH = SLIDE_H - header.contentTop - FOOTER_H - 0.34 - calloutReserve;
   const topY = header.contentTop + 0.18;
   const gutter = 0.24;
@@ -3828,19 +3828,19 @@ function renderLabRunResults(pptx, slide, slideData, preset) {
   if (callout) {
     slide.addShape('rect', shapeOpts({
       x: MARGIN_X,
-      y: SLIDE_H - FOOTER_H - 0.42,
+      y: SLIDE_H - FOOTER_H - 0.52,
       w: usableW,
-      h: 0.30,
+      h: 0.42,
       fill: { color: preset.surface || 'FFFFFF' },
       line: { color: preset.line, width: 0.5 },
     }));
     slide.addText(callout, textOpts({
       x: MARGIN_X + 0.12,
-      y: SLIDE_H - FOOTER_H - 0.36,
+      y: SLIDE_H - FOOTER_H - 0.43,
       w: usableW - 0.24,
-      h: 0.22,
+      h: 0.32,
       fontFace: preset.font_body,
-      fontSize: 8.4,
+      fontSize: 12,
       color: preset.text || preset.text_primary,
       bold: true,
       fit: 'shrink',

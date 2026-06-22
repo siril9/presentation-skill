@@ -143,6 +143,32 @@ requirement for normal deck-generation tasks.
 
 The repo includes release evidence galleries for major style-system updates.
 
+The v0.5.0 random-topic corpus comparison evidence is under
+`decks/random-topic-corpus-comparison-v0.5.0-20260622/`. It builds eight fresh
+synthetic topics two ways: a normal baseline deck and a descriptor-corpus-guided
+deck. The manifest records design-catalog selections, 2,000-record corpus
+context use, generated data/chart/table artifacts for multiple examples, QA
+totals, structural sequence signatures, and baseline-vs-corpus deltas so the
+evidence can prove the corpus is changing slide grammar, not only colors or
+title rules.
+
+Useful files:
+
+- `decks/random-topic-corpus-comparison-v0.5.0-20260622/RELEASE_NOTES_v0.5.0.md`
+- `decks/random-topic-corpus-comparison-v0.5.0-20260622/manifest.json`
+- `decks/random-topic-corpus-comparison-v0.5.0-20260622/contact_sheets/`
+- `decks/random-topic-corpus-comparison-v0.5.0-20260622/comparison-gallery/build/random-topic-corpus-comparison-gallery.pptx`
+- `scripts/design_catalog_selector.py`
+- `scripts/build_random_topic_comparison_decks.py`
+- `scripts/run_random_topic_comparison_smoke.py`
+
+Rebuild and verify it with:
+
+```bash
+npm run check:design-catalog
+npm run check:random-topic-comparison
+```
+
 The v0.3.0 large public deck corpus lives in `references/`:
 
 - `references/large_style_corpus_sources.json`
