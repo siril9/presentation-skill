@@ -166,6 +166,7 @@ def _assert_required_packet(packet: dict[str, Any], failures: list[dict[str, Any
         "agent_kickoff_brief",
         "execution_plan",
         "application_contract",
+        "atom_workflow_context",
         "acceptance_checklist",
         "main_agent_kickoff_prompt",
         "subagent_prompt",
@@ -230,6 +231,47 @@ def _assert_required_packet(packet: dict[str, Any], failures: list[dict[str, Any
         failures.append({"step": "deck_start_packet", "reason": "bad_route_decision_ledger"})
     elif route_ledger.get("source_inventory_summary", {}).get("data_file_count", 0) < 1:
         failures.append({"step": "deck_start_packet", "reason": "route_ledger_missing_source_inventory"})
+    active_routes = _active_route_ids(route_ledger if isinstance(route_ledger, dict) else {})
+    if "atom_composition" not in active_routes:
+        failures.append(
+            {
+                "step": "deck_start_packet",
+                "reason": "atom_composition_route_not_active",
+                "routes": active_routes,
+            }
+        )
+    atom_context = (
+        packet.get("atom_workflow_context")
+        if isinstance(packet.get("atom_workflow_context"), dict)
+        else {}
+    )
+    if (
+        atom_context.get("schema_version") != "normal_workflow_atom_context_v1"
+        or atom_context.get("route_id") != "atom_composition"
+        or not isinstance(atom_context.get("style_atom_composition"), dict)
+        or not atom_context.get("style_atom_composition")
+        or not isinstance(atom_context.get("preferred_variants"), list)
+        or not atom_context.get("preferred_variants")
+    ):
+        failures.append(
+            {
+                "step": "deck_start_packet",
+                "reason": "bad_atom_workflow_context",
+                "atom_workflow_context": atom_context,
+            }
+        )
+    strict_prompt = str(atom_context.get("strict_json_prompt") or "")
+    strict_instruction = str(atom_context.get("strict_json_instruction") or "")
+    if (
+        "Use strict JSON only" not in strict_prompt
+        and "Use strict JSON only" not in strict_instruction
+    ) or not str(atom_context.get("target_family") or "").strip():
+        failures.append(
+            {
+                "step": "deck_start_packet",
+                "reason": "atom_context_missing_strict_json_prompt",
+            }
+        )
     quality_contract = packet.get("slide_quality_contract")
     if not isinstance(quality_contract, dict) or quality_contract.get("contract_version") != "slide_quality_contract_v1":
         failures.append({"step": "deck_start_packet", "reason": "bad_slide_quality_contract"})
@@ -445,6 +487,10 @@ def _assert_required_packet(packet: dict[str, Any], failures: list[dict[str, Any
         "deck_reproducibility_contract_v1",
         "slide_quality_contract_v1",
         "data_artifacts",
+        "atom_composition",
+        "normal_workflow_atom_context_v1",
+        "choice_resolution.atom_composition",
+        "style_atom_composition",
         "command_ladder",
     ):
         if needle not in prompt_text:
@@ -465,6 +511,19 @@ def _assert_required_packet(packet: dict[str, Any], failures: list[dict[str, Any
                 "step": "deck_start_packet",
                 "reason": "application_contract_missing_slide_quality_contract",
                 "slide_quality_contract": app_quality,
+            }
+        )
+    app_atom = (
+        app_contract.get("atom_workflow_context")
+        if isinstance(app_contract.get("atom_workflow_context"), dict)
+        else {}
+    )
+    if app_atom.get("schema_version") != "normal_workflow_atom_context_v1":
+        failures.append(
+            {
+                "step": "deck_start_packet",
+                "reason": "application_contract_missing_atom_context",
+                "atom_workflow_context": app_atom,
             }
         )
     if len(str(packet.get("subagent_prompt") or "")) < 1000:
@@ -544,6 +603,11 @@ def _assert_style_reference_starter_workspace(workspace: Path, failures: list[di
         return
     metadata = outline.get("metadata") if isinstance(outline.get("metadata"), dict) else {}
     style_meta = metadata.get("style_reference") if isinstance(metadata.get("style_reference"), dict) else {}
+    outline_atom = (
+        metadata.get("style_atom_context")
+        if isinstance(metadata.get("style_atom_context"), dict)
+        else {}
+    )
     if (
         metadata.get("starter_outline_version") != "style_reference_starter_outline_v1"
         or metadata.get("starter_outline_status") != "synthetic_scaffold_replace_before_delivery"
@@ -555,6 +619,18 @@ def _assert_style_reference_starter_workspace(workspace: Path, failures: list[di
                 "step": "init_deck_workspace",
                 "reason": "style_reference_starter_metadata_missing",
                 "metadata": metadata,
+            }
+        )
+    if (
+        outline_atom.get("schema_version") != "normal_workflow_atom_context_v1"
+        or outline_atom.get("route_id") != "atom_composition"
+        or not outline_atom.get("preferred_variants")
+    ):
+        failures.append(
+            {
+                "step": "init_deck_workspace",
+                "reason": "outline_atom_context_missing",
+                "style_atom_context": outline_atom,
             }
         )
 
@@ -637,6 +713,16 @@ def _assert_style_reference_starter_workspace(workspace: Path, failures: list[di
         if isinstance(structure.get("style_reference_layout_playbook"), dict)
         else {}
     )
+    design_atom = (
+        style_system.get("style_atom_context")
+        if isinstance(style_system.get("style_atom_context"), dict)
+        else {}
+    )
+    atom_composition = (
+        style_system.get("style_atom_composition")
+        if isinstance(style_system.get("style_atom_composition"), dict)
+        else {}
+    )
     if (
         direct_reference.get("catalog_version") != "style_reference_catalog_v1"
         or direct_reference.get("reference_id") != "ref-clean-assay-report"
@@ -652,10 +738,32 @@ def _assert_style_reference_starter_workspace(workspace: Path, failures: list[di
                 "structure_playbook": structure_playbook,
             }
         )
+    if (
+        design_atom.get("schema_version") != "normal_workflow_atom_context_v1"
+        or design_atom.get("route_id") != "atom_composition"
+        or not atom_composition
+        or not isinstance(style_system.get("style_atom_preferred_variants"), list)
+        or not style_system.get("style_atom_preferred_variants")
+        or not isinstance(style_system.get("style_atom_narrative_arc"), list)
+        or not style_system.get("style_atom_narrative_arc")
+    ):
+        failures.append(
+            {
+                "step": "design_brief",
+                "reason": "style_atom_context_missing",
+                "style_atom_context": design_atom,
+                "style_atom_composition": atom_composition,
+            }
+        )
 
     contract_reference = (
         style_contract.get("style_reference")
         if isinstance(style_contract, dict) and isinstance(style_contract.get("style_reference"), dict)
+        else {}
+    )
+    contract_atom = (
+        style_contract.get("style_atom_context")
+        if isinstance(style_contract, dict) and isinstance(style_contract.get("style_atom_context"), dict)
         else {}
     )
     if (
@@ -667,6 +775,14 @@ def _assert_style_reference_starter_workspace(workspace: Path, failures: list[di
                 "step": "style_contract",
                 "reason": "style_reference_starter_contract_missing",
                 "style_reference": contract_reference,
+            }
+        )
+    if contract_atom.get("schema_version") != "normal_workflow_atom_context_v1":
+        failures.append(
+            {
+                "step": "style_contract",
+                "reason": "style_atom_contract_missing",
+                "style_atom_context": contract_atom,
             }
         )
     if "Starter scaffold: `style_reference_starter_outline_v1`" not in notes:
@@ -707,6 +823,16 @@ def _assert_application_state(
     choice_seed = (
         design.get("choice_resolution_seed")
         if isinstance(design.get("choice_resolution_seed"), dict)
+        else {}
+    )
+    style_atom_context = (
+        style_system.get("style_atom_context")
+        if isinstance(style_system.get("style_atom_context"), dict)
+        else {}
+    )
+    style_atom_composition = (
+        style_system.get("style_atom_composition")
+        if isinstance(style_system.get("style_atom_composition"), dict)
         else {}
     )
 
@@ -790,6 +916,38 @@ def _assert_application_state(
         failures.append({"step": "design_brief", "reason": "choice_resolution_seed_missing"})
     if choice_seed.get("stable_prompt_id") != expected_seed:
         failures.append({"step": "design_brief", "reason": "choice_resolution_seed_wrong_seed"})
+    atom_seed = (
+        choice_seed.get("atom_composition")
+        if isinstance(choice_seed.get("atom_composition"), dict)
+        else {}
+    )
+    if (
+        atom_seed.get("route_id") != "atom_composition"
+        or not isinstance(atom_seed.get("style_atom_composition"), dict)
+        or not atom_seed.get("style_atom_composition")
+    ):
+        failures.append(
+            {
+                "step": "design_brief",
+                "reason": "choice_resolution_seed_missing_atom_composition",
+                "atom_composition": atom_seed,
+            }
+        )
+    if (
+        style_atom_context.get("schema_version") != "normal_workflow_atom_context_v1"
+        or style_atom_context.get("route_id") != "atom_composition"
+        or not style_atom_composition
+        or not isinstance(style_system.get("style_atom_preferred_variants"), list)
+        or not style_system.get("style_atom_preferred_variants")
+    ):
+        failures.append(
+            {
+                "step": "design_brief",
+                "reason": "style_atom_context_not_preserved_after_intake",
+                "style_atom_context": style_atom_context,
+                "style_atom_composition": style_atom_composition,
+            }
+        )
     seed_inventory = (
         choice_seed.get("workspace_source_inventory")
         if isinstance(choice_seed.get("workspace_source_inventory"), dict)

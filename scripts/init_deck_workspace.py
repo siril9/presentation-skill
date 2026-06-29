@@ -18,6 +18,7 @@ from design_tokens import PRESETS
 from emit_deck_start_packet import build_packet
 from style_reference_catalog import LAYOUT_PLAYBOOK_VERSION, preset_style_reference
 from style_treatment_profiles import preset_treatment_profile
+from workflow_atom_context import build_workflow_atom_context, compact_workflow_atom_context
 
 
 STYLE_REFERENCE_ASSETS = {
@@ -566,13 +567,31 @@ def _style_reference_starter_slides(style_preset: str, *, start_index: int = 3, 
     return slides
 
 
-def _starter_outline(title: str, style_preset: str, font_pair: str | None, palette_key: str | None) -> dict[str, Any]:
+def _starter_outline(
+    title: str,
+    style_preset: str,
+    font_pair: str | None,
+    palette_key: str | None,
+    *,
+    user_prompt: str = "",
+) -> dict[str, Any]:
     reference = preset_style_reference(style_preset)
     playbook = _story_dict(reference.get("layout_playbook"))
+    atom_context = compact_workflow_atom_context(
+        build_workflow_atom_context(
+            user_prompt=user_prompt or title,
+            style_preset=style_preset,
+            slide_count=8,
+            include_prompt=False,
+        )
+    )
     deck_style: dict[str, Any] = {
         "visual_density": "medium",
         "emoji_mode": "none",
     }
+    for key, value in (atom_context.get("deck_style_delta") or {}).items():
+        if key in {"chart_treatment", "table_treatment", "header_mode", "footer_mode", "visual_density"}:
+            deck_style[key] = value
     if font_pair:
         deck_style["font_pair"] = font_pair
     if palette_key:
@@ -591,6 +610,7 @@ def _starter_outline(title: str, style_preset: str, font_pair: str | None, palet
                 "playbook_version": playbook.get("playbook_version"),
                 "style_metric_profile": reference.get("style_metric_profile"),
             },
+            "style_atom_context": atom_context,
         },
         "slides": [
             {
@@ -1047,11 +1067,29 @@ def _content_plan_stub(title: str, slide_refs: list[dict[str, str]] | None = Non
     }
 
 
-def _design_brief_stub(title: str, style_preset: str) -> dict[str, Any]:
+def _design_brief_stub(title: str, style_preset: str, *, user_prompt: str = "") -> dict[str, Any]:
     preset = PRESETS[style_preset]
     treatment_profile = preset_treatment_profile(style_preset)
     style_reference = preset_style_reference(style_preset)
     playbook = _story_dict(style_reference.get("layout_playbook"))
+    atom_context = compact_workflow_atom_context(
+        build_workflow_atom_context(
+            user_prompt=user_prompt or title,
+            style_preset=style_preset,
+            slide_count=8,
+            include_prompt=False,
+        )
+    )
+    atom_brief = (
+        atom_context.get("design_brief_delta")
+        if isinstance(atom_context.get("design_brief_delta"), dict)
+        else {}
+    )
+    style_atom_composition = (
+        atom_brief.get("style_atom_composition")
+        if isinstance(atom_brief.get("style_atom_composition"), dict)
+        else atom_context.get("style_atom_composition")
+    )
     preferred_variants = [
         str(item)
         for item in _story_list(playbook.get("preferred_variants"))
@@ -1095,8 +1133,17 @@ def _design_brief_stub(title: str, style_preset: str) -> dict[str, Any]:
             "style_seed": f"{_slugify(title)}-{style_preset}",
             "preset_treatment_profile": treatment_profile,
             "style_reference": style_reference,
+            "style_atom_context": atom_context,
+            "style_atom_composition": style_atom_composition,
+            "style_atom_preferred_variants": atom_context.get("preferred_variants") or [],
+            "style_atom_narrative_arc": atom_context.get("narrative_arc") or [],
             "style_mix_matrix": treatment_profile["style_mix_matrix"],
         },
+        "style_atom_composition": style_atom_composition,
+        "palette_signals": atom_brief.get("palette_signals", []),
+        "typography_signals": atom_brief.get("typography_signals", []),
+        "layout_signals": atom_brief.get("layout_signals", []),
+        "rhythm_signature": atom_brief.get("rhythm_signature", ""),
         "title_page_concept": {
             "chosen_archetype": "topic-specific opener chosen from the preset and content",
             "dominant_element": "large topic-specific title",
@@ -1245,10 +1292,19 @@ def _style_contract(
     font_pair: str | None,
     palette_key: str | None,
     reference_pptx: Path | None,
+    user_prompt: str = "",
 ) -> dict[str, Any]:
     preset = PRESETS[style_preset]
     style_reference = preset_style_reference(style_preset)
     playbook = _story_dict(style_reference.get("layout_playbook"))
+    atom_context = compact_workflow_atom_context(
+        build_workflow_atom_context(
+            user_prompt=user_prompt or title,
+            style_preset=style_preset,
+            slide_count=8,
+            include_prompt=False,
+        )
+    )
     contract: dict[str, Any] = {
         "workspace_version": 1,
         "deck_title": title,
@@ -1280,6 +1336,7 @@ def _style_contract(
             "preferred_variants": playbook.get("preferred_variants"),
             "starter_outline_version": "style_reference_starter_outline_v1",
         },
+        "style_atom_context": atom_context,
     }
     if reference_pptx:
         contract["reference"] = _reference_summary(reference_pptx)
@@ -1429,7 +1486,13 @@ def main() -> int:
     elif reference_pptx:
         outline = _extract_outline(reference_pptx)
     else:
-        outline = _starter_outline(args.title, args.style_preset, args.font_pair, args.palette_key)
+        outline = _starter_outline(
+            args.title,
+            args.style_preset,
+            args.font_pair,
+            args.palette_key,
+            user_prompt=user_prompt,
+        )
 
     slide_refs = _ensure_outline_slide_ids(outline)
     outline.setdefault("title", args.title)
@@ -1447,6 +1510,7 @@ def main() -> int:
         font_pair=args.font_pair,
         palette_key=args.palette_key,
         reference_pptx=reference_pptx,
+        user_prompt=user_prompt,
     )
     workspace_manifest = {
         "workspace_version": 1,
@@ -1478,7 +1542,12 @@ def main() -> int:
     )
     _write_text(
         workspace / "design_brief.json",
-        json.dumps(_design_brief_stub(args.title, args.style_preset), indent=2, ensure_ascii=False) + "\n",
+        json.dumps(
+            _design_brief_stub(args.title, args.style_preset, user_prompt=user_prompt),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n",
     )
     _write_text(
         workspace / "evidence_plan.json",

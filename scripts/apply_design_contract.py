@@ -516,6 +516,8 @@ def _reproducibility_contract_from(
     figure_table = _as_dict(style_system.get("figure_table_system"))
     chart = _as_dict(style_system.get("chart_system"))
     style_reference = _as_dict(style_system.get("style_reference"))
+    style_atom_context = _as_dict(style_system.get("style_atom_context"))
+    style_atom_composition = _as_dict(style_system.get("style_atom_composition"))
     artifact_plan = _as_dict(evidence.get("analysis_artifact_plan"))
     figure_contract = _as_dict(evidence.get("figure_export_contract"))
     renderer_defaults = _renderer_treatment_base_defaults(style_system)
@@ -556,6 +558,9 @@ def _reproducibility_contract_from(
         "artifact_manifest": artifact_plan.get("artifact_manifest"),
         "analysis_summary": artifact_plan.get("analysis_summary"),
         "reference_pptx_style_fragment": "style_extract_design_brief.json",
+        "atom_workflow_context": "deck_start_packet.json:atom_workflow_context"
+        if style_atom_context
+        else "",
     }.items():
         if _non_empty(value) and not _non_empty(replay_inputs.get(key)):
             replay_inputs[key] = value
@@ -629,6 +634,11 @@ def _reproducibility_contract_from(
         "treatment_archetype_ids": treatment_archetype_ids,
         "treatment_archetype_signatures": treatment_archetype_signatures,
         "treatment_archetype_semantic_signatures": treatment_archetype_semantic_signatures,
+        "atom_composition": style_atom_composition,
+        "atom_target_family": style_atom_context.get("target_family"),
+        "atom_selection_basis": style_atom_context.get("selection_basis"),
+        "atom_preferred_variants": style_system.get("style_atom_preferred_variants"),
+        "atom_narrative_arc": style_system.get("style_atom_narrative_arc"),
     }.items():
         if _non_empty(value) and not _non_empty(style_replay.get(key)):
             style_replay[key] = value
@@ -1153,6 +1163,7 @@ def _enrich_choice_resolution_from_seed(
         "answered_by",
         "resolved_choices",
         "route_decisions",
+        "atom_composition",
         "design_fields_locked",
         "selected_renderer_treatment_signature",
         "replay_inputs",
@@ -1253,6 +1264,19 @@ def apply_contract(
     design = _load_json(design_path, {})
     if not isinstance(design, dict):
         raise SystemExit(f"{design_path} must contain a JSON object.")
+    existing_style_system = _as_dict(design.get("style_system"))
+    for key in (
+        "style_atom_context",
+        "style_atom_composition",
+        "style_atom_preferred_variants",
+        "style_atom_narrative_arc",
+    ):
+        if not _non_empty(style_system.get(key)) and _non_empty(existing_style_system.get(key)):
+            style_system[key] = existing_style_system.get(key)
+    if not _non_empty(style_system.get("style_atom_composition")) and _non_empty(
+        design.get("style_atom_composition")
+    ):
+        style_system["style_atom_composition"] = design.get("style_atom_composition")
     choice_resolution, choice_resolution_enriched = _enrich_choice_resolution_from_seed(
         choice_resolution,
         design,
@@ -1293,6 +1317,7 @@ def apply_contract(
             "format_promise": deck_identity.get("target_outcome") or contract.get("user_request_summary"),
             "design_dna": contract.get("design_dna"),
             "style_system": style_system,
+            "style_atom_composition": style_system.get("style_atom_composition"),
             "renderer_treatments": _renderer_treatments(style_system),
             "style_mix_matrix": style_system.get("style_mix_matrix"),
             "title_page_concept": {
@@ -1480,6 +1505,11 @@ def apply_contract(
             choice_resolution.get("route_decision_ledger"),
             dict,
         ),
+        "style_atom_composition_applied": isinstance(
+            _as_dict(style_system.get("style_atom_composition")),
+            dict,
+        )
+        and bool(_as_dict(style_system.get("style_atom_composition"))),
         "reproducibility_contract_applied": bool(reproducibility_contract),
         "acceptance_evidence_count": len(acceptance_evidence),
     }

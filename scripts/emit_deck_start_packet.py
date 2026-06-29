@@ -28,6 +28,7 @@ from emit_design_contract_prompt import (  # noqa: E402
     render_contract_prompt,
 )
 from style_treatment_profiles import preset_treatment_profile  # noqa: E402
+from workflow_atom_context import build_workflow_atom_context, compact_workflow_atom_context  # noqa: E402
 
 
 DATA_SUFFIXES = {
@@ -387,6 +388,7 @@ def _route_decision_ledger(
     workspace: Path | None,
     user_prompt: str,
     source_inventory: dict[str, Any],
+    atom_context: dict[str, Any],
     data_artifacts_likely: bool,
     pptx_style_likely: bool,
     data_artifact_commands: list[str],
@@ -446,6 +448,43 @@ def _route_decision_ledger(
                     f"{workspace_text}/design_contract.json",
                     f"{workspace_text}/design_contract_apply_report.json",
                     f"{workspace_text}/design_brief.json:design_contract",
+                ],
+            },
+            {
+                "id": "atom_composition",
+                "active": True,
+                "trigger_evidence": [
+                    "normal_workflow_atom_context_v1 seed emitted from descriptor-only atom atlas",
+                    f"target family: {atom_context.get('target_family') or 'unknown'}",
+                ],
+                "decision": (
+                    "accept the deterministic atom seed, refine it with the strict JSON atom prompt, "
+                    "or skip it with a recorded reason"
+                ),
+                "commands": [
+                    _shell_join(
+                        [
+                            "python3",
+                            "scripts/style_atom_router.py",
+                            "deterministic",
+                            "--family",
+                            str(atom_context.get("target_family") or _workspace_style_preset(workspace)),
+                            "--slide-count",
+                            str(atom_context.get("slide_count") or 8),
+                            "--topic",
+                            user_prompt or "<deck topic>",
+                            "--user-prompt",
+                            user_prompt or "<deck request>",
+                        ]
+                    )
+                ],
+                "writes": [
+                    f"{workspace_text}/design_contract.json:choice_resolution.atom_composition",
+                    f"{workspace_text}/design_contract.json:style_system.style_atom_composition",
+                    f"{workspace_text}/design_brief.json:style_atom_composition",
+                    f"{workspace_text}/design_brief.json:style_system.style_atom_preferred_variants",
+                    f"{workspace_text}/content_plan.json:narrative_arc",
+                    f"{workspace_text}/outline.json:deck_style supported atom deltas",
                 ],
             },
             {
@@ -758,6 +797,7 @@ def _choice_resolution_contract(
     *,
     stable_id: str,
     source_inventory: dict[str, Any],
+    atom_context: dict[str, Any],
     data_artifacts_likely: bool,
     pptx_style_likely: bool,
 ) -> dict[str, Any]:
@@ -886,6 +926,24 @@ def _choice_resolution_contract(
         ],
         "route_decisions": [
             {
+                "id": "atom_composition",
+                "active": True,
+                "trigger_evidence": (
+                    "normal_workflow_atom_context_v1 is available as a reproducible "
+                    "style-grammar seed before outline authoring"
+                ),
+                "target_family": atom_context.get("target_family"),
+                "preferred_variants": atom_context.get("preferred_variants") or [],
+                "narrative_arc": atom_context.get("narrative_arc") or [],
+                "must_write_when_used": [
+                    f"{workspace_text}/design_contract.json:choice_resolution.atom_composition",
+                    f"{workspace_text}/design_contract.json:style_system.style_atom_composition",
+                    f"{workspace_text}/design_brief.json:style_atom_composition",
+                    f"{workspace_text}/design_brief.json:style_system.style_atom_preferred_variants",
+                    f"{workspace_text}/content_plan.json:narrative_arc",
+                ],
+            },
+            {
                 "id": "data_artifacts",
                 "active": data_artifacts_likely,
                 "trigger_evidence": (
@@ -930,6 +988,8 @@ def _choice_resolution_contract(
                 "analysis_artifact_plan",
                 "figure_export_contract",
                 "qa_contract",
+                "choice_resolution.atom_composition",
+                "style_system.style_atom_composition",
             ],
             "outline_authoring_inputs": [
                 "resolved audience/use context",
@@ -940,6 +1000,7 @@ def _choice_resolution_contract(
                 "data_artifact route status",
                 "pptx_style_import route status",
                 "workspace source inventory snapshot",
+                "atom composition preferred variants and narrative arc if accepted/refined",
             ],
         },
         "replay_proof": [
@@ -1468,6 +1529,7 @@ def _agent_kickoff_brief(
     intake: dict[str, Any],
     intake_answers_template: dict[str, Any],
     source_inventory: dict[str, Any],
+    atom_context: dict[str, Any],
     route_decision_ledger: dict[str, Any],
     execution_plan: dict[str, Any],
     acceptance_checklist: list[dict[str, Any]],
@@ -1504,9 +1566,11 @@ def _agent_kickoff_brief(
             "active_routes": active_routes,
             "data_artifacts_likely": data_artifacts_likely,
             "pptx_style_likely": pptx_style_likely,
+            "atom_composition_target_family": atom_context.get("target_family"),
             "source_inventory": _source_inventory_summary(source_inventory),
         },
         "preset_treatment_profile": preset_treatment,
+        "atom_workflow_context": atom_context,
         "slide_quality_contract": slide_quality_contract,
         "locked_replay_fields": [
             "stable_prompt_id",
@@ -1514,6 +1578,9 @@ def _agent_kickoff_brief(
             "style_system.style_preset",
             "style_system.style_mix_matrix",
             "style_system.style_reference",
+            "style_system.style_atom_composition",
+            "style_system.style_atom_preferred_variants",
+            "style_system.style_atom_narrative_arc",
             "style_system.background_system",
             "structure_blueprint.slide_sequence",
             "structure_blueprint.slide_variant_mix",
@@ -1532,7 +1599,9 @@ def _agent_kickoff_brief(
                 "save_to": f"{workspace_text}/design_contract.json",
                 "must_include": [
                     "choice_resolution",
+                    "choice_resolution.atom_composition",
                     "reproducibility_contract",
+                    "style_system.style_atom_composition",
                     "style_system.style_mix_matrix",
                     "structure_blueprint",
                     "slide_quality_contract",
@@ -1790,6 +1859,16 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
     workspace_text = _workspace_arg(workspace)
     source_inventory = _workspace_source_inventory(workspace)
     preset_treatment = preset_treatment_profile(_workspace_style_preset(workspace))
+    atom_context = compact_workflow_atom_context(
+        build_workflow_atom_context(
+            user_prompt=user_prompt_clean or "presentation deck",
+            workspace=workspace,
+            style_preset=_workspace_style_preset(workspace),
+            slide_count=8,
+            include_prompt=True,
+        ),
+        include_prompt=True,
+    )
     data_artifacts_likely = _data_artifacts_likely(
         workspace=workspace,
         user_prompt=user_prompt_clean,
@@ -1828,6 +1907,7 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
         workspace_text,
         stable_id=stable_id,
         source_inventory=source_inventory,
+        atom_context=atom_context,
         data_artifacts_likely=data_artifacts_likely,
         pptx_style_likely=pptx_style_likely,
     )
@@ -1840,6 +1920,7 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
         workspace=workspace,
         user_prompt=user_prompt_clean,
         source_inventory=source_inventory,
+        atom_context=atom_context,
         data_artifacts_likely=data_artifacts_likely,
         pptx_style_likely=pptx_style_likely,
         data_artifact_commands=data_artifact_commands,
@@ -1860,6 +1941,7 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
         intake=intake,
         intake_answers_template=intake_answers_template,
         source_inventory=source_inventory,
+        atom_context=atom_context,
         route_decision_ledger=route_decision_ledger,
         execution_plan=execution_plan,
         acceptance_checklist=acceptance_checklist,
@@ -1937,6 +2019,7 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
             ),
         },
         "workspace_source_inventory": source_inventory,
+        "atom_workflow_context": atom_context,
         "choice_resolution_contract": choice_resolution_contract,
         "route_decision_ledger": route_decision_ledger,
         "slide_quality_contract": slide_quality_contract,
@@ -1947,6 +2030,7 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
             "pptx_style_likely": pptx_style_likely,
             "preset_treatment_profile": preset_treatment,
             "style_reference": preset_treatment.get("style_reference") if isinstance(preset_treatment, dict) else {},
+            "atom_workflow_context": atom_context,
             "workspace_source_inventory": _source_inventory_summary(source_inventory),
             "choice_resolution_contract": choice_resolution_contract,
             "route_decision_ledger": route_decision_ledger,
@@ -1972,6 +2056,10 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
                 {
                     "input": "strict deck_design_contract_v1 JSON from design scout or main agent",
                     "target": f"{workspace_text}/design_contract.json and deterministic apply_design_contract.py source updates",
+                },
+                {
+                    "input": "normal_workflow_atom_context_v1 accepted/refined/skipped atom decision",
+                    "target": f"{workspace_text}/design_contract.json:choice_resolution.atom_composition and {workspace_text}/design_brief.json:style_atom_composition",
                 },
                 {
                     "input": "resolved question-card choices and route decisions",
@@ -2060,6 +2148,17 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
                         "figure_export_contract",
                     ],
                 },
+                {
+                    "from": "atom_workflow_context",
+                    "to": [
+                        "choice_resolution.atom_composition decision",
+                        "style_system.style_atom_composition",
+                        "style_system.style_atom_preferred_variants",
+                        "style_system.style_atom_narrative_arc",
+                        "structure_blueprint.slide_sequence when accepted/refined",
+                        "outline.deck_style supported atom deltas",
+                    ],
+                },
             ],
             "fast_first_pass_commands": [
                 _shell_join(["python3", "scripts/validate_planning.py", "--workspace", workspace_text]),
@@ -2134,6 +2233,9 @@ def build_packet(*, workspace: Path | None, user_prompt: str, mode: str) -> dict
             "and run apply_outline_authoring_handoff.py to patch source files. "
             "Use slide_quality_contract_v1 as the compact target for readable "
             "text, whitespace, evidence anchors, artifact metadata, and QA gates. "
+            "Use normal_workflow_atom_context_v1 as a first-class optional "
+            "style-grammar route: accept, refine, or skip it explicitly and "
+            "persist the decision. "
             "Keep choices reproducible: "
             "preset, palette, style seed, background, title layout, "
             "header/footer variant pool, slide-variant mix, artifact scripts, "

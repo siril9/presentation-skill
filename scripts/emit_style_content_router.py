@@ -29,6 +29,7 @@ from large_style_corpus import compact_large_style_corpus_context
 from style_inspiration_corpus import compact_style_inspiration_context
 from style_reference_catalog import rank_style_references, style_reference_mix_plan
 from style_treatment_profiles import preset_treatment_profile
+from workflow_atom_context import build_workflow_atom_context, compact_workflow_atom_context
 
 
 def _read_optional(path: Path) -> str | None:
@@ -499,6 +500,16 @@ def _style_reference_match_context(text: str, *, limit: int = 22000) -> str:
     )
 
 
+def _atom_workflow_context(user_prompt: str, workspace: Path) -> str:
+    context = build_workflow_atom_context(
+        user_prompt=user_prompt,
+        workspace=workspace,
+        slide_count=8,
+        include_prompt=True,
+    )
+    return _compact_json(compact_workflow_atom_context(context, include_prompt=True), 16000)
+
+
 def _text_blob(value: Any) -> str:
     if value is None:
         return ""
@@ -650,6 +661,14 @@ ideas such as "agent workflow comparison", "risk register table", "journal
 figure plate", or "product roadmap bands", then create original synthetic
 structure in the design contract and outline.
 
+The `normal_workflow_atom_context_v1` block is the corpus atom route for this
+same normal workflow. Treat it as an optional first-class handoff. Accept it
+when the deterministic atom seed fits the topic, refine it by returning the
+strict JSON atom shape, or skip it with a concrete reason. When used, translate
+`preferred_variants`, `narrative_arc`, and supported `deck_style_delta` fields
+into the slide route and design contract. Do not force every atom-selected
+variant into the deck.
+
 Treat report structure and source/footer posture as first-class reproducibility
 contracts. Bind the selected reference's layout playbook to a concrete section
 order, treatment recipes, footer mode, source-line/page-number rule, and final
@@ -764,6 +783,18 @@ Return ONLY valid JSON with this shape:
     "routing_rationale": [
       "specific prompt/evidence signal that matched the selected reference"
     ]
+  }},
+  "atom_composition_route": {{
+    "schema_version": "normal_workflow_atom_context_v1",
+    "decision": "accept_seed | refine_with_agent_atoms | skip",
+    "target_family": "copy/refine from atom context",
+    "source": "deterministic_seed | agent_refined | skipped",
+    "skip_reason": "required only when skipped",
+    "preferred_variants": ["supported variants used in the recommended slide route"],
+    "narrative_arc": ["story beats used in the recommended section order"],
+    "deck_style_delta": {{"supported_renderer_field": "supported value"}},
+    "style_atom_composition": {{"schema_version": "style_atom_composition_v1"}},
+    "routing_rationale": ["why the atom seed did or did not fit this topic"]
   }},
   "report_structure_contract": {{
     "structure_version": "style_reference_report_structure_contract_v1",
@@ -974,6 +1005,10 @@ Return ONLY valid JSON with this shape:
 
 {style_reference_matches}
 
+--- Normal-workflow atom context ---
+
+{atom_workflow_context}
+
 --- Workspace summary ---
 
 {workspace_summary}
@@ -1076,6 +1111,7 @@ def main() -> int:
         user_prompt=args.user_prompt or "<not provided>",
         keyword_priors="\n".join(f"- {item}" for item in priors) or "<none>",
         style_reference_matches=_style_reference_match_context(combined_text),
+        atom_workflow_context=_atom_workflow_context(args.user_prompt or combined_text[:1200], workspace),
         workspace_summary="\n".join(_outline_summary(outline)),
         evidence_summary="\n".join(_evidence_summary(evidence_plan, asset_plan)),
         design_brief=_compact_json(design_brief, args.truncate_json),

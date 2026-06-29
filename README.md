@@ -2,9 +2,9 @@
 
 A skill for coding agents that produces editable PowerPoint decks from structured source files. The idea is to treat a deck like code: `outline.json` is the source, scripts build the `.pptx`, and a validation loop checks layout, density, and design-taste issues before delivery.
 
-![v0.6.0 baseline vs corpus-guided rendered slides](decks/random-topic-corpus-comparison-v0.6.0-20260629/contact_sheets/night-market-battery-swaps_baseline_vs_corpus.png)
+![Codex native vs updated presentation-skill](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_hero.png)
 
-*Actual rendered slides from the release gate: baseline row above, corpus-guided row below.*
+*Same random topic generated two ways: Codex native baseline vs updated presentation-skill.*
 
 ## Why
 
@@ -39,9 +39,9 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 ## See it
 
-[![v0.6.0 release showcase](decks/random-topic-corpus-comparison-v0.6.0-20260629/contact_sheets/all_topics_baseline_vs_corpus.png)](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0)
+[![Codex native vs updated presentation-skill comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png)](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.7.0)
 
-Full release notes and gallery `.pptx` are in the [v0.6.0 release](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0).
+Full release notes and comparison images are in the [v0.7.0 release](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.7.0).
 
 ## Install
 
@@ -148,6 +148,7 @@ Codex and other OpenAI-style agents trigger this skill for PowerPoint, `.pptx`, 
 
 ## Releases
 
+- [`v0.7.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.7.0) — optional first-class atom composition in the normal deck-start/design-contract/style-router workflow, plus clean Codex-native vs updated-skill README comparison images.
 - [`v0.6.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0) — topic-aware atom router, stricter reproducible composition prompts, readable stats rendering, refreshed random-topic evidence gallery.
 - [`v0.5.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.5.0) — descriptor-only style corpus (~2,000 records), random-topic comparison gallery, design-catalog selector.
 - [`v0.2.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.2.0) — per-preset contact sheets, style-reference routing.

@@ -135,6 +135,10 @@ def _answer_text(value: Any) -> str:
     return ""
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 def _extract_answer_items(payload: Any) -> dict[str, str]:
     if not isinstance(payload, dict):
         raise SystemExit("Answers JSON must be an object.")
@@ -327,6 +331,19 @@ def _packet_source_inventory(packet: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _packet_atom_context(packet: Any) -> dict[str, Any]:
+    if not isinstance(packet, dict):
+        return {}
+    candidates = [
+        packet.get("atom_workflow_context"),
+        _as_dict(packet.get("application_contract")).get("atom_workflow_context"),
+    ]
+    for value in candidates:
+        if isinstance(value, dict) and value.get("schema_version") == "normal_workflow_atom_context_v1":
+            return value
+    return {}
+
+
 def _route_ledger_status(route_ledger: dict[str, Any]) -> dict[str, bool]:
     routes = route_ledger.get("routes")
     if not isinstance(routes, list):
@@ -398,6 +415,7 @@ def _build_choice_resolution_seed(
     choice_contract = _packet_choice_contract(packet)
     route_ledger = _packet_route_ledger(packet)
     source_inventory = _packet_source_inventory(packet)
+    atom_context = _packet_atom_context(packet)
     route_ledger_status = _route_ledger_status(route_ledger)
     ledger_by_id = _choice_ledger_by_id(choice_contract)
     compressed = (
@@ -496,6 +514,21 @@ def _build_choice_resolution_seed(
     if source_inventory:
         seed["workspace_source_inventory"] = source_inventory
         seed["replay_inputs"]["workspace_source_inventory"] = "deck_start_packet.json:workspace_source_inventory"
+    if atom_context:
+        seed["atom_composition"] = {
+            "schema_version": atom_context.get("schema_version"),
+            "route_id": "atom_composition",
+            "decision": "seeded_optional_accept_refine_or_skip",
+            "target_family": atom_context.get("target_family"),
+            "selection_basis": atom_context.get("selection_basis"),
+            "preferred_variants": atom_context.get("preferred_variants") or [],
+            "narrative_arc": atom_context.get("narrative_arc") or [],
+            "style_atom_composition": atom_context.get("style_atom_composition") or {},
+            "deck_style_delta": atom_context.get("deck_style_delta") or {},
+            "normal_workflow_contract": atom_context.get("normal_workflow_contract") or {},
+            "source": "deck_start_packet.atom_workflow_context",
+        }
+        seed["replay_inputs"]["atom_workflow_context"] = "deck_start_packet.json:atom_workflow_context"
     return seed
 
 
@@ -587,6 +620,14 @@ def _notes_section(
                 for route_id, active in sorted(route_status.items())
             ]
             lines.append(f"- Route ledger: {', '.join(route_summary)}")
+        atom_composition = choice_resolution_seed.get("atom_composition")
+        if isinstance(atom_composition, dict):
+            target_family = _answer_text(atom_composition.get("target_family"))
+            variants = atom_composition.get("preferred_variants")
+            variant_text = _answer_text(variants[:5] if isinstance(variants, list) else variants)
+            summary = ", ".join(part for part in (target_family, variant_text) if part)
+            if summary:
+                lines.append(f"- Atom composition seed: {summary}")
         source_inventory = choice_resolution_seed.get("workspace_source_inventory")
         if isinstance(source_inventory, dict):
             data_count = int(source_inventory.get("data_file_count") or 0)
@@ -635,6 +676,7 @@ def apply_answers(
         packet=packet,
         stable_prompt_id=style_seed,
     )
+    atom_context = _packet_atom_context(packet)
 
     changed_files: list[str] = []
     touched_fields: dict[str, list[str]] = {}
@@ -647,14 +689,36 @@ def apply_answers(
     if choice_resolution_seed:
         design["choice_resolution_seed"] = choice_resolution_seed
         touched_fields.setdefault("design_brief.json", []).append("choice_resolution_seed")
-    if style_seed:
+    if style_seed or atom_context:
         style_system = design.get("style_system")
         if not isinstance(style_system, dict):
             style_system = {}
             design["style_system"] = style_system
+    else:
+        style_system = {}
+    if style_seed:
         if style_system.get("style_seed") != style_seed:
             style_system["style_seed"] = style_seed
             touched_fields.setdefault("design_brief.json", []).append("style_system.style_seed")
+    if atom_context:
+        style_atom_updates = {
+            "style_atom_context": atom_context,
+            "style_atom_composition": atom_context.get("style_atom_composition") or {},
+            "style_atom_preferred_variants": atom_context.get("preferred_variants") or [],
+            "style_atom_narrative_arc": atom_context.get("narrative_arc") or [],
+        }
+        changed = _merge_missing(style_system, style_atom_updates, overwrite=overwrite_translations)
+        if changed:
+            touched_fields.setdefault("design_brief.json", []).extend(
+                f"style_system.{key}" for key in changed
+            )
+        changed = _merge_missing(
+            design,
+            {"style_atom_composition": atom_context.get("style_atom_composition") or {}},
+            overwrite=overwrite_translations,
+        )
+        if changed:
+            touched_fields.setdefault("design_brief.json", []).extend(changed)
 
     style_direction = _answer_text(user_intake.get("style_direction"))
     density = _answer_text(user_intake.get("density"))

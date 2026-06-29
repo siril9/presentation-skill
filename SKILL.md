@@ -153,13 +153,14 @@ skill, ChatGPT presentation skill, OpenAI agent presentation skill.
   metadata, inferred style families, and descriptors; never raw decks,
   screenshots, copied slide text, logos, or distinctive source geometry.
 - `references/style_token_atlas.json`, `references/style_grammar_index.json`,
-  `scripts/style_atom_router.py`, and `scripts/apply_atom_composition.py`:
-  dynamic corpus-atom grammar layer. Use it when a deck needs the corpus to
-  influence structure, treatment pools, density, and narrative arc while still
-  leaving the current/future LLM free to make topic-fit choices. The
-  deterministic path is for reproducible scripts and smoke tests; the emitted
-  strict-JSON prompt is for design scouts or the main agent to mix atoms across
-  families and then apply only supported renderer fields.
+  `scripts/style_atom_router.py`, `scripts/apply_atom_composition.py`, and
+  `scripts/workflow_atom_context.py`: dynamic corpus-atom grammar layer. Use it
+  when a deck needs the corpus to influence structure, treatment pools, density,
+  and narrative arc while still leaving the current/future LLM free to make
+  topic-fit choices. Normal deck-start, design-contract, and style/content
+  router prompts now receive a `normal_workflow_atom_context_v1` seed that can
+  be accepted, refined through strict JSON, or skipped with a recorded reason.
+  Apply only supported renderer fields.
 - `scripts/run_large_style_corpus_smoke.py`: focused fast smoke proving the
   large-corpus source manifest, descriptor schema, family coverage, compact
   context, and digest writer stay usable without network access.
@@ -206,8 +207,9 @@ skill, ChatGPT presentation skill, OpenAI agent presentation skill.
   signatures.
 - `scripts/run_style_content_router_smoke.py`: focused fast smoke proving the
   style/content router prompt includes ranked style-reference matches,
-  mix-plan context, layout playbooks, content recipes, and renderer treatment
-  pools for prompt-to-reference routing.
+  mix-plan context, layout playbooks, content recipes, renderer treatment pools,
+  and the optional first-class atom composition route for prompt-to-reference
+  routing.
 - `scripts/run_style_reference_release_evidence_smoke.py`: optional rendered
   release-evidence smoke proving the all-preset gallery has clean QA,
   unique content signatures, visual-diversity hashes, fingerprinted contact
@@ -357,6 +359,13 @@ python3 scripts/init_deck_workspace.py \
   --style-preset <preset> \
   --user-prompt "Original user request here"
 ```
+
+This initializes style-reference starter files and a
+`normal_workflow_atom_context_v1` seed. Treat the atom seed as optional
+first-class grammar: accept it when topic-fit, refine it with the strict JSON
+atom prompt when a stronger mix is obvious, or skip it with a reason. When used,
+persist the decision in `choice_resolution.atom_composition`,
+`style_system.style_atom_composition`, and the slide sequence/variant plan.
 
 That writes `deck_start_packet.json` immediately, records it in
 `workspace.json`, and lets the agent ask the compact question card or persist

@@ -18,6 +18,7 @@ from typing import Any
 
 from style_reference_catalog import REQUIRED_CONTENT_TREATMENTS, rank_style_references, style_reference_mix_plan
 from style_treatment_profiles import preset_treatment_profile
+from workflow_atom_context import build_workflow_atom_context, compact_workflow_atom_context
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -404,6 +405,17 @@ def _style_reference_match_context(user_prompt: str) -> str:
         },
         limit=10500,
     )
+
+
+def _atom_workflow_context(user_prompt: str, workspace: Path | None) -> str:
+    context = build_workflow_atom_context(
+        user_prompt=user_prompt,
+        workspace=workspace,
+        style_preset=_design_brief_style_preset(_load_json(workspace / "design_brief.json") if workspace else None),
+        slide_count=8,
+        include_prompt=True,
+    )
+    return _compact_json(compact_workflow_atom_context(context, include_prompt=True), limit=16000)
 
 
 def _load_reference_field(match: dict[str, Any], key: str) -> Any:
@@ -807,6 +819,19 @@ Workspace source inventory:
 Prompt-to-style reference matches:
 {style_reference_matches}
 
+Normal-workflow atom composition context:
+{atom_workflow_context}
+
+Use `normal_workflow_atom_context_v1` as an optional first-class style-grammar
+route, not as a hard template. The deterministic packet gives a reproducible
+seed from the descriptor-only atom atlas. Accept it when it fits the topic,
+refine it by returning the strict JSON atom shape, or skip it with a recorded
+reason. When accepted or refined, persist the atom replay ledger under
+`choice_resolution.atom_composition`, `style_system.style_atom_composition`,
+`reproducibility_contract.style_replay.atom_composition`, and the relevant
+`structure_blueprint` variant/narrative fields. Use only supported renderer
+fields from `deck_style_delta`; never copy external slide geometry.
+
 Return this JSON shape:
 
 {{
@@ -858,11 +883,23 @@ Return this JSON shape:
       "intake_questions",
       "design_contract"
     ],
+    "atom_composition": {{
+      "schema_version": "normal_workflow_atom_context_v1",
+      "decision": "accept_seed | refine_with_agent_atoms | skip",
+      "target_family": "copy from atom context or refined strict JSON",
+      "source": "deterministic_seed | agent_refined | skipped",
+      "skip_reason": "required only when decision is skip",
+      "preferred_variants": ["supported variants selected for this deck"],
+      "narrative_arc": ["ordered story beats selected for this deck"],
+      "deck_style_delta": {{"supported_renderer_field": "supported value"}},
+      "style_atom_composition": {{"schema_version": "style_atom_composition_v1"}}
+    }},
     "selected_renderer_treatment_signature": "copy from the selected preset defaults, or the recomputed supported override signature",
     "replay_inputs": {{
       "answers": "intake_answers.json or explicit assumptions",
       "packet": "deck_start_packet.json",
-      "route_decision_ledger": "deck_start_packet.json:route_decision_ledger"
+      "route_decision_ledger": "deck_start_packet.json:route_decision_ledger",
+      "atom_workflow_context": "deck_start_packet.json:atom_workflow_context or this prompt's normal_workflow_atom_context_v1 block"
     }},
     "design_fields_locked": [
       "style_system.style_mix_matrix",
@@ -917,6 +954,14 @@ Return this JSON shape:
       "table_treatment_pool": ["same supported entries as style_mix_matrix.table_treatment_pool"],
       "figure_table_treatment_pool": ["same supported entries as style_mix_matrix.figure_table_treatment_pool"],
       "renderer_treatment_signature": "title_layout:...|footer_mode:...|chart_treatment:...|table_treatment:...|figure_table_treatment:...|stats_mode:...|matrix_mode:...|summary_callout_mode:...",
+      "atom_composition": {{
+        "schema_version": "style_atom_composition_v1",
+        "target_family": "accepted/refined atom target family",
+        "source_families": ["families that contributed atoms"],
+        "preferred_variants": ["variants that influenced structure"],
+        "narrative_arc": ["beats that influenced structure"],
+        "deck_style_delta": {{"supported renderer fields used": "values"}}
+      }},
       "renderer_treatment_defaults": {{
         "title_layout": "split-hero | lab-plate | command-center | poster | masthead | light-atlas",
         "footer_mode": "standard | source-line",
@@ -977,6 +1022,15 @@ Return this JSON shape:
     "background_system": "white report | dark stage | light editorial | source-backed visual | generated concept | custom",
     "preset_treatment_profile": "copy/refine the workspace preset treatment profile so preset-specific heading/footer/chart/figure pools are reproducible",
     "renderer_treatment_signature": "compact replay key for selected title/footer/chart/table/figure/stats/matrix/callout posture",
+    "style_atom_composition": {{
+      "schema_version": "style_atom_composition_v1",
+      "target_family": "accepted/refined atom target family",
+      "source_families": ["families that contributed atoms"],
+      "preferred_variants": ["variants selected for outline authoring"],
+      "narrative_arc": ["story beats selected for outline authoring"]
+    }},
+    "style_atom_preferred_variants": ["ordered supported variants from accepted/refined atom route"],
+    "style_atom_narrative_arc": ["ordered story beats from accepted/refined atom route"],
     "renderer_treatment_defaults": {{
       "title_layout": "split-hero | lab-plate | command-center | poster | masthead | light-atlas",
       "footer_mode": "standard | source-line",
@@ -1389,6 +1443,7 @@ def render_contract_prompt(*, user_prompt: str, workspace: Path | None) -> str:
         workspace_context=_workspace_context(workspace),
         workspace_source_inventory=_compact_json(_workspace_source_inventory(workspace), limit=3500),
         style_reference_matches=_style_reference_match_context(user_prompt),
+        atom_workflow_context=_atom_workflow_context(user_prompt, workspace),
         reference_context=_reference_context(),
     )
 

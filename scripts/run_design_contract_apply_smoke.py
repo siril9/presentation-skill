@@ -152,7 +152,24 @@ def _contract_fixture(
     *,
     seed: str,
     slide_quality_contract: dict[str, Any] | None = None,
+    atom_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    atom_context = atom_context if isinstance(atom_context, dict) else {}
+    style_atom_composition = (
+        atom_context.get("style_atom_composition")
+        if isinstance(atom_context.get("style_atom_composition"), dict)
+        else {}
+    )
+    preferred_variants = (
+        atom_context.get("preferred_variants")
+        if isinstance(atom_context.get("preferred_variants"), list)
+        else []
+    )
+    atom_narrative_arc = (
+        atom_context.get("narrative_arc")
+        if isinstance(atom_context.get("narrative_arc"), list)
+        else []
+    )
     return {
         "contract_version": "deck_design_contract_v1",
         "stable_prompt_id": seed,
@@ -164,6 +181,14 @@ def _contract_fixture(
         "choice_resolution": {
             "seed_kind": "scout_refined",
             "selected_renderer_treatment_signature": EXPECTED_RENDERER_TREATMENT_SIGNATURE,
+            "atom_composition": {
+                "route_id": "atom_composition",
+                "decision": "accepted_seeded_context",
+                "target_family": atom_context.get("target_family"),
+                "preferred_variants": preferred_variants,
+                "narrative_arc": atom_narrative_arc,
+                "style_atom_composition": style_atom_composition,
+            },
         },
         "reproducibility_contract": {
             "contract_version": "deck_reproducibility_contract_v1",
@@ -199,6 +224,10 @@ def _contract_fixture(
                 "figure_table_treatment_pool": ["figure-first", "image-sidebar"],
                 "renderer_treatment_signature": EXPECTED_RENDERER_TREATMENT_SIGNATURE,
                 "renderer_treatment_defaults": EXPECTED_RENDERER_TREATMENT_DEFAULTS,
+                "atom_composition": style_atom_composition,
+                "atom_target_family": atom_context.get("target_family"),
+                "atom_preferred_variants": preferred_variants,
+                "atom_narrative_arc": atom_narrative_arc,
                 "mix_rule": "Rotate only small lab chrome choices from the stable seed.",
                 "variation_boundaries": [
                     "Headers and footer treatment may rotate.",
@@ -351,6 +380,10 @@ def _contract_fixture(
                     "Do not use decorative cards for assay evidence.",
                 ],
             },
+            "style_atom_context": atom_context,
+            "style_atom_composition": style_atom_composition,
+            "style_atom_preferred_variants": preferred_variants,
+            "style_atom_narrative_arc": atom_narrative_arc,
         },
         "structure_blueprint": {
             "target_slide_count": 2,
@@ -527,6 +560,7 @@ def _assert_contract_state(
         "choice_resolution_applied",
         "choice_resolution_enriched_from_seed",
         "choice_resolution_route_ledger_applied",
+        "style_atom_composition_applied",
         "reproducibility_contract_applied",
         "slide_quality_contract_applied",
     ):
@@ -563,6 +597,33 @@ def _assert_contract_state(
         failures.append({"step": "design_brief", "reason": "style_seed_not_applied", "value": style_system.get("style_seed")})
     if style_system.get("style_preset") != "lab-report":
         failures.append({"step": "design_brief", "reason": "style_preset_not_applied", "value": style_system.get("style_preset")})
+    style_atom_context = (
+        style_system.get("style_atom_context")
+        if isinstance(style_system.get("style_atom_context"), dict)
+        else {}
+    )
+    style_atom_composition = (
+        style_system.get("style_atom_composition")
+        if isinstance(style_system.get("style_atom_composition"), dict)
+        else {}
+    )
+    if (
+        style_atom_context.get("schema_version") != "normal_workflow_atom_context_v1"
+        or style_atom_context.get("route_id") != "atom_composition"
+        or not style_atom_composition
+        or not isinstance(style_system.get("style_atom_preferred_variants"), list)
+        or not style_system.get("style_atom_preferred_variants")
+        or not isinstance(style_system.get("style_atom_narrative_arc"), list)
+        or not style_system.get("style_atom_narrative_arc")
+    ):
+        failures.append(
+            {
+                "step": "design_brief",
+                "reason": "style_atom_composition_not_applied",
+                "style_atom_context": style_atom_context,
+                "style_atom_composition": style_atom_composition,
+            }
+        )
     if (
         preset_profile.get("profile_version") != "deck_preset_treatment_profiles_v1"
         or preset_profile.get("style_preset") != "lab-report"
@@ -670,6 +731,23 @@ def _assert_contract_state(
                 "choice_resolution": choice_resolution,
             }
         )
+    atom_choice = (
+        choice_resolution.get("atom_composition")
+        if isinstance(choice_resolution.get("atom_composition"), dict)
+        else {}
+    )
+    if (
+        atom_choice.get("route_id") != "atom_composition"
+        or not isinstance(atom_choice.get("style_atom_composition"), dict)
+        or not atom_choice.get("style_atom_composition")
+    ):
+        failures.append(
+            {
+                "step": "design_brief",
+                "reason": "choice_resolution_atom_composition_missing",
+                "atom_composition": atom_choice,
+            }
+        )
     if sorted(choice_resolution.get("route_ledger_active_routes", [])) != _active_route_ids(packet.get("route_decision_ledger", {})):
         failures.append(
             {
@@ -701,6 +779,13 @@ def _assert_contract_state(
         failures.append({"step": "design_brief", "reason": "replay_style_renderer_signature_missing", "style_replay": replay_style})
     if replay_style.get("renderer_treatment_defaults") != EXPECTED_RENDERER_TREATMENT_DEFAULTS:
         failures.append({"step": "design_brief", "reason": "replay_style_renderer_defaults_missing", "style_replay": replay_style})
+    if (
+        not isinstance(replay_style.get("atom_composition"), dict)
+        or not replay_style.get("atom_composition")
+        or not replay_style.get("atom_preferred_variants")
+        or not replay_style.get("atom_narrative_arc")
+    ):
+        failures.append({"step": "design_brief", "reason": "replay_style_atom_composition_missing", "style_replay": replay_style})
     if (
         replay_style.get("structural_motif_library_version") != "style_reference_structural_motif_library_v1"
         or not replay_style.get("structural_motif_signature")
@@ -1295,6 +1380,16 @@ def main() -> int:
             failures.append({"step": "emit_design_contract_prompt", "reason": "prompt_missing_renderer_treatment_signature"})
         if "renderer_treatment_defaults" not in prompt_text or "renderer_treatment_fields" not in prompt_text:
             failures.append({"step": "emit_design_contract_prompt", "reason": "prompt_missing_renderer_treatment_defaults"})
+        if (
+            "Normal-workflow atom composition context" not in prompt_text
+            or "normal_workflow_atom_context_v1" not in prompt_text
+            or "choice_resolution.atom_composition" not in prompt_text
+            or "style_atom_composition" not in prompt_text
+            or "Use strict JSON only" not in prompt_text
+            or "preferred_variants" not in prompt_text
+            or "narrative_arc" not in prompt_text
+        ):
+            failures.append({"step": "emit_design_contract_prompt", "reason": "prompt_missing_atom_workflow_context"})
 
         packet_quality = (
             packet.get("slide_quality_contract")
@@ -1303,7 +1398,13 @@ def main() -> int:
         )
         _write_json(
             contract_path,
-            _contract_fixture(seed=seed, slide_quality_contract=packet_quality),
+            _contract_fixture(
+                seed=seed,
+                slide_quality_contract=packet_quality,
+                atom_context=packet.get("atom_workflow_context")
+                if isinstance(packet.get("atom_workflow_context"), dict)
+                else {},
+            ),
         )
         for cmd in (
             [
@@ -1445,9 +1546,16 @@ def main() -> int:
             and "selected_renderer_treatment_signature" in prompt_text,
             "prompt_contains_renderer_treatment_defaults": "renderer_treatment_defaults" in prompt_text
             and "renderer_treatment_fields" in prompt_text,
+            "prompt_contains_atom_workflow_context": "Normal-workflow atom composition context" in prompt_text
+            and "normal_workflow_atom_context_v1" in prompt_text
+            and "choice_resolution.atom_composition" in prompt_text
+            and "style_atom_composition" in prompt_text,
+            "prompt_contains_atom_strict_json": "Use strict JSON only" in prompt_text
+            and "target_family" in prompt_text,
             "apply_changed_file_count": len(apply_report.get("changed_files", [])) if isinstance(apply_report, dict) else None,
             "repeat_changed_file_count": len(repeat_report.get("changed_files", [])) if isinstance(repeat_report, dict) else None,
             "choice_resolution_enriched_from_seed": apply_report.get("choice_resolution_enriched_from_seed") if isinstance(apply_report, dict) else None,
+            "style_atom_composition_applied": apply_report.get("style_atom_composition_applied") if isinstance(apply_report, dict) else None,
             "reproducibility_contract_applied": apply_report.get("reproducibility_contract_applied") if isinstance(apply_report, dict) else None,
             "slide_quality_contract_applied": apply_report.get("slide_quality_contract_applied") if isinstance(apply_report, dict) else None,
             "slide_quality_contract_version": apply_report.get("slide_quality_contract_version") if isinstance(apply_report, dict) else None,
