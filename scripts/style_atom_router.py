@@ -8,10 +8,10 @@ Two entry points:
    through ``apply_composition()``. This is how the skill leverages
    improving LLMs without calling APIs itself.
 
-2. ``deterministic_composition(target_family, slide_count)``
-   Picks the most frequent atoms within the target family. Used when no
-   agent is in the loop (CLI builds, smoke tests, etc.). Guarantees the
-   skill never breaks if an LLM is unavailable.
+2. ``deterministic_composition(target_family, slide_count, topic, user_prompt)``
+   Picks reproducible atoms within the target family, with a light topic
+   relevance nudge. Used when no agent is in the loop (CLI builds, smoke
+   tests, etc.). Guarantees the skill never breaks if an LLM is unavailable.
 
 The output composition shape (whether agent-picked or deterministic):
 
@@ -28,7 +28,9 @@ The output composition shape (whether agent-picked or deterministic):
         "arc_beats":         ["arc_beat:<value>", ...],
         "rhythm_signature":  "rhythm_signature:<value>",
         "source_families":   ["data-heavy-boardroom", "arctic-minimal", ...],
-        "composition_mode":  "agent-picked" | "deterministic-fallback"
+        "composition_mode":  "agent-picked" | "deterministic-fallback",
+        "target_family":     "lab-report",
+        "preferred_variants": ["scientific-figure", "table", ...]
     }
 
 ``apply_composition()`` in scripts/apply_atom_composition.py turns this
@@ -78,6 +80,44 @@ PICK_TARGETS = {
     "rhythm_signature": 1,
 }
 
+STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "by", "for", "from", "in", "into",
+    "is", "it", "of", "on", "or", "the", "to", "with", "without",
+}
+
+
+def _topic_terms(*parts: str) -> set[str]:
+    raw = " ".join(part or "" for part in parts).lower()
+    out: set[str] = set()
+    token: list[str] = []
+    for ch in raw:
+        if ch.isalnum():
+            token.append(ch)
+        else:
+            if len(token) >= 3:
+                value = "".join(token)
+                if value not in STOPWORDS:
+                    out.add(value)
+            token = []
+    if len(token) >= 3:
+        value = "".join(token)
+        if value not in STOPWORDS:
+            out.add(value)
+    return out
+
+
+def _atom_topic_score(atom: dict[str, Any], terms: set[str]) -> int:
+    if not terms:
+        return 0
+    text_parts = [
+        str(atom.get("atom_id") or ""),
+        str(atom.get("value") or ""),
+        str(atom.get("atom_type") or ""),
+    ]
+    text = " ".join(text_parts).lower().replace("-", " ").replace("_", " ")
+    compact = text.replace(" ", "")
+    return sum(1 for term in terms if term in text or term in compact)
+
 
 def _load_atlas() -> dict[str, Any]:
     with ATLAS_PATH.open() as fh:
@@ -97,6 +137,7 @@ def _rank_for_family(
     atoms: list[dict[str, Any]],
     primary_family: str,
     related_families: list[str],
+    topic_terms: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Re-rank atoms so primary-family atoms surface first, then related, then rest.
 
@@ -106,6 +147,7 @@ def _rank_for_family(
     """
     primary_set = set([primary_family])
     related_set = set(related_families)
+    terms = topic_terms or set()
 
     def tier(atom: dict[str, Any]) -> int:
         origins = atom.get("family_origins", {})
@@ -123,6 +165,7 @@ def _rank_for_family(
         atoms,
         key=lambda a: (
             tier(a),
+            -_atom_topic_score(a, terms),
             -family_specific_freq(a, primary_set) if tier(a) == 0 else 0,
             -family_specific_freq(a, related_set) if tier(a) == 1 else 0,
             -a.get("frequency", 0),
@@ -135,8 +178,9 @@ def _candidate_block(
     primary_family: str,
     related_families: list[str],
     limit: int,
+    topic_terms: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    ranked = _rank_for_family(atoms, primary_family, related_families)
+    ranked = _rank_for_family(atoms, primary_family, related_families, topic_terms)
     return ranked[:limit]
 
 
@@ -178,11 +222,18 @@ def emit_composition_prompt(
     grammar = _load_grammar()
     related = _related_families(target_family, grammar)
     family_template = grammar.get("family_grammar_templates", {}).get(target_family, {})
+    terms = _topic_terms(topic, user_prompt)
 
     candidates: dict[str, list[dict[str, Any]]] = {}
     for atom_type, limit in TYPE_CANDIDATE_LIMITS.items():
         atoms = _atoms_for_type(atlas, atom_type)
-        candidates[atom_type] = _candidate_block(atoms, target_family, related, limit)
+        candidates[atom_type] = _candidate_block(
+            atoms,
+            target_family,
+            related,
+            limit,
+            topic_terms=terms,
+        )
 
     prompt_lines: list[str] = [
         "You are composing the visual + structural style of a slide deck by",
@@ -197,6 +248,7 @@ def emit_composition_prompt(
         f"Primary style family: {target_family}",
         f"Related families (for cross-family mixing): {', '.join(related) or '(none)'}",
         f"Target slide count: {slide_count}",
+        f"Topic terms used for ranking: {', '.join(sorted(terms)) or '(none)'}",
         "",
         "Family baseline (the deterministic fallback if you decline to pick):",
         f"  preferred_variants: {family_template.get('preferred_variants', [])}",
@@ -221,22 +273,29 @@ def emit_composition_prompt(
             "Return JSON with this exact shape:",
             "",
             "{",
-            '  "palette":           "palette:<value>",',
-            '  "typography":        "typography:<value>",',
-            '  "layout_motifs":     ["layout_motif:<value>", ...],   // 1-2 atoms',
-            '  "chart_treatment":   "chart_treatment:<value>",',
-            '  "table_treatment":   "table_treatment:<value>",',
-            '  "header_treatment":  "header_treatment:<value>",',
-            '  "footer_treatment":  "footer_treatment:<value>",',
-            '  "decorative_motifs": ["decorative_motif:<value>", ...], // 2-3 atoms',
-            '  "density":           "density:<value>",',
-            '  "arc_beats":         ["arc_beat:<value>", ...],         // 5-7 atoms',
-            '  "rhythm_signature":  "rhythm_signature:<value>",',
-            '  "reasoning":         "1-2 sentences on why this mix fits"',
+            '  "target_family": "primary-family-slug",',
+            '  "palette": "palette:<value>",',
+            '  "typography": "typography:<value>",',
+            '  "layout_motifs": ["layout_motif:<value>"],',
+            '  "chart_treatment": "chart_treatment:<value>",',
+            '  "table_treatment": "table_treatment:<value>",',
+            '  "header_treatment": "header_treatment:<value>",',
+            '  "footer_treatment": "footer_treatment:<value>",',
+            '  "decorative_motifs": ["decorative_motif:<value>"],',
+            '  "density": "density:<value>",',
+            '  "arc_beats": ["arc_beat:<value>"],',
+            '  "rhythm_signature": "rhythm_signature:<value>",',
+            '  "source_families": ["primary-family-slug"],',
+            '  "preferred_variants": ["supported-outline-variant"],',
+            '  "composition_mode": "agent-picked",',
+            '  "reasoning": "1-2 sentences on why this mix fits"',
             "}",
             "",
+            "Use strict JSON only: no comments, no trailing commas.",
+            "Pick 1-2 layout_motifs, 2-3 decorative_motifs, and 5-7 arc_beats.",
             "Constraint: at least one atom must come from a non-primary family.",
             "Constraint: arc_beats must be ordered as the deck would flow.",
+            "Constraint: preferred_variants must use only variants supported by the skill.",
         ]
     )
 
@@ -255,20 +314,23 @@ def emit_composition_prompt(
 def deterministic_composition(
     target_family: str,
     slide_count: int,
+    topic: str = "",
+    user_prompt: str = "",
 ) -> dict[str, Any]:
     atlas = _load_atlas()
     grammar = _load_grammar()
     related = _related_families(target_family, grammar)
     template = grammar.get("family_grammar_templates", {}).get(target_family, {})
+    terms = _topic_terms(topic, user_prompt)
 
     def pick_one(atom_type: str) -> str | None:
         atoms = _atoms_for_type(atlas, atom_type)
-        ranked = _rank_for_family(atoms, target_family, related)
+        ranked = _rank_for_family(atoms, target_family, related, terms)
         return ranked[0]["atom_id"] if ranked else None
 
     def pick_n(atom_type: str, n: int) -> list[str]:
         atoms = _atoms_for_type(atlas, atom_type)
-        ranked = _rank_for_family(atoms, target_family, related)
+        ranked = _rank_for_family(atoms, target_family, related, terms)
         return [a["atom_id"] for a in ranked[:n]]
 
     arc = template.get("narrative_arc", [])
@@ -290,6 +352,9 @@ def deterministic_composition(
         "composition_mode": "deterministic-fallback",
         "target_family": target_family,
         "slide_count": slide_count,
+        "topic_terms": sorted(terms),
+        "preferred_variants": list(template.get("preferred_variants", [])),
+        "artifact_density": template.get("artifact_density"),
     }
     return composition
 
@@ -308,6 +373,8 @@ def _cli() -> None:
     p_det = sub.add_parser("deterministic", help="Emit deterministic composition.")
     p_det.add_argument("--family", required=True)
     p_det.add_argument("--slide-count", type=int, default=10)
+    p_det.add_argument("--topic", default="")
+    p_det.add_argument("--user-prompt", default="")
     p_det.add_argument("--output", help="Write to file (default: stdout JSON)")
 
     args = parser.parse_args()
@@ -317,7 +384,12 @@ def _cli() -> None:
             args.topic, args.user_prompt, args.family, args.slide_count
         )
     else:
-        result = deterministic_composition(args.family, args.slide_count)
+        result = deterministic_composition(
+            args.family,
+            args.slide_count,
+            topic=args.topic,
+            user_prompt=args.user_prompt,
+        )
 
     text = json.dumps(result, indent=2)
     if args.output:

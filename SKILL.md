@@ -152,9 +152,20 @@ skill, ChatGPT presentation skill, OpenAI agent presentation skill.
   with original synthetic structure. It stores only public URLs, repository/path
   metadata, inferred style families, and descriptors; never raw decks,
   screenshots, copied slide text, logos, or distinctive source geometry.
+- `references/style_token_atlas.json`, `references/style_grammar_index.json`,
+  `scripts/style_atom_router.py`, and `scripts/apply_atom_composition.py`:
+  dynamic corpus-atom grammar layer. Use it when a deck needs the corpus to
+  influence structure, treatment pools, density, and narrative arc while still
+  leaving the current/future LLM free to make topic-fit choices. The
+  deterministic path is for reproducible scripts and smoke tests; the emitted
+  strict-JSON prompt is for design scouts or the main agent to mix atoms across
+  families and then apply only supported renderer fields.
 - `scripts/run_large_style_corpus_smoke.py`: focused fast smoke proving the
   large-corpus source manifest, descriptor schema, family coverage, compact
   context, and digest writer stay usable without network access.
+- `scripts/run_style_atom_router_smoke.py`: focused fast smoke proving the
+  atom atlas, grammar templates, deterministic fallback, topic-aware ranking,
+  strict JSON atom prompt, and applier replay ledger stay usable.
 - `scripts/build_large_style_corpus_contact_sheets.py`: publish-safe visual
   contact sheets generated from large-corpus descriptors. It draws synthetic
   family and source-record cards from catalog metadata only; it does not fetch,
@@ -1006,7 +1017,9 @@ When changing build-time style-reference layout resolution, playbook treatment
 maps, generic-to-specific variant compatibility, or resolved-outline metadata,
 run `npm run check:style-reference-resolution`.
 When changing prompt-to-style routing, style/content scout output shape, or
-router subagent guidance, run `npm run check:style-router`.
+router subagent guidance, run `npm run check:style-router`. When changing the
+style atom atlas, atom router, atom applier, deterministic fallback, or
+corpus-to-grammar bridge, run `npm run check:style-atoms`.
 When changing the large public deck corpus source manifest, descriptor schema,
 overlap balancing, compact LLM context, or digest writer, run
 `npm run check:large-style-corpus`. When changing corpus contact sheets or

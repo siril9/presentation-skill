@@ -2,9 +2,9 @@
 
 A skill for coding agents that produces editable PowerPoint decks from structured source files. The idea is to treat a deck like code: `outline.json` is the source, scripts build the `.pptx`, and a validation loop checks layout, density, and design-taste issues before delivery.
 
-![best 3 latest-skill style renders](decks/native-vs-latest-random-topics-20260623/best_3_style_renders/best_3_latest_style_renders.png)
+![v0.6.0 baseline vs corpus-guided rendered slides](decks/random-topic-corpus-comparison-v0.6.0-20260629/contact_sheets/night-market-battery-swaps_baseline_vs_corpus.png)
 
-*Three latest-skill examples selected for the strongest visual separation: midnight neon, clean lab report, and warm investor pitch. These are actual rendered slides from the corpus-routed arm.*
+*Actual rendered slides from the release gate: baseline row above, corpus-guided row below.*
 
 ## Why
 
@@ -33,15 +33,15 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 - **A pptxgenjs renderer with 13 slide variants.** `title`, `section`, `cards-3`, `split`, `timeline`, `stats`, `kpi-hero`, `comparison-2col`, `matrix`, `chart`, `lab-run-results`, `scientific-figure`, `flow` (Mermaid). Each variant has its own layout discipline so a deck doesn't collapse into bullet-list-after-bullet-list.
 - **A preset system across 13 style families.** Lab report, executive clinical, board risk memo, investor reveal, editorial report, civic science policy, and so on. Each ships with palette, font pair, density profile, and treatment options.
-- **A descriptor-only style corpus (~2,200 records) atomized into a LEGO token atlas.** The corpus carries described palettes, layouts, density patterns, and structural motifs from public deck-like sources (no copied assets). It's processed into ~240 composable atoms across 12 atom types (palette, typography, layout_motif, chart_treatment, table_treatment, header_treatment, footer_treatment, decorative_motif, density, arc_beat, rhythm_signature, content_treatment). A composition router queries the atlas to mix and match atoms across families per topic, so decks pull grammar — not just colors — from the corpus.
+- **A descriptor-only style corpus (~2,200 records) atomized into a LEGO token atlas.** The corpus carries described palettes, layouts, density patterns, and structural motifs from public deck-like sources (no copied assets). It's processed into 311 composable atoms across 12 atom types (palette, typography, layout_motif, chart_treatment, table_treatment, header_treatment, footer_treatment, decorative_motif, density, arc_beat, rhythm_signature, content_treatment). A composition router queries the atlas to mix and match atoms across families per topic, so decks pull grammar — not just colors — from the corpus.
 - **A three-step QA loop.** Geometric checks (overflow, overlap, density), rendered-image visual inspection on JPGs, and a placeholder-text grep that catches leftover `TODO`/`lorem`/`xxx` strings. The visual-inspection prompt is biased toward finding problems, not confirming the deck looks fine.
 - **Workspace mode for decks you'll rebuild later.** `design_brief.json`, `content_plan.json`, `evidence_plan.json`, `asset_plan.json`, `outline.json`, and `notes.md` live in a folder. Readiness diagnostics tell the agent what to fix next instead of re-running blind.
 
 ## See it
 
-[![v0.5.0 release showcase](decks/random-topic-corpus-comparison-v0.5.0-20260622/contact_sheets/pocket-forest-cooling-blocks_baseline_vs_corpus.png)](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.5.0)
+[![v0.6.0 release showcase](decks/random-topic-corpus-comparison-v0.6.0-20260629/contact_sheets/all_topics_baseline_vs_corpus.png)](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0)
 
-Full release notes and gallery `.pptx` are in the [v0.5.0 release](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.5.0).
+Full release notes and gallery `.pptx` are in the [v0.6.0 release](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0).
 
 ## Install
 
@@ -148,6 +148,7 @@ Codex and other OpenAI-style agents trigger this skill for PowerPoint, `.pptx`, 
 
 ## Releases
 
+- [`v0.6.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.6.0) — topic-aware atom router, stricter reproducible composition prompts, readable stats rendering, refreshed random-topic evidence gallery.
 - [`v0.5.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.5.0) — descriptor-only style corpus (~2,000 records), random-topic comparison gallery, design-catalog selector.
 - [`v0.2.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.2.0) — per-preset contact sheets, style-reference routing.
 - [`v0.1.0`](https://github.com/sirilsengolraj-source/presentation-skill/releases/tag/v0.1.0) — initial release with variant renderer + workspace mode.

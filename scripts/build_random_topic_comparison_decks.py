@@ -37,6 +37,15 @@ from apply_atom_composition import apply_composition
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTDIR = ROOT / RELEASE_EVIDENCE_DIR
 TOPICS: list[dict[str, Any]] = comparison_topics()
+CORPUS_BUILDER_VARIANTS = {
+    "image-sidebar",
+    "lab-run-results",
+    "table",
+    "chart",
+    "comparison-2col",
+    "stats",
+    "kpi-hero",
+}
 
 
 def _slugify(value: str) -> str:
@@ -202,7 +211,57 @@ def _draw_topic_figure(topic: dict[str, Any], outpath: Path, *, mode: str) -> No
     image.save(outpath)
 
 
-def _base_deck_style(topic: dict[str, Any], *, mode: str) -> dict[str, Any]:
+def _topic_atom_prompt(topic: dict[str, Any]) -> str:
+    return " ".join(
+        [
+            str(topic.get("prompt") or ""),
+            str(topic.get("topic_type") or ""),
+            " ".join(str(item) for item in topic.get("tags", [])),
+            " ".join(str(item) for item in topic.get("chart_categories", [])),
+        ]
+    )
+
+
+def _corpus_atom_application(topic: dict[str, Any]) -> dict[str, Any]:
+    composition = deterministic_composition(
+        target_family=topic["corpus_family"],
+        slide_count=topic.get("slide_count_target", 10),
+        topic=topic["title"],
+        user_prompt=_topic_atom_prompt(topic),
+    )
+    applied = apply_composition(composition)
+    applied["composition"] = composition
+    return applied
+
+
+def _corpus_variant_plan(topic: dict[str, Any], applied: dict[str, Any]) -> dict[str, str]:
+    preferred = [
+        str(item)
+        for item in applied.get("preferred_variants", [])
+        if str(item) in CORPUS_BUILDER_VARIANTS
+    ]
+    family = topic["corpus_family"]
+    dashboard_variant = (
+        "kpi-hero"
+        if "kpi-hero" in preferred
+        and family in {"bold-startup-narrative", "midnight-neon", "sunset-investor"}
+        else "stats" if "stats" in preferred else "chart"
+    )
+    return {
+        "s2": "image-sidebar",
+        "s3": "lab-run-results" if "lab-run-results" in preferred else "table",
+        "s4": "chart" if "chart" in preferred else dashboard_variant,
+        "s5": "comparison-2col",
+        "s6": dashboard_variant if dashboard_variant in {"kpi-hero", "stats"} else "table",
+    }
+
+
+def _base_deck_style(
+    topic: dict[str, Any],
+    *,
+    mode: str,
+    applied: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if mode == "baseline":
         return {
             "visual_density": "medium",
@@ -215,11 +274,8 @@ def _base_deck_style(topic: dict[str, Any], *, mode: str) -> dict[str, Any]:
     # built from all 2,183 enriched records and returns atoms ranked by
     # family-specific frequency. This is what makes "corpus changes slide
     # grammar" a real claim instead of scaffolding.
-    composition = deterministic_composition(
-        target_family=topic["corpus_family"],
-        slide_count=topic.get("slide_count_target", 10),
-    )
-    applied = apply_composition(composition)
+    if applied is None:
+        applied = _corpus_atom_application(topic)
     deck_style = dict(applied["deck_style"])
     deck_style.update(
         {
@@ -320,11 +376,81 @@ def _baseline_outline(topic: dict[str, Any], figure_path: str) -> dict[str, Any]
     }
 
 
-def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dict[str, Any]) -> dict[str, Any]:
+def _metric_facts(topic: dict[str, Any]) -> list[dict[str, str]]:
+    values = [int(v) for v in topic.get("chart_values", [])]
+    labels = [str(v) for v in topic.get("chart_categories", [])]
+    if not values or not labels:
+        return []
+    high_i = max(range(len(values)), key=lambda idx: values[idx])
+    low_i = min(range(len(values)), key=lambda idx: values[idx])
+    return [
+        {"value": str(values[high_i]), "label": labels[high_i], "detail": "Highest synthetic readout", "accent": "accent_primary"},
+        {"value": str(values[low_i]), "label": labels[low_i], "detail": "Lowest synthetic readout", "accent": "accent_secondary"},
+        {"value": str(len(values)), "label": "tracked nodes", "detail": "Compact comparison set", "accent": "accent_primary"},
+    ]
+
+
+def _dashboard_slide(topic: dict[str, Any], *, variant: str, slide_id: str = "s6") -> dict[str, Any]:
+    facts = _metric_facts(topic)
+    if variant == "table":
+        return {
+            "slide_id": slide_id,
+            "type": "content",
+            "variant": "table",
+            "treatment_key": "decision",
+            "slide_intent": "decision",
+            "title": "Decision row",
+            "subtitle": "Close with action, owner, and caveat instead of a generic recap",
+            "headers": ["Choice", "Scope", "Condition", "Call"],
+            "rows": topic["decision_rows"],
+            "caption": "Synthetic decision ledger for reproducible deck comparison.",
+            "sources": ["Synthetic decision ledger"],
+            "refs": ["LC-v1"],
+        }
+    if variant == "kpi-hero" and facts:
+        return {
+            "slide_id": slide_id,
+            "type": "content",
+            "variant": "kpi-hero",
+            "treatment_key": "decision",
+            "slide_intent": "decision",
+            "title": "One number to carry forward",
+            "subtitle": "Use the strongest signal as the close, not another table",
+            "value": facts[0]["value"],
+            "label": facts[0]["label"],
+            "context": "Synthetic comparison metric; used to test whether corpus grammar can end on a focused decision moment.",
+            "sources": ["Synthetic decision metric"],
+            "refs": ["LC-v1"],
+        }
+    return {
+        "slide_id": slide_id,
+        "type": "content",
+        "variant": "stats",
+        "treatment_key": "decision",
+        "slide_intent": "decision",
+        "title": "Decision readout",
+        "subtitle": "Close with a compact metric strip and a next action",
+        "facts": facts,
+        "bullets": [
+            "Promote the strongest signal into the next pilot gate.",
+            "Keep caveats beside the metric instead of burying them in prose.",
+        ],
+        "sources": ["Synthetic decision ledger"],
+        "refs": ["LC-v1"],
+    }
+
+
+def _corpus_outline(
+    topic: dict[str, Any],
+    figure_path: str,
+    corpus_context: dict[str, Any],
+    applied: dict[str, Any],
+) -> dict[str, Any]:
+    variant_plan = _corpus_variant_plan(topic, applied)
     return {
         "title": topic["title"],
         "subtitle": f"Corpus-guided treatment: {topic['corpus_family']}",
-        "deck_style": _base_deck_style(topic, mode="corpus"),
+        "deck_style": _base_deck_style(topic, mode="corpus", applied=applied),
         "large_corpus_context": {
             "catalog_version": corpus_context.get("catalog_version"),
             "selected_family": topic["corpus_family"],
@@ -342,7 +468,7 @@ def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dic
             {
                 "slide_id": "s2",
                 "type": "content",
-                "variant": "image-sidebar",
+                "variant": variant_plan["s2"],
                 "treatment_key": "figure",
                 "slide_intent": "evidence",
                 "visual_intent": "hero",
@@ -361,7 +487,7 @@ def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dic
             {
                 "slide_id": "s3",
                 "type": "content",
-                "variant": "lab-run-results" if topic["corpus_family"] == "lab-report" else "table",
+                "variant": variant_plan["s3"],
                 "treatment_key": "table",
                 "slide_intent": "evidence",
                 "visual_intent": "data",
@@ -385,7 +511,7 @@ def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dic
             {
                 "slide_id": "s4",
                 "type": "content",
-                "variant": "chart",
+                "variant": variant_plan["s4"],
                 "treatment_key": "chart",
                 "slide_intent": "evidence",
                 "visual_intent": "data",
@@ -400,7 +526,7 @@ def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dic
                 },
                 "sources": ["Synthetic pilot metrics"],
                 "refs": ["LC-v1"],
-            },
+            } if variant_plan["s4"] == "chart" else _dashboard_slide(topic, variant=variant_plan["s4"], slide_id="s4"),
             {
                 "slide_id": "s5",
                 "type": "content",
@@ -413,19 +539,7 @@ def _corpus_outline(topic: dict[str, Any], figure_path: str, corpus_context: dic
                 "sources": ["Synthetic comparison brief"],
                 "refs": ["LC-v1"],
             },
-            {
-                "slide_id": "s6",
-                "type": "content",
-                "variant": "table",
-                "treatment_key": "decision",
-                "title": "Decision row",
-                "subtitle": "Close with action, owner, and caveat instead of a generic recap",
-                "headers": ["Choice", "Scope", "Condition", "Call"],
-                "rows": topic["decision_rows"],
-                "caption": "Synthetic decision ledger for reproducible deck comparison.",
-                "sources": ["Synthetic decision ledger"],
-                "refs": ["LC-v1"],
-            },
+            _dashboard_slide(topic, variant=variant_plan["s6"]),
         ],
     }
 
@@ -437,6 +551,7 @@ def _design_brief(
     preset: str,
     corpus_context: dict[str, Any] | None,
     generated_data: dict[str, Any] | None = None,
+    atom_application: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     builder_script = str((ROOT / "scripts" / "build_random_topic_comparison_decks.py").resolve())
     generated_data = generated_data or {}
@@ -574,6 +689,12 @@ def _design_brief(
         },
     }
     if mode == "corpus":
+        atom_brief = (atom_application or {}).get("design_brief") or {}
+        for key in ("palette_signals", "typography_signals", "layout_signals", "rhythm_signature"):
+            if key in atom_brief:
+                brief[key] = atom_brief[key]
+        if atom_brief.get("style_atom_composition"):
+            brief["style_atom_composition"] = atom_brief["style_atom_composition"]
         brief["large_style_corpus_used"] = {
             "catalog_version": corpus_context.get("catalog_version") if corpus_context else None,
             "selected_family": topic["corpus_family"],
@@ -582,6 +703,8 @@ def _design_brief(
             "safety_statement": "Descriptor-only source records; no source deck assets copied or rendered.",
         }
         brief["design_catalog_selection"] = topic.get("design_catalog_selection")
+        brief["style_system"]["style_atom_preferred_variants"] = (atom_application or {}).get("preferred_variants", [])
+        brief["style_system"]["style_atom_narrative_arc"] = (atom_application or {}).get("narrative_arc", [])
         brief["style_system"]["style_mix_matrix"] = {
             "header_variant_pool": ["left-accent", "split-rule", "top-bottom-rule", "plain"],
             "chart_treatment_pool": ["facts-right", "minimal", "sparse-wide"],
@@ -593,10 +716,17 @@ def _design_brief(
     return brief
 
 
-def _content_plan(topic: dict[str, Any], *, mode: str) -> dict[str, Any]:
+def _content_plan(topic: dict[str, Any], *, mode: str, atom_application: dict[str, Any] | None = None) -> dict[str, Any]:
     s3_variant = "chart"
+    s4_variant = "comparison-2col"
+    s5_variant = "image-sidebar"
+    s6_variant = ""
     if mode == "corpus":
-        s3_variant = "lab-run-results" if topic["corpus_family"] == "lab-report" else "table"
+        variant_plan = _corpus_variant_plan(topic, atom_application or _corpus_atom_application(topic))
+        s3_variant = variant_plan["s3"]
+        s4_variant = variant_plan["s4"]
+        s5_variant = variant_plan["s5"]
+        s6_variant = variant_plan["s6"]
     return {
         "thesis": f"{topic['title']} can be explained through a concise evidence loop.",
         "audience": "Skill-quality reviewers",
@@ -605,13 +735,18 @@ def _content_plan(topic: dict[str, Any], *, mode: str) -> dict[str, Any]:
             {"slide_id": "s1", "role": "opener", "message": "Set the topic and comparison mode.", "variant": "title", "visual_strategy": "topic-specific title opener"},
             {"slide_id": "s2", "role": "evidence", "message": "Give the primary visual object enough area.", "variant": "image-sidebar" if mode == "corpus" else "comparison-2col", "visual_strategy": "evidence object or modular framing"},
             {"slide_id": "s3", "role": "evidence", "message": "Expose a compact data readout.", "variant": s3_variant, "visual_strategy": "chart or table-first evidence"},
-            {"slide_id": "s4", "role": "evidence", "message": "Compare operating states.", "variant": "chart" if mode == "corpus" else "comparison-2col", "visual_strategy": "sidecar chart or before-after comparison"},
-            {"slide_id": "s5", "role": "decision", "message": "Show implications and next action.", "variant": "comparison-2col" if mode == "corpus" else "image-sidebar", "visual_strategy": "decision comparison or figure sidebar"},
+            {"slide_id": "s4", "role": "evidence", "message": "Compare operating states.", "variant": s4_variant if mode == "corpus" else "comparison-2col", "visual_strategy": "sidecar chart, stats strip, or before-after comparison"},
+            {"slide_id": "s5", "role": "decision", "message": "Show implications and next action.", "variant": s5_variant if mode == "corpus" else "image-sidebar", "visual_strategy": "decision comparison or figure sidebar"},
+            *(
+                [{"slide_id": "s6", "role": "decision", "message": "Close with the strongest action signal.", "variant": s6_variant, "visual_strategy": "atom-selected dashboard or decision readout"}]
+                if mode == "corpus"
+                else []
+            ),
         ],
         "narrative_arc": [
             {"phase": "frame", "slides": ["s1", "s2"]},
             {"phase": "evidence", "slides": ["s3", "s4"]},
-            {"phase": "decision", "slides": ["s5"]},
+            {"phase": "decision", "slides": ["s5", *(['s6'] if mode == "corpus" else [])]},
         ],
     }
 
@@ -1056,19 +1191,32 @@ def _build_workspace(topic: dict[str, Any], *, mode: str, outdir: Path) -> dict[
     _draw_topic_figure(topic, workspace / figure_rel, mode=mode)
     generated_data = _write_data_artifacts(topic, workspace, mode=mode)
     corpus_context = None
+    atom_application = None
     if mode == "corpus":
         corpus_context = compact_large_style_corpus_context(
             topic["prompt"],
             primary_family=topic["corpus_family"],
             max_records=6,
         )
-    outline = _corpus_outline(topic, figure_rel, corpus_context or {}) if mode == "corpus" else _baseline_outline(topic, figure_rel)
+        atom_application = _corpus_atom_application(topic)
+    outline = (
+        _corpus_outline(topic, figure_rel, corpus_context or {}, atom_application or {})
+        if mode == "corpus"
+        else _baseline_outline(topic, figure_rel)
+    )
     _write_json(workspace / "outline.json", outline)
     _write_json(
         workspace / "design_brief.json",
-        _design_brief(topic, mode=mode, preset=preset, corpus_context=corpus_context, generated_data=generated_data),
+        _design_brief(
+            topic,
+            mode=mode,
+            preset=preset,
+            corpus_context=corpus_context,
+            generated_data=generated_data,
+            atom_application=atom_application,
+        ),
     )
-    _write_json(workspace / "content_plan.json", _content_plan(topic, mode=mode))
+    _write_json(workspace / "content_plan.json", _content_plan(topic, mode=mode, atom_application=atom_application))
     _write_json(workspace / "evidence_plan.json", _evidence_plan(topic, mode=mode))
     _write_json(workspace / "asset_plan.json", _asset_plan(topic, figure_rel, generated_data))
     notes = [

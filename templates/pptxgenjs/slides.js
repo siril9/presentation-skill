@@ -2739,9 +2739,9 @@ function renderStatsFeatureLeft(slide, slideData, preset, header, facts, iconPat
       x: MARGIN_X + 0.34,
       y: contentY + 2.42,
       w: leftW - 0.58,
-      h: Math.max(0.46, contentH - 2.70),
+      h: Math.max(0.56, contentH - 2.70),
       fontFace: preset.font_body,
-      fontSize: 10.5,
+      fontSize: 12,
       color: 'CBD5E1',
       fit: 'shrink',
     }));
@@ -2789,16 +2789,16 @@ function renderStatsFeatureLeft(slide, slideData, preset, header, facts, iconPat
       x: rightX + 0.20,
       y: y + 0.60,
       w: rightW - 0.48,
-      h: 0.26,
+      h: 0.34,
       fontFace: preset.font_heading,
-      fontSize: 10.8,
+      fontSize: 12,
       bold: true,
       color: preset.text || preset.text_primary,
       fit: 'shrink',
     }));
     if (fact.caption) {
       const captionH = Math.min(
-        Math.max(0.22, estimateTextHeight(fact.caption, 8.8, rightW - 0.40, 1.15) + 0.10),
+        Math.max(0.34, estimateTextHeight(fact.caption, 12, rightW - 0.40, 1.15) + 0.10),
         Math.max(0.22, rowH - 1.18),
       );
       slide.addText(fact.caption, textOpts({
@@ -2807,7 +2807,7 @@ function renderStatsFeatureLeft(slide, slideData, preset, header, facts, iconPat
         w: rightW - 0.40,
         h: captionH,
         fontFace: preset.font_body,
-        fontSize: 8.8,
+        fontSize: 12,
         color: preset.text_muted,
         fit: 'shrink',
       }));
@@ -2873,9 +2873,9 @@ function renderStatsPolicyBands(slide, slideData, preset, header, facts, iconPat
       x: circleX + circlePad,
       y: circleY + 2.08,
       w: circleW - circlePad * 2,
-      h: Math.min(0.62, Math.max(0.36, estimateTextHeight(primary.caption, 10.0, circleW - circlePad * 2, 1.20) + 0.18)),
+      h: Math.min(0.72, Math.max(0.44, estimateTextHeight(primary.caption, 12, circleW - circlePad * 2, 1.20) + 0.18)),
       fontFace: preset.font_body,
-      fontSize: 10.0,
+      fontSize: 12,
       color: preset.text_muted,
       align: 'center',
       fit: 'shrink',
@@ -2923,16 +2923,16 @@ function renderStatsPolicyBands(slide, slideData, preset, header, facts, iconPat
       x: rightX + 1.50,
       y: y + 0.18,
       w: rightW - 1.50,
-      h: 0.28,
+      h: 0.34,
       fontFace: preset.font_heading,
-      fontSize: 10.8,
+      fontSize: 12,
       bold: true,
       color: preset.text || preset.text_primary,
       fit: 'shrink',
     }));
     if (fact.caption) {
       const captionH = Math.min(
-        Math.max(0.22, estimateTextHeight(fact.caption, 8.8, rightW - 1.50, 1.15) + 0.10),
+        Math.max(0.34, estimateTextHeight(fact.caption, 12, rightW - 1.50, 1.15) + 0.10),
         Math.max(0.28, rowH - 0.78),
       );
       slide.addText(fact.caption, textOpts({
@@ -2941,7 +2941,7 @@ function renderStatsPolicyBands(slide, slideData, preset, header, facts, iconPat
         w: rightW - 1.50,
         h: captionH,
         fontFace: preset.font_body,
-        fontSize: 8.8,
+        fontSize: 12,
         color: preset.text_muted,
         fit: 'shrink',
       }));
@@ -3062,9 +3062,9 @@ function renderStats(pptx, slide, slideData, preset) {
         x: tx + 0.25,
         y: captionY,
         w: tileW - 0.4,
-        h: Math.min(0.58, Math.max(0.36, 0.16 + estimateTextLines(fact.caption, 11, tileW - 0.4) * 0.18)),
+        h: Math.min(0.70, Math.max(0.44, 0.16 + estimateTextLines(fact.caption, 12, tileW - 0.4) * 0.20)),
         fontFace: preset.font_body,
-        fontSize: 11,
+        fontSize: 12,
         color: preset.text_muted,
         valign: 'top',
         paraSpaceAfter: 3,

@@ -2975,6 +2975,7 @@ def main() -> int:
     # deterministic linter can't see. Non-blocking — just printed so the
     # agent sees it and can paste it into an Explore subagent.
     _maybe_emit_critique_prompt(
+        workspace=workspace,
         outline_path=outline_path,
         scripts_dir=scripts_dir,
         py=py,
@@ -3069,7 +3070,7 @@ def _warn_if_stub_and_text_only(asset_plan_path: Path, outline_path: Path) -> No
     print("", file=sys.stderr)
 
 
-def _maybe_emit_critique_prompt(*, outline_path: Path, scripts_dir: Path, py: str) -> None:
+def _maybe_emit_critique_prompt(*, workspace: Path, outline_path: Path, scripts_dir: Path, py: str) -> None:
     try:
         outline = json.loads(outline_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -3088,7 +3089,7 @@ def _maybe_emit_critique_prompt(*, outline_path: Path, scripts_dir: Path, py: st
         return
 
     result = subprocess.run(
-        [py, str(emitter), "--outline", str(outline_path)],
+        [py, str(emitter), "--outline", str(outline_path), "--workspace", str(workspace)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

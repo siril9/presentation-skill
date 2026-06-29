@@ -74,6 +74,12 @@ def _validate(value: str, valid: set[str], fallback: str) -> str:
     return value if value in valid else fallback
 
 
+def _as_text_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
 def apply_composition(
     composition: dict[str, Any],
     base_design_brief: dict[str, Any] | None = None,
@@ -90,6 +96,10 @@ def apply_composition(
     """
     brief = dict(base_design_brief or {})
     deck_style: dict[str, Any] = {}
+    source_families = _as_text_list(composition.get("source_families"))
+    target_family = str(composition.get("target_family") or "").strip()
+    if not target_family and source_families:
+        target_family = source_families[0]
 
     if composition.get("palette"):
         brief.setdefault("palette_signals", []).append(_strip_prefix(composition["palette"]))
@@ -130,21 +140,40 @@ def apply_composition(
     if arc:
         deck_style["arc_beats"] = arc
 
-    families = composition.get("source_families") or []
-    if not families and composition.get("target_family"):
-        families = [composition["target_family"]]
-    if families:
-        deck_style["style_seed_families"] = families
+    if not source_families and target_family:
+        source_families = [target_family]
+    if source_families:
+        deck_style["style_seed_families"] = source_families
 
-    grammar_template = _load_family_template(composition.get("target_family", ""))
+    grammar_template = _load_family_template(target_family)
     preferred_variants = list(grammar_template.get("preferred_variants", []))
     narrative_arc = list(grammar_template.get("narrative_arc", []))
 
-    record_tilt = composition.get("preferred_variants")
+    record_tilt = _as_text_list(composition.get("preferred_variants"))
     if record_tilt:
-        preferred_variants = list(record_tilt)
+        preferred_variants = record_tilt
 
     deck_style["composition_mode"] = composition.get("composition_mode", "agent-picked")
+    brief["style_atom_composition"] = {
+        "schema_version": "style_atom_composition_v1",
+        "target_family": target_family,
+        "source_families": source_families,
+        "composition_mode": deck_style["composition_mode"],
+        "topic_terms": _as_text_list(composition.get("topic_terms")),
+        "palette": composition.get("palette"),
+        "typography": composition.get("typography"),
+        "layout_motifs": _as_text_list(composition.get("layout_motifs")),
+        "chart_treatment": composition.get("chart_treatment"),
+        "table_treatment": composition.get("table_treatment"),
+        "header_treatment": composition.get("header_treatment"),
+        "footer_treatment": composition.get("footer_treatment"),
+        "decorative_motifs": _as_text_list(composition.get("decorative_motifs")),
+        "density": composition.get("density"),
+        "arc_beats": _as_text_list(composition.get("arc_beats")),
+        "rhythm_signature": composition.get("rhythm_signature"),
+        "preferred_variants": preferred_variants,
+        "artifact_density": composition.get("artifact_density", grammar_template.get("artifact_density")),
+    }
 
     return {
         "design_brief": brief,

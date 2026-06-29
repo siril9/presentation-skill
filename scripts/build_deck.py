@@ -3286,7 +3286,7 @@ def _preferred_fact_card_height(
 ) -> float:
     label = _as_str(item.get("label"), "Key Fact")
     detail_lines = _fact_body_lines(item, include_source=include_source)
-    label_font = max(typography.caption_min + 2, min(typography.section_min, 15))
+    label_font = max(typography.body_min, typography.caption_min + 2, min(typography.section_min, 15))
     detail_font = _card_body_font(
         detail_lines or [label],
         width_in=width_in,
@@ -3371,7 +3371,7 @@ def _add_fact_card(
         cursor_y += 0.72
 
     label = _as_str(item.get("label"), "Key Fact")
-    label_font = max(typography.caption_min + 2, min(typography.section_min, 15))
+    label_font = max(typography.body_min, typography.caption_min + 2, min(typography.section_min, 15))
     label_lines = max(1, min(2, _estimate_text_lines(label, width_in=max(0.8, w - 0.28), font_size_pt=label_font)))
     label_h = min(0.50, max(0.22, 0.12 + label_lines * 0.16))
     _set_text_box(

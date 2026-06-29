@@ -9,10 +9,10 @@ from copy import deepcopy
 from typing import Any
 
 
-RELEASE_VERSION = "0.5.0"
+RELEASE_VERSION = "0.6.0"
 DESIGN_CATALOG_VERSION = "design_catalog_selection_v1"
-RELEASE_EVIDENCE_DIR = "decks/random-topic-corpus-comparison-v0.5.0-20260622"
-RANDOM_SEED = "random-topics-v2-20260622"
+RELEASE_EVIDENCE_DIR = "decks/random-topic-corpus-comparison-v0.6.0-20260629"
+RANDOM_SEED = "random-topics-v3-20260629"
 
 
 TOPIC_DESIGN_CASES: list[dict[str, Any]] = [
