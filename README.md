@@ -4,7 +4,7 @@ A skill for coding agents that produces editable PowerPoint decks from structure
 
 ![presentation-skill variant proof board](decks/native-vs-latest-random-topics-20260623/readme_images/presentation_skill_variant_proof.png)
 
-*Rendered samples across the renderer variants, plus the source-first workflow that keeps decks reproducible.*
+*Rendered samples across the renderer variants, from title and section slides to lab tables, figures, KPI, matrix, chart, comparison, and flow layouts.*
 
 ## Why
 

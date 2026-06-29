@@ -31,7 +31,7 @@ VARIANT_TILE_SOURCES = [
     ("split", "Split", "editorial-minimal", "split"),
     ("timeline", "Timeline", "charcoal-safety", "timeline"),
     ("stats", "Stats", "arctic-minimal", "stats"),
-    ("kpi-hero", "KPI Hero", "sunset-investor", "kpi-hero"),
+    ("kpi-hero", "KPI Hero", "bold-startup-narrative", "kpi-hero"),
     ("comparison-2col", "Comparison", "lab-report", "comparison-2col"),
     ("matrix", "Matrix", "lavender-ops", "matrix"),
     ("chart", "Chart", "data-heavy-boardroom", "chart"),
@@ -52,7 +52,7 @@ STYLE_TILE_SOURCES = [
     ("lavender-ops", "Lavender Ops", "flow"),
     ("midnight-neon", "Midnight Neon", "flow"),
     ("paper-journal", "Paper Journal", "scientific-figure"),
-    ("sunset-investor", "Investor Reveal", "kpi-hero"),
+    ("sunset-investor", "Investor Reveal", "chart"),
     ("warm-terracotta", "Terracotta Case", "timeline"),
 ]
 
@@ -60,7 +60,6 @@ INK = "#111827"
 MUTED = "#4b5563"
 RULE = "#d8dee8"
 BG = "#ffffff"
-PALE_BG = "#f8fafc"
 
 
 def _font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -207,71 +206,6 @@ def _tile_from_path(path: Path | None, size: tuple[int, int], label: str) -> Ima
     return tile
 
 
-def _workflow_tile(kind: str, size: tuple[int, int]) -> Image.Image:
-    width, height = size
-    tile = Image.new("RGB", size, PALE_BG)
-    draw = ImageDraw.Draw(tile)
-    draw.rectangle((0, 0, width - 1, height - 1), outline="#d7dee9", width=2)
-    if kind == "source":
-        _text(draw, (22, 18), "outline.json", size=21, bold=True)
-        _text(draw, (22, 47), "source of truth", size=12, fill=MUTED)
-        for i, name in enumerate(["design_brief.json", "content_plan.json", "evidence_plan.json"]):
-            y = 78 + i * 24
-            draw.rectangle((22, y, 174, y + 14), fill="#dbeafe")
-            _text(draw, (29, y - 1), name, size=10, fill="#1e3a8a")
-        draw.line((206, 68, 252, 68), fill="#0f172a", width=2)
-        draw.polygon([(252, 68), (242, 62), (242, 74)], fill="#0f172a")
-        draw.rectangle((224, 92, 284, 128), outline="#0f172a", width=2)
-        _text(draw, (236, 101), ".pptx", size=16, bold=True)
-    elif kind == "qa":
-        _text(draw, (22, 18), "QA gate", size=23, bold=True)
-        checks = [("Geometry", "#0f766e"), ("Visual JPGs", "#2563eb"), ("Placeholder grep", "#b45309")]
-        for i, (name, color) in enumerate(checks):
-            y = 58 + i * 33
-            draw.ellipse((24, y, 42, y + 18), fill=color)
-            draw.line((29, y + 9, 34, y + 14), fill="white", width=2)
-            draw.line((34, y + 14, 40, y + 5), fill="white", width=2)
-            _text(draw, (54, y - 1), name, size=16, fill=INK, bold=True)
-        draw.rectangle((210, 46, 278, 130), outline="#cbd5e1", width=2)
-        draw.rectangle((221, 58, 267, 76), fill="#e2e8f0")
-        draw.rectangle((221, 88, 267, 104), fill="#e2e8f0")
-    elif kind == "atoms":
-        _text(draw, (22, 18), "Atom router", size=23, bold=True)
-        tokens = [("palette", "#f97316"), ("layout", "#06b6d4"), ("density", "#8b5cf6"), ("chart", "#22c55e")]
-        for i, (name, color) in enumerate(tokens):
-            x = 22 + (i % 2) * 118
-            y = 58 + (i // 2) * 38
-            draw.rounded_rectangle((x, y, x + 96, y + 24), radius=6, fill=color)
-            _text(draw, (x + 11, y + 5), name, size=12, fill="white", bold=True)
-        draw.line((236, 74, 274, 102), fill="#0f172a", width=2)
-        draw.line((236, 128, 274, 102), fill="#0f172a", width=2)
-        draw.polygon([(278, 102), (268, 96), (268, 108)], fill="#0f172a")
-    elif kind == "recipes":
-        _text(draw, (22, 18), "Content recipes", size=22, bold=True)
-        rows = [("chart", "readout rail"), ("table", "sidecar"), ("figure", "proof strip")]
-        for i, (left, right) in enumerate(rows):
-            y = 58 + i * 31
-            draw.rectangle((22, y, 92, y + 20), fill="#111827")
-            _text(draw, (34, y + 4), left, size=11, fill="white", bold=True)
-            draw.rectangle((102, y, 274, y + 20), outline="#cbd5e1", width=1)
-            _text(draw, (112, y + 4), right, size=11, fill=MUTED)
-    elif kind == "artifacts":
-        _text(draw, (22, 18), "Data artifacts", size=23, bold=True)
-        draw.rectangle((24, 62, 106, 126), outline="#2563eb", width=2)
-        for x1, y1, x2, y2 in [(38, 100, 50, 118), (58, 86, 70, 118), (78, 74, 90, 118)]:
-            draw.rectangle((x1, y1, x2, y2), fill="#2563eb")
-        draw.rectangle((126, 62, 204, 126), outline="#0f766e", width=2)
-        for i in range(4):
-            draw.line((126, 78 + i * 12, 204, 78 + i * 12), fill="#cbd5e1")
-        for i in range(3):
-            draw.line((152 + i * 18, 62, 152 + i * 18, 126), fill="#cbd5e1")
-        draw.rectangle((224, 62, 282, 126), outline="#b45309", width=2)
-        draw.line((235, 106, 247, 94, 260, 99, 274, 82), fill="#b45309", width=3)
-    else:
-        _text(draw, (22, 18), kind, size=22, bold=True)
-    return tile
-
-
 def _captioned_tile(
     canvas: Image.Image,
     image: Image.Image,
@@ -297,18 +231,19 @@ def _build_tile_board(
     subtitle: str,
     tiles: list[tuple[str, str, Image.Image]],
     out_path: Path,
-    columns: int = 4,
+    columns: int = 5,
 ) -> Path:
-    tile_w = 306
-    tile_h = 172
+    tile_w = 280
+    tile_h = 158
     left = 48
     top = 34
-    header_h = 88
+    header_h = 84
     gap_x = 24
-    gap_y = 34
-    label_h = 42
+    gap_y = 30
+    label_h = 40
     rows = (len(tiles) + columns - 1) // columns
-    width = left * 2 + columns * tile_w + (columns - 1) * gap_x
+    content_w = columns * tile_w + (columns - 1) * gap_x
+    width = left * 2 + content_w
     height = top + header_h + rows * (label_h + tile_h) + (rows - 1) * gap_y + 44
     canvas = Image.new("RGB", (width, height), BG)
     draw = ImageDraw.Draw(canvas)
@@ -319,7 +254,11 @@ def _build_tile_board(
     for index, (label, source, image) in enumerate(tiles):
         row = index // columns
         col = index % columns
-        x = left + col * (tile_w + gap_x)
+        row_start = row * columns
+        row_count = min(columns, len(tiles) - row_start)
+        row_w = row_count * tile_w + max(0, row_count - 1) * gap_x
+        row_left = left + (content_w - row_w) // 2
+        x = row_left + col * (tile_w + gap_x)
         yy = y + row * (label_h + tile_h + gap_y)
         _captioned_tile(canvas, image, (x, yy), title=label, subtitle=source, tile_w=tile_w, tile_h=tile_h)
 
@@ -338,17 +277,10 @@ def _build_variant_proof(summary_path: Path, out_dir: Path, *, render_section: b
     for variant, label, preset, source_variant in VARIANT_TILE_SOURCES:
         path = section if preset == "_section" else _record_variant_image(records, preset, source_variant)
         source = "rendered example" if preset == "_section" else preset.replace("-", " ")
-        tiles.append((label, source, _tile_from_path(path, (306, 172), variant)))
-    tiles.extend(
-        [
-            ("Source First", "JSON -> script -> PPTX", _workflow_tile("source", (306, 172))),
-            ("QA Loop", "geometry + visual + grep", _workflow_tile("qa", (306, 172))),
-            ("Atom Router", "corpus tokens -> grammar", _workflow_tile("atoms", (306, 172))),
-        ]
-    )
+        tiles.append((label, source, _tile_from_path(path, (280, 158), variant)))
     return _build_tile_board(
         title="13 variants, not one bullet-list template",
-        subtitle="Rendered samples plus the source-first workflow that makes decks reproducible.",
+        subtitle="Rendered samples across title, section, data, figure, flow, KPI, matrix, and comparison layouts.",
         tiles=tiles,
         out_path=out_path,
     )
@@ -362,17 +294,10 @@ def _build_style_family_proof(summary_path: Path, out_dir: Path) -> Path:
     tiles: list[tuple[str, str, Image.Image]] = []
     for preset, label, variant in STYLE_TILE_SOURCES:
         path = _record_variant_image(records, preset, variant)
-        tiles.append((label, variant, _tile_from_path(path, (306, 172), preset)))
-    tiles.extend(
-        [
-            ("Corpus Atlas", "311 composable atoms", _workflow_tile("atoms", (306, 172))),
-            ("Recipes", "chart/table/figure rules", _workflow_tile("recipes", (306, 172))),
-            ("Data Artifacts", "chart + table + figure", _workflow_tile("artifacts", (306, 172))),
-        ]
-    )
+        tiles.append((label, variant, _tile_from_path(path, (280, 158), preset)))
     return _build_tile_board(
         title="Presets change structure, not only color",
-        subtitle="One rendered sample per style family, plus the corpus/recipe pieces that route structure.",
+        subtitle="One rendered sample per style family, selected from the style-reference gallery.",
         tiles=tiles,
         out_path=out_path,
     )
