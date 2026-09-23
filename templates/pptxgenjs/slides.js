@@ -1301,6 +1301,11 @@ function addFooter(slide, preset, slideData) {
   if (!footer && provenanceParts.length === 0 && !showPageNumber) return;
 
   const y = SLIDE_H - FOOTER_H;
+  const darkCover = (slideData.role === 'title' || slideData.type === 'title')
+    && ['lavender-ops', 'sunset-investor', 'midnight-neon'].includes(preset.style_preset);
+  const footerInk = darkCover
+    ? firstReadableColor(preset.bg_dark, [preset.title_footer_color, preset.text_muted, 'CBD5E1', 'FFFFFF'], 4.5)
+    : preset.text_muted;
   // Thin accent line above footer.
   slide.addShape('rect', shapeOpts({
     x: MARGIN_X, y: y - 0.04, w: SLIDE_W - MARGIN_X * 2, h: 0.02,
@@ -1323,7 +1328,7 @@ function addFooter(slide, preset, slideData) {
         h: FOOTER_H - 0.02,
         fontFace: preset.font_body,
         fontSize,
-        color: preset.text_muted,
+        color: footerInk,
         valign: 'middle',
         fit: 'shrink',
         objectName: 'metadata:footer-sources',
@@ -1337,7 +1342,7 @@ function addFooter(slide, preset, slideData) {
         h: FOOTER_H - 0.02,
         fontFace: preset.font_body,
         fontSize: roleMetadataFont(preset, 8.4),
-        color: preset.text_muted,
+        color: footerInk,
         align: 'right',
         valign: 'middle',
         objectName: 'metadata:footer-page-number',
@@ -1360,7 +1365,7 @@ function addFooter(slide, preset, slideData) {
       h: FOOTER_H,
       fontFace: preset.font_body,
       fontSize: footerFont,
-      color: preset.text_muted,
+      color: footerInk,
       valign: 'middle',
       fit: 'shrink',
       objectName: 'metadata:footer-text',
@@ -1381,7 +1386,7 @@ function addFooter(slide, preset, slideData) {
       h: FOOTER_H,
       fontFace: preset.font_body,
       fontSize: sourceFont,
-      color: preset.text_muted,
+      color: footerInk,
       italic: true,
       align: sourceOnly ? 'left' : 'right',
       valign: 'middle',
@@ -1397,7 +1402,7 @@ function addFooter(slide, preset, slideData) {
       h: FOOTER_H,
       fontFace: preset.font_body,
       fontSize: roleMetadataFont(preset, 9),
-      color: preset.text_muted,
+      color: footerInk,
       align: 'right',
       valign: 'middle',
       objectName: 'metadata:footer-page-number',
@@ -3378,8 +3383,11 @@ function renderCards(pptx, slide, slideData, preset, columns) {
   const evidenceContract = roleContract(preset, slideData, 'evidence');
   if (evidenceContract && rawCards.length) {
     const maxItems = Math.max(1, Number(evidenceContract.density && evidenceContract.density.max_items) || 4);
+    if (rawCards.length > maxItems) {
+      throw new Error(`Evidence layout supports at most ${maxItems} cards; split the source slide instead of dropping content.`);
+    }
     const facts = normalizeFacts(rawCards.slice(0, maxItems).map((card, index) => ({
-      value: safeText(card && (card.value || card.number)),
+      value: safeText(card && (card.value ?? card.number)),
       label: safeText(card && card.title, `Evidence ${index + 1}`),
       caption: safeText(card && (card.body || card.text || card.caption)),
       source: safeText(card && card.source),
@@ -4127,6 +4135,11 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
   rows.forEach((item, index) => {
     const y = body.y + index * (rowH + rowGap);
     const color = index % 2 ? secondary : accent;
+    const label = safeText(item.label || item.date, `Step ${index + 1}`).toUpperCase();
+    const labelH = Math.min(
+      rowH - 0.16,
+      Math.max(0.28, estimateTextHeight(label, metadataFont, labelW - 0.20, 1.18) + 0.14),
+    );
     slide.addShape('line', shapeOpts({
       x: body.x,
       y: y + rowH,
@@ -4144,11 +4157,11 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
       line: { color: preset.bg || 'FFFFFF', width: 0.8 },
       objectName: `decorative:timeline-marker:${index}`,
     }));
-    slide.addText(safeText(item.label || item.date, `Step ${index + 1}`).toUpperCase(), textOpts({
+    slide.addText(label, textOpts({
       x: body.x + 0.30,
-      y: y + 0.08,
+      y: y + (rowH - labelH) / 2,
       w: labelW - 0.20,
-      h: Math.max(0.24, rowH - 0.16),
+      h: labelH,
       fontFace: preset.font_heading,
       fontSize: metadataFont,
       bold: true,
@@ -4197,17 +4210,129 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
   return true;
 }
 
+function renderTimelineComposition(slide, slideData, preset, header, contract, items) {
+  const grammar = safeText(contract.composition_grammar_id || preset.composition_grammar);
+  const defaultMode = /editorial|investor/.test(grammar) ? 'chapter-spread'
+    : /scientific|operational|policy/.test(grammar) ? 'bands' : 'rail';
+  const requested = safeText(slideData.timeline_mode || preset.timeline_mode).toLowerCase();
+  const mode = ['bands', 'report-bands'].includes(requested) ? 'bands'
+    : requested === 'chapter-spread' ? 'chapter-spread'
+      : ['rail', 'rail-cards'].includes(requested) ? 'rail' : defaultMode;
+  if (mode === 'bands') {
+    return renderReadableTimelineContract(slide, slideData, preset, header, contract, items);
+  }
+  const rows = items.slice(0, 5);
+  if (!rows.length) return false;
+  const body = roleBodyBox(header, slideData, preset, { summaryReserve: 0.76 });
+  const bodyFont = roleBodyFont(preset, 16);
+  const labelFont = roleMetadataFont(preset, 10);
+  const accent = cleanHex(preset.accent_primary, '1493A4');
+  const ink = firstReadableColor(preset.bg, [preset.text, preset.text_primary, '171717', 'FFFFFF']);
+  const muted = firstReadableColor(preset.bg, [preset.text_muted, ink], 4.5);
+  const addText = (text, box, options = {}) => slide.addText(safeText(text), textOpts({
+    ...box, fontFace: preset.font_body, fontSize: bodyFont, color: ink,
+    fit: 'shrink', ...options,
+  }));
+  const addRule = (x, y, w, color = preset.line) => slide.addShape('line', shapeOpts({
+    x, y, w, h: 0, line: { color: cleanHex(color, 'CBD5E1'), width: 0.8 },
+  }));
+  if (mode === 'rail' || rows.length === 1) {
+    const gap = 0.24;
+    const width = (body.w - gap * (rows.length - 1)) / rows.length;
+    const railY = body.y + 0.62;
+    addRule(body.x + 0.09, railY, body.w - width + 0.01, accent);
+    rows.forEach((item, index) => {
+      const x = body.x + index * (width + gap);
+      const color = firstReadableColor(preset.bg, [index % 2 ? preset.accent_secondary : accent, ink]);
+      addText(item.label || item.date || String(index + 1).padStart(2, '0'), {
+        x, y: body.y + 0.05, w: width, h: 0.40,
+      }, { fontSize: labelFont, color, bold: true, objectName: `metadata:timeline-label-${index}` });
+      slide.addShape('ellipse', shapeOpts({
+        x, y: railY - 0.08, w: 0.16, h: 0.16,
+        fill: { color }, line: { color, width: 0 },
+        objectName: `role-contract-slot:evidence:timeline-${index}`,
+      }));
+      const title = safeText(item.title || item.name);
+      const titleH = Math.max(0.48, estimateTextHeight(title, bodyFont, width, 1.18) + 0.12);
+      const titleY = railY + 0.26;
+      addText(title, { x, y: titleY, w: width, h: titleH }, { bold: true, fontFace: preset.font_heading });
+      const detailY = titleY + titleH + 0.16;
+      addText(item.body || item.text || item.caption, {
+        x, y: detailY, w: width, h: Math.max(0.32, body.y + body.h - detailY - 0.08),
+      }, { color: muted });
+    });
+  } else {
+    const focusW = body.w * 0.32;
+    const gap = 0.42;
+    const focus = rows[0];
+    const dark = cleanHex(preset.bg_dark, '171717');
+    const focusInk = firstReadableColor(dark, ['FFFFFF', '171717']);
+    slide.addShape('rect', shapeOpts({
+      x: body.x, y: body.y, w: focusW, h: body.h,
+      fill: { color: dark }, line: { color: dark, width: 0 },
+      objectName: 'role-contract-slot:evidence:timeline-0',
+    }));
+    const x = body.x + 0.26;
+    const width = focusW - 0.52;
+    addText(focus.label || focus.date || '01', {
+      x, y: body.y + 0.28, w: width, h: 0.46,
+    }, { fontSize: labelFont, bold: true, color: focusInk, objectName: 'metadata:timeline-label-0' });
+    const titleFont = Math.max(bodyFont, 22);
+    const titleH = Math.max(0.60, estimateTextHeight(safeText(focus.title), titleFont, width, 1.18) + 0.12);
+    addText(focus.title || focus.name, {
+      x, y: body.y + 0.92, w: width, h: titleH,
+    }, { fontSize: titleFont, color: focusInk, bold: true, fontFace: preset.font_heading });
+    const detailY = body.y + 0.92 + titleH + 0.24;
+    addText(focus.body || focus.text || focus.caption, {
+      x, y: detailY, w: width, h: Math.max(0.38, body.y + body.h - detailY - 0.24),
+    }, { color: focusInk });
+    const rest = rows.slice(1);
+    const rowH = body.h / rest.length;
+    const rightX = body.x + focusW + gap;
+    const rightW = body.w - focusW - gap;
+    rest.forEach((item, index) => {
+      const y = body.y + index * rowH;
+      const labelW = Math.min(1.08, rightW * 0.22);
+      const textX = rightX + labelW + 0.15;
+      const textW = rightW - labelW - 0.15;
+      addRule(rightX, y + rowH - 0.02, rightW);
+      addText(item.label || item.date || String(index + 2).padStart(2, '0'), {
+        x: rightX, y: y + 0.12, w: labelW, h: Math.min(0.48, rowH - 0.22),
+      }, { fontSize: labelFont, color: muted, bold: true, objectName: `metadata:timeline-label-${index + 1}` });
+      const titleH = Math.max(0.30, estimateTextHeight(safeText(item.title), bodyFont, textW, 1.12) + 0.08);
+      addText(item.title || item.name, { x: textX, y: y + 0.08, w: textW, h: titleH }, {
+        bold: true, objectName: `role-contract-slot:evidence:timeline-${index + 1}`,
+      });
+      addText(item.body || item.text || item.caption, {
+        x: textX, y: y + 0.08 + titleH + 0.08, w: textW,
+        h: Math.max(0.30, rowH - titleH - 0.28),
+      }, { color: muted });
+    });
+  }
+  addFooter(slide, preset, slideData);
+  attachNotes(slide, slideData);
+  markRoleContractExecution(slideData, preset, 'evidence', rows.map((_item, index) => `timeline_${index}`));
+  if (slideData.__roleContractExecution) {
+    slideData.__roleContractExecution.adaptation = `readable-timeline-${mode}`;
+    slideData.__roleContractExecution.source_system_id = safeText(contract.system_id);
+  }
+  return true;
+}
+
 function renderTimeline(pptx, slide, slideData, preset) {
   const evidenceContract = roleContract(preset, slideData, 'evidence');
   if (evidenceContract) {
+    if (Array.isArray(slideData.milestones) && slideData.milestones.length > 5) {
+      throw new Error('Timeline supports at most five milestones; split the source slide instead of dropping steps.');
+    }
     paintBackground(slide, preset.bg);
     const header = addDarkTitleBar(slide, preset, slideData.title, slideData.subtitle, slideData);
     const timelineItems = normalizeTimelineItems(slideData);
     const minBody = Number(
       preset && preset.readability_contract && preset.readability_contract.min_body_pt,
     );
-    if (Number.isFinite(minBody) && minBody >= 15 && timelineItems.length >= 4) {
-      renderReadableTimelineContract(
+    if ((Number.isFinite(minBody) && minBody >= 15) || slideData.timeline_mode) {
+      renderTimelineComposition(
         slide,
         slideData,
         preset,
@@ -4381,7 +4506,7 @@ function normalizeFacts(facts) {
         accent = accentRaw;
       }
       return {
-        value: safeText(f.value || f.stat || f.number),
+        value: safeText(f.value ?? f.stat ?? f.number),
         label: safeText(f.label || f.title),
         caption: safeText(f.detail || f.caption || f.body || f.text),
         source: safeText(f.source),
@@ -4391,11 +4516,51 @@ function normalizeFacts(facts) {
     .filter((f) => f && (f.value || f.label));
 }
 
-function renderRoleFactCard(slide, preset, fact, box, index, isAnchor, dense) {
+function renderRoleFactCard(slide, preset, fact, box, index, isAnchor, dense, readable = null) {
   const accentKey = fact.accent || (index % 2 ? 'accent_secondary' : 'accent_primary');
   const accent = preset[accentKey] || preset.accent_primary;
   const darkAnchor = isAnchor && box.w >= 2.2 && box.h >= 1.5;
   const fill = darkAnchor ? (preset.bg_dark || '0F172A') : (preset.surface || 'FFFFFF');
+  const valueColor = firstReadableColor(fill, [accent, preset.text, 'FFFFFF', '111111'], 4.5);
+  if (readable) {
+    const role = readable.role || 'evidence';
+    const slotName = `role-contract-slot:${role}:${index}`;
+    if (darkAnchor || readable.frame === 'rail') {
+      slide.addShape('rect', shapeOpts({
+        ...box, fill: { color: fill },
+        line: { color: darkAnchor ? fill : (preset.line || 'CBD5E1'), width: 0.6 },
+        objectName: slotName,
+      }));
+    } else {
+      slide.addShape('line', shapeOpts({
+        x: box.x, y: readable.frame === 'rule' ? box.y : box.y + box.h,
+        w: box.w, h: 0,
+        line: { color: readable.frame === 'rule' ? accent : (preset.line || 'CBD5E1'), width: 0.7 },
+        objectName: slotName,
+      }));
+    }
+    if (readable.frame === 'rail') {
+      slide.addShape('rect', shapeOpts({
+        x: box.x, y: box.y, w: 0.045, h: box.h,
+        fill: { color: accent }, line: { color: accent, width: 0 },
+      }));
+    }
+    const background = darkAnchor || readable.frame === 'rail' ? fill : (preset.bg || 'FFFFFF');
+    for (const text of readable.texts) {
+      const candidates = text.kind === 'value'
+        ? [accent, preset.text, 'FFFFFF', '111111']
+        : text.kind === 'caption'
+          ? [preset.text_muted, 'CBD5E1', 'FFFFFF', '111111']
+          : [darkAnchor ? 'FFFFFF' : preset.text, 'FFFFFF', '111111'];
+      const { kind, text: content, ...options } = text;
+      slide.addText(content, textOpts({
+        ...options, color: firstReadableColor(background, candidates, 4.5),
+        wrap: true, valign: 'top',
+        objectName: `${role}:${index}:${kind}`,
+      }));
+    }
+    return;
+  }
   const titleColor = darkAnchor ? 'FFFFFF' : (preset.text || preset.text_primary || '0F172A');
   const mutedColor = darkAnchor
     ? firstReadableColor(fill, [preset.text_muted, 'CBD5E1', 'FFFFFF'], 3.0)
@@ -4419,7 +4584,7 @@ function renderRoleFactCard(slide, preset, fact, box, index, isAnchor, dense) {
       slide.addText(truncate(fact.value, 10), textOpts({
         x: box.x + 0.18, y: box.y + 0.12, w: valueW, h: Math.max(0.34, box.h - 0.24),
         fontFace: preset.font_heading, fontSize: dense ? 18 : 22, bold: true,
-        color: accent, valign: 'middle', fit: 'shrink',
+        color: valueColor, valign: 'middle', fit: 'shrink',
       }));
     }
     const minBody = Number(
@@ -4525,7 +4690,7 @@ function renderRoleFactCard(slide, preset, fact, box, index, isAnchor, dense) {
       x: box.x + pad, y: box.y + pad, w: Math.max(0.38, box.w - pad * 2), h: valueH,
       fontFace: preset.font_heading,
       fontSize: dense ? (isAnchor ? 25 : 18) : (isAnchor ? 34 : 23),
-      bold: true, color: accent, fit: 'shrink',
+      bold: true, color: valueColor, fit: 'shrink',
     }));
   }
   const labelY = box.y + pad + (hasValue ? valueH + 0.12 : 0);
@@ -4573,30 +4738,17 @@ function renderRoleFactCard(slide, preset, fact, box, index, isAnchor, dense) {
 }
 
 function renderReadableEvidenceGrid(slide, slideData, preset, header, contract, facts) {
-  const body = roleBodyBox(header, slideData, preset, { summaryReserve: 0.76 });
-  const count = Math.min(4, facts.length);
-  const columns = count === 1 ? 1 : 2;
-  const rows = Math.ceil(count / columns);
-  const gapX = 0.20;
-  const gapY = 0.16;
-  const cardW = (body.w - gapX * Math.max(0, columns - 1)) / columns;
-  const cardH = (body.h - gapY * Math.max(0, rows - 1)) / rows;
-  facts.slice(0, count).forEach((fact, index) => {
-    const row = Math.floor(index / columns);
-    const column = index % columns;
+  const { planReadableRole } = require('./readable_role_layouts.js');
+  const body = roleBodyBox(header, slideData, preset, { topGap: 0.12, summaryReserve: 0.76 });
+  const grammar = safeText(contract.grammar_id || contract.composition_grammar_id || preset.composition_grammar);
+  const layout = planReadableRole({
+    grammar, role: 'evidence', variant: contract.variant, body, items: facts,
+    fontSize: roleBodyFont(preset, 15), fontHeading: preset.font_heading, fontBody: preset.font_body,
+  });
+  layout.placements.forEach((placement) => {
+    const { index, box, anchor } = placement;
     renderRoleFactCard(
-      slide,
-      preset,
-      fact,
-      {
-        x: body.x + column * (cardW + gapX),
-        y: body.y + row * (cardH + gapY),
-        w: cardW,
-        h: cardH,
-      },
-      index,
-      index === 0,
-      false,
+      slide, preset, facts[index], box, index, anchor, false, placement,
     );
   });
   addFooter(slide, preset, slideData);
@@ -4605,11 +4757,13 @@ function renderReadableEvidenceGrid(slide, slideData, preset, header, contract, 
     slideData,
     preset,
     'evidence',
-    facts.slice(0, count).map((_fact, index) => `evidence_${index}`),
+    facts.map((_fact, index) => `evidence_${index}`),
   );
   if (slideData.__roleContractExecution) {
-    slideData.__roleContractExecution.adaptation = 'readable-evidence-grid';
+    slideData.__roleContractExecution.adaptation = `readable-evidence:${grammar}:${layout.recipe}`;
     slideData.__roleContractExecution.source_system_id = safeText(contract.system_id);
+    slideData.__roleContractExecution.executed_slots = layout.placements.map(({ index, box }) => ({ slot: `evidence_${index}`, ...box }));
+    slideData.__roleContractExecution.rendered_item_count = facts.length;
   }
   return true;
 }
@@ -4728,16 +4882,16 @@ function renderPolicyEvidenceRecord(slide, slideData, preset, header, contract, 
 }
 
 function renderEvidenceContract(slide, slideData, preset, header, contract, facts) {
-  if (renderPolicyEvidenceRecord(slide, slideData, preset, header, contract, facts)) return true;
   const minBody = Number(
     preset && preset.readability_contract && preset.readability_contract.min_body_pt,
   );
-  const verboseFacts = facts.some((fact) => (
-    `${safeText(fact.label)} ${safeText(fact.caption)}`.trim().length > 48
-  ));
-  if (Number.isFinite(minBody) && minBody >= 15 && facts.length >= 3 && verboseFacts) {
+  if (Number.isFinite(minBody) && minBody >= 15) {
+    if (Array.isArray(slideData.facts) && normalizeFacts(slideData.facts).length > facts.length) {
+      throw new Error('Evidence exceeds the adapter item limit. Split this slide; content must not be dropped.');
+    }
     return renderReadableEvidenceGrid(slide, slideData, preset, header, contract, facts);
   }
+  if (renderPolicyEvidenceRecord(slide, slideData, preset, header, contract, facts)) return true;
   const body = roleBodyBox(header, slideData, preset, { summaryReserve: 0.76 });
   const slots = roleSlotNames(contract, 'evidence_');
   const dense = contract.variant === 'dense' || facts.length > slots.length;
@@ -5608,6 +5762,8 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
   if (!text || w <= 0 || h <= 0) return;
   const fill = treatment === 'decision-matrix' ? (preset.bg_dark || '0F172A') : (preset.surface || 'FFFFFF');
   const dark = treatment === 'decision-matrix';
+  const bodyColor = firstReadableColor(fill, [dark ? 'FFFFFF' : preset.text, preset.text_primary, '111111', 'FFFFFF']);
+  const accentColor = firstReadableColor(fill, [preset.accent_secondary, preset.accent_primary, bodyColor], 4.5);
   slide.addShape('rect', shapeOpts({
     x,
     y,
@@ -5621,8 +5777,8 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
     y,
     w: 0.07,
     h,
-    fill: { color: preset.accent_secondary || preset.accent_primary },
-    line: { color: preset.accent_secondary || preset.accent_primary, width: 0 },
+    fill: { color: accentColor },
+    line: { color: accentColor, width: 0 },
   }));
   if (w < 1.35) {
     const labelH = Math.min(0.34, Math.max(0.30, h * 0.16));
@@ -5631,7 +5787,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
       x: x + 0.12, y: y + 0.12, w: Math.max(0.24, w - 0.24),
       h: labelH, fontFace: preset.font_heading,
       fontSize: roleMetadataFont(preset, 8.0), bold: true,
-      color: dark ? (preset.accent_secondary || 'FFFFFF') : (preset.accent_primary || preset.text),
+      color: accentColor,
       align: 'center', fit: 'shrink',
       objectName: 'metadata:table-readout-label',
     }));
@@ -5646,7 +5802,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
       x: x + 0.12, y: bodyY, w: bodyW,
       h: bodyH,
       fontFace: preset.font_body, fontSize: bodyFont,
-      color: dark ? 'FFFFFF' : (preset.text || preset.text_primary),
+      color: bodyColor,
       align: 'center', valign: 'middle', fit: 'shrink',
     }));
     return;
@@ -5663,7 +5819,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
       fontFace: preset.font_heading,
       fontSize: roleMetadataFont(preset, 8.2),
       bold: true,
-      color: dark ? (preset.accent_secondary || 'FFFFFF') : (preset.accent_primary || preset.text),
+      color: accentColor,
       charSpacing: 1.1,
       fit: 'shrink',
       valign: 'middle',
@@ -5676,7 +5832,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
       h: Math.max(0.32, h - 0.12),
       fontFace: preset.font_body,
       fontSize: roleBodyFont(preset, 8.0),
-      color: dark ? 'FFFFFF' : (preset.text || preset.text_primary),
+      color: bodyColor,
       fit: 'shrink',
       valign: 'middle',
     }));
@@ -5690,12 +5846,12 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
     fontFace: preset.font_heading,
     fontSize: roleMetadataFont(preset, 8.6),
     bold: true,
-    color: dark ? (preset.accent_secondary || 'FFFFFF') : (preset.accent_primary || preset.text),
+    color: accentColor,
     charSpacing: 1.2,
     fit: 'shrink',
     objectName: 'metadata:table-readout-label',
   }));
-  const tallBodyFont = 12;
+  const tallBodyFont = roleBodyFont(preset, 12);
   const tallBodyW = w - 0.34;
   const tallBodyH = Math.min(
     Math.max(0.50, estimateTextHeight(text, tallBodyFont, tallBodyW, 1.18) + 0.16),
@@ -5708,7 +5864,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment) {
     h: tallBodyH,
     fontFace: preset.font_body,
     fontSize: tallBodyFont,
-    color: dark ? 'FFFFFF' : (preset.text || preset.text_primary),
+    color: bodyColor,
     fit: 'shrink',
     valign: 'top',
   }));
@@ -5874,6 +6030,12 @@ function renderReadableReferenceRegister(slide, slideData, preset, header, table
       const longTitle = title.length > 18;
       const titleW = Math.min(longTitle ? 1.82 : 1.52, columnW * (longTitle ? 0.34 : 0.28));
       const titleFont = roleMetadataFont(preset, longTitle ? 10.0 : 12.5);
+      const titleTextW = titleW - 0.14;
+      const detailW = Math.max(0.50, columnW - titleW - 0.32);
+      const titleH = Math.min(rowH - 0.08, Math.max(0.30,
+        estimateTextHeight(title, titleFont, titleTextW, 1.18) + 0.16));
+      const detailH = Math.min(rowH - 0.08, Math.max(0.30,
+        estimateTextHeight(detail, metadataFont, detailW, 1.18) + 0.16));
       slide.addShape('rect', shapeOpts({
         x,
         y,
@@ -5893,9 +6055,9 @@ function renderReadableReferenceRegister(slide, slideData, preset, header, table
       }));
       slide.addText(title, textOpts({
         x: x + 0.18,
-        y: y + 0.04,
-        w: titleW - 0.14,
-        h: Math.max(0.28, rowH - 0.08),
+        y: y + (rowH - titleH) / 2,
+        w: titleTextW,
+        h: titleH,
         fontFace: preset.font_heading,
         fontSize: titleFont,
         bold: true,
@@ -5906,9 +6068,9 @@ function renderReadableReferenceRegister(slide, slideData, preset, header, table
       }));
       slide.addText(detail, textOpts({
         x: x + titleW + 0.16,
-        y: y + 0.04,
-        w: Math.max(0.50, columnW - titleW - 0.32),
-        h: Math.max(0.28, rowH - 0.08),
+        y: y + (rowH - detailH) / 2,
+        w: detailW,
+        h: detailH,
         fontFace: preset.font_body,
         fontSize: metadataFont,
         color: preset.text || preset.text_primary || '0F172A',
@@ -5966,6 +6128,7 @@ function renderPolicyOptionTable(slide, slideData, preset, header, table, contra
   const accent = cleanHex(preset.accent_primary, 'C65D3B');
   const secondary = cleanHex(preset.accent_secondary, '2F7D76');
   const summary = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
+  const interpretation = safeText(slideData.interpretation);
   const hasTableNotes = !!(table.caption || (table.footnotes || []).length);
   const captionH = hasTableNotes ? 0.20 : 0;
   const captionGap = hasTableNotes ? 0.06 : 0;
@@ -5974,8 +6137,10 @@ function renderPolicyOptionTable(slide, slideData, preset, header, table, contra
     ? (summaryLines > 1 ? 0.82 : (summary.length > 84 ? 0.74 : 0.64))
     : 0;
   const summaryGap = summary ? 0.10 : 0;
+  const interpretationH = interpretation ? 0.66 : 0;
+  const interpretationGap = interpretation ? 0.10 : 0;
   const tableY = body.y;
-  const tableH = Math.max(1.20, body.h - captionGap - captionH - summaryGap - summaryH);
+  const tableH = Math.max(1.20, body.h - captionGap - captionH - summaryGap - summaryH - interpretationGap - interpretationH);
   const treatmentOpts = tableTreatmentOptions('standard', preset, false);
   treatmentOpts.headerFontSize = Math.max(12.5, roleBodyFont(preset, 13));
   treatmentOpts.bodyFontSize = Math.max(12.5, roleBodyFont(preset, 13));
@@ -5990,7 +6155,7 @@ function renderPolicyOptionTable(slide, slideData, preset, header, table, contra
     objectName: 'Editable table: public option register',
   });
   if (summary) {
-    const summaryY = body.y + body.h - summaryH;
+    const summaryY = body.y + body.h - interpretationH - interpretationGap - summaryH;
     slide.addShape('rect', shapeOpts({
       x: body.x, y: summaryY, w: body.w, h: summaryH,
       fill: { color: secondary }, line: { color: secondary, width: 0 },
@@ -6012,9 +6177,15 @@ function renderPolicyOptionTable(slide, slideData, preset, header, table, contra
       fontSize: roleMetadataFont(preset, 9),
     });
   }
+  if (interpretation) {
+    addTableReadoutPanel(
+      slide, preset, interpretation,
+      body.x, body.y + body.h - interpretationH, body.w, interpretationH, 'standard',
+    );
+  }
   addFooter(slide, preset, slideData);
   attachNotes(slide, slideData);
-  markRoleContractExecution(slideData, preset, 'table', ['table', ...(summary ? ['readout'] : [])]);
+  markRoleContractExecution(slideData, preset, 'table', ['table', ...(summary || interpretation ? ['readout'] : [])]);
   if (slideData.__roleContractExecution) {
     slideData.__roleContractExecution.adaptation = 'policy-option-table-open';
     slideData.__roleContractExecution.source_system_id = safeText(contract.system_id);
@@ -6049,17 +6220,35 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
   const gap = 0.32;
   const sourceW = sourceRows.length ? Math.min(3.30, body.w * 0.30) : 0;
   const riskW = body.w - sourceW - (sourceRows.length ? gap : 0);
-  const labelH = 0.38;
+  const labelH = 0.70;
   const rowsY = body.y + labelH + 0.10;
   const rowsH = body.h - labelH - 0.10;
 
   slide.addText('ACCOUNTABILITY REGISTER', textOpts({
-    x: body.x, y: body.y, w: riskW, h: labelH,
+    x: body.x, y: body.y, w: riskW, h: 0.30,
     fontFace: preset.font_body, fontSize: roleMetadataFont(preset, 9),
     bold: true, color: secondary, charSpacing: 0.8, fit: 'shrink',
     objectName: 'metadata:policy-accountability-register',
   }));
   const riskRowH = rowsH / Math.max(1, riskRows.length);
+  const indexW = 0.42;
+  const titleW = Math.min(1.70, Math.max(1.52, riskW * 0.27));
+  const ownerW = Math.min(1.76, Math.max(1.62, riskW * 0.285));
+  const controlW = Math.max(0.90, riskW - indexW - titleW - ownerW);
+  const headerLabels = table.headers.slice(0, 3);
+  [
+    [body.x + indexW + 0.04, titleW - 0.08],
+    [body.x + indexW + titleW + 0.04, ownerW - 0.08],
+    [body.x + indexW + titleW + ownerW + 0.04, controlW - 0.08],
+  ].forEach(([x, w], index) => {
+    if (!safeText(headerLabels[index])) return;
+    slide.addText(headerLabels[index], textOpts({
+      x, y: body.y + 0.40, w, h: 0.22,
+      fontFace: preset.font_body, fontSize: roleMetadataFont(preset, 9),
+      bold: true, color: secondary, fit: 'shrink',
+      objectName: `metadata:policy-register-header-${index}`,
+    }));
+  });
   const registerRows = riskRows.map(({ row }, rowIndex) => {
     const rowFill = cleanHex(preset.bg, 'F6F8F5');
     const cellBorder = { type: 'solid', color: rowFill, pt: 0.1 };
@@ -6099,10 +6288,6 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
     ];
   });
   if (registerRows.length) {
-    const indexW = 0.42;
-    const titleW = Math.min(1.70, Math.max(1.52, riskW * 0.27));
-    const ownerW = Math.min(1.76, Math.max(1.62, riskW * 0.285));
-    const controlW = Math.max(0.90, riskW - indexW - titleW - ownerW);
     riskRows.forEach((_item, rowIndex) => {
       if (rowIndex === 0) return;
       const y = rowsY + rowIndex * riskRowH;
@@ -6132,8 +6317,8 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
       bold: true, color: 'FFFFFF', charSpacing: 0.8, fit: 'shrink',
       objectName: 'metadata:policy-source-register',
     }));
-    const sourceTop = body.y + 0.82;
-    const sourceRowH = Math.max(1.10, (body.h - 1.04) / sourceRows.length);
+    const sourceTop = body.y + 0.62;
+    const sourceRowH = (body.h - 0.72) / sourceRows.length;
     sourceRows.forEach(({ row }, index) => {
       const y = sourceTop + index * sourceRowH;
       if (index > 0) {
@@ -6144,15 +6329,15 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
       }
       const sourceTitle = safeText(row && row[0], `Source ${index + 1}`);
       const sourceTitleW = sourceW - 0.56;
-      const sourceTitleFont = roleMetadataFont(preset, 12.5);
+      const sourceTitleFont = roleMetadataFont(preset, sourceRows.length >= 3 ? 10 : 12.5);
       const sourceTitleH = Math.min(
-        Math.max(0.34, sourceRowH - 0.46),
-        Math.max(0.34, estimateTextHeight(sourceTitle, sourceTitleFont, sourceTitleW, 1.14) + 0.12),
+        Math.max(0.26, sourceRowH - 0.46),
+        Math.max(0.26, estimateTextHeight(sourceTitle, sourceTitleFont, sourceTitleW, 1.14) + 0.06),
       );
       slide.addText(sourceTitle, textOpts({
-        x: sourceX + 0.28, y: y + 0.10, w: sourceTitleW, h: sourceTitleH,
+        x: sourceX + 0.28, y: y + 0.06, w: sourceTitleW, h: sourceTitleH,
         fontFace: preset.font_heading, fontSize: sourceTitleFont,
-        bold: true, color: index % 2 ? secondary : accent, fit: 'shrink',
+        bold: true, color: firstReadableColor(preset.bg_dark, [index % 2 ? secondary : accent, 'FFFFFF']), fit: 'shrink',
         objectName: `metadata:policy-source-title-${index}`,
       }));
       const sourceDetailCells = (row || []).slice(1).map((item) => safeText(item)).filter(Boolean);
@@ -6160,10 +6345,10 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
         sourceDetailCells.pop();
       }
       const sourceDetail = sourceDetailCells.join(' · ');
-      const sourceDetailFont = roleMetadataFont(preset, 12.5);
+      const sourceDetailFont = roleMetadataFont(preset, sourceRows.length >= 3 ? 9 : 12.5);
       const sourceDetailW = sourceW - 0.56;
-      const sourceDetailY = y + 0.10 + sourceTitleH + 0.10;
-      const sourceDetailAvailableH = Math.max(0.30, y + sourceRowH - sourceDetailY - 0.10);
+      const sourceDetailY = y + 0.06 + sourceTitleH + 0.09;
+      const sourceDetailAvailableH = Math.max(0.30, y + sourceRowH - sourceDetailY - 0.06);
       const sourceDetailH = Math.min(
         sourceDetailAvailableH,
         Math.max(0.30, estimateTextHeight(sourceDetail, sourceDetailFont, sourceDetailW, 1.18) + 0.14),
@@ -6210,7 +6395,7 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
   if (readableReferenceRegister) {
     return renderReadableReferenceRegister(slide, slideData, preset, header, table, contract);
   }
-  const readableAdaptation = readableWideTable
+  let readableAdaptation = readableWideTable
     ? 'readable-wide-table'
     : '';
   if (readableWideTable) {
@@ -6238,6 +6423,21 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
     notesBox = null;
   }
   const explicitReadout = tableReadoutText(slideData, table);
+  const narrowOrdinaryReadout = !referenceTable
+    && explicitReadout
+    && Number.isFinite(minBody)
+    && minBody >= 15
+    && readoutBox
+    && (readoutBox.w < 2.75 || estimateTextHeight(explicitReadout, minBody, Math.max(0.30, readoutBox.w - 0.34), 1.18) > readoutBox.h - 0.60);
+  if (narrowOrdinaryReadout) {
+    const bandH = Math.min(1.02, Math.max(0.82, estimateTextHeight(explicitReadout, minBody, body.w - 1.70, 1.18) + 0.24));
+    const bandGap = 0.24;
+    tableBox = { x: body.x, y: body.y, w: body.w, h: Math.max(0.80, body.h - bandH - bandGap) };
+    readoutBox = { x: body.x, y: body.y + body.h - bandH, w: body.w, h: bandH };
+    indexBox = null;
+    notesBox = null;
+    readableAdaptation = 'readable-table-readout-band';
+  }
   if (!referenceTable && !explicitReadout) {
     tableBox = body;
     indexBox = null;
@@ -6264,7 +6464,16 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
     colW: tableColumnWidths(table.headers, table.column_weights, tableBox.w),
     fontSize: treatmentOpts.bodyFontSize || (contract.variant === 'dense' ? 7.5 : 8.3),
     rowH,
+    objectName: `Editable ${referenceTable ? 'source register' : 'table'}: ${safeText(slideData.title)}`,
   });
+  if (referenceTable && preset.style_preset === 'midnight-neon') {
+    slide.addText('SOURCE REGISTER', textOpts({
+      x: tableBox.x, y: tableBox.y - 0.28, w: tableBox.w, h: 0.22,
+      fontFace: preset.font_body, fontSize: roleMetadataFont(preset, 9),
+      bold: true, color: firstReadableColor(preset.bg, [preset.accent_primary, preset.text, 'FFFFFF']),
+      objectName: 'metadata:reference-table-label',
+    }));
+  }
   if (embeddedCaption) {
     slide.addText(captionText, textOpts({
       x: tableBox.x, y: tableBox.y + tableH + 0.06, w: tableBox.w, h: captionH,
@@ -6289,8 +6498,8 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
       slideData.__roleContractConsumesSummary = true;
     }
   }
-  if (notesBox) {
-    const notes = captionText || (referenceTable ? 'Primary evidence\nMethods and provenance\nAccessed for this deck' : explicitReadout);
+  if (notesBox && (captionText || explicitReadout)) {
+    const notes = captionText || explicitReadout;
     slide.addShape('rect', shapeOpts({
       x: notesBox.x, y: notesBox.y, w: notesBox.w, h: notesBox.h,
       fill: { color: preset.surface || 'FFFFFF' },
@@ -6310,7 +6519,7 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
       slide.addText(notes.replace(/\s*\n\s*/g, '  |  '), textOpts({
         x: notesBox.x + labelW + 0.10, y: notesBox.y + 0.08,
         w: Math.max(0.30, notesBox.w - labelW - 0.22), h: Math.max(0.20, notesBox.h - 0.16),
-        fontFace: preset.font_body, fontSize: roleBodyFont(preset, 8.0),
+        fontFace: preset.font_body, fontSize: referenceTable ? roleMetadataFont(preset, 9) : roleBodyFont(preset, 8.0),
         color: preset.text || preset.text_primary || '0F172A', valign: 'middle', fit: 'shrink',
         objectName: referenceTable ? 'metadata:reference-notes' : 'support:table-readout',
       }));
@@ -6342,7 +6551,7 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
       objectName: 'metadata:table-notes-label',
     }));
     const notesY = notesBox.y + 0.10 + noteLabelH + 0.10;
-    const notesFont = roleBodyFont(preset, 8.0);
+    const notesFont = referenceTable ? roleMetadataFont(preset, 9) : roleBodyFont(preset, 8.0);
     const notesW = Math.max(0.26, notesBox.w - 0.20);
     const availableNotesH = Math.max(0.20, notesBox.y + notesBox.h - notesY - 0.10);
     const notesH = Math.min(
@@ -7016,7 +7225,7 @@ function renderContractComparisonOption(slide, preset, spec, box, index, dense) 
   if (horizontal) {
     const pad = 0.16;
     const titleW = Math.min(2.45, Math.max(1.35, box.w * 0.28));
-    const titleFont = dense ? 12 : 15;
+    const titleFont = roleBodyFont(preset, dense ? 12 : 15);
     const titleTextW = Math.max(0.50, titleW - pad);
     const titleH = Math.min(
       Math.max(0.34, box.h - pad * 2),
@@ -7052,12 +7261,14 @@ function renderContractComparisonOption(slide, preset, spec, box, index, dense) 
     return;
   }
   const pad = narrow ? 0.10 : 0.18;
-  const titleH = horizontal ? Math.min(0.48, box.h * 0.30) : Math.min(0.62, box.h * 0.22);
+  const optionTitleFont = roleBodyFont(preset, narrow ? 10 : (dense ? 12 : 15));
+  const titleH = Math.min(0.62, Math.max(0.34,
+    estimateTextHeight(title, optionTitleFont, Math.max(0.30, box.w - pad * 2), 1.10) + 0.08));
   const titleX = box.x + pad;
   const titleY = box.y + pad;
   slide.addText(title, textOpts({
     x: titleX, y: titleY, w: Math.max(0.30, box.w - pad * 2), h: titleH,
-    fontFace: preset.font_heading, fontSize: narrow ? 10 : (dense ? 12 : 15),
+    fontFace: preset.font_heading, fontSize: optionTitleFont,
     bold: true, color: accent, fit: 'shrink',
   }));
   if (body.length) {
@@ -7105,29 +7316,41 @@ function renderPolicyComparisonDocket(slide, slideData, preset, contract) {
   options.forEach((spec, index) => {
     const y = body.y + index * rowH;
     const rowAccent = index % 2 ? secondary : accent;
+    const optionNumber = String(index + 1).padStart(2, '0');
+    const optionTitle = safeText(spec.title, `Option ${index + 1}`);
+    const bodyText = comparisonBodyLines(spec).map((item) => `• ${item}`).join('\n');
+    const titleW = Math.min(3.0, body.w * 0.25);
+    const bodyW = Math.max(1.0, body.w - titleW - 1.02);
+    const numberFont = roleBodyFont(preset, 22);
+    const titleFont = roleBodyFont(preset, 18);
+    const optionBodyFont = roleBodyFont(preset, 15.5);
+    const compactH = (value, font, width) => Math.min(rowH - 0.28, Math.max(
+      0.40, estimateTextHeight(value, font, width, 1.18) + 0.18,
+    ));
+    const numberH = compactH(optionNumber, numberFont, 0.72);
+    const titleH = compactH(optionTitle, titleFont, titleW);
+    const bodyH = compactH(bodyText, optionBodyFont, bodyW);
     if (index > 0) {
       slide.addShape('line', shapeOpts({
         x: body.x, y, w: body.w, h: 0,
         line: { color: line, width: 0.75 },
       }));
     }
-    slide.addText(String(index + 1).padStart(2, '0'), textOpts({
-      x: body.x, y: y + 0.18, w: 0.72, h: rowH - 0.36,
-      fontFace: preset.font_heading, fontSize: roleBodyFont(preset, 22),
+    slide.addText(optionNumber, textOpts({
+      x: body.x, y: y + (rowH - numberH) / 2, w: 0.72, h: numberH,
+      fontFace: preset.font_heading, fontSize: numberFont,
       bold: true, color: rowAccent, valign: 'middle', fit: 'shrink',
       objectName: `metadata:policy-option-${index + 1}`,
     }));
-    const titleW = Math.min(3.0, body.w * 0.25);
-    slide.addText(safeText(spec.title, `Option ${index + 1}`), textOpts({
-      x: body.x + 0.88, y: y + 0.14, w: titleW, h: rowH - 0.28,
-      fontFace: preset.font_heading, fontSize: roleBodyFont(preset, 18),
+    slide.addText(optionTitle, textOpts({
+      x: body.x + 0.88, y: y + (rowH - titleH) / 2, w: titleW, h: titleH,
+      fontFace: preset.font_heading, fontSize: titleFont,
       bold: true, color: text, valign: 'middle', fit: 'shrink',
     }));
-    const bodyLines = comparisonBodyLines(spec);
-    slide.addText(bodyLines.map((item) => `• ${item}`).join('\n'), textOpts({
-      x: body.x + 1.02 + titleW, y: y + 0.14,
-      w: Math.max(1.0, body.w - titleW - 1.02), h: rowH - 0.28,
-      fontFace: preset.font_body, fontSize: roleBodyFont(preset, 15.5),
+    slide.addText(bodyText, textOpts({
+      x: body.x + 1.02 + titleW, y: y + (rowH - bodyH) / 2,
+      w: bodyW, h: bodyH,
+      fontFace: preset.font_body, fontSize: optionBodyFont,
       color: muted, valign: 'middle', fit: 'shrink',
     }));
   });
@@ -7169,18 +7392,16 @@ function renderComparisonContract(slide, slideData, preset, contract) {
     (slideData.right && typeof slideData.right === 'object') ? slideData.right : {},
   ];
   const dense = contract.variant === 'dense';
-  options.forEach((spec, index) => {
-    const box = roleSlot(contract, `option_${index}`, body);
-    if (box) renderContractComparisonOption(slide, preset, spec, box, index, dense);
-  });
+  let optionBoxes = options.map((_spec, index) => roleSlot(contract, `option_${index}`, body));
   const verdict = safeText(slideData.verdict || slideData.takeaway);
   const verdictBox = roleSlot(contract, 'verdict', body);
+  let verdictRenderBox = verdictBox;
   if (verdict && verdictBox) {
     // Some grammars intentionally use a compact verdict anchor between two
     // comparison fields. Preserve that reading order, but widen the top-row
     // anchor for sentence-length conclusions so the readability floor does
     // not force overflow inside a narrow semantic slot.
-  let verdictRenderBox = verdict.length > 52
+    verdictRenderBox = verdict.length > 52
       && verdictBox.w < body.w * 0.48
       && verdictBox.h <= body.h * 0.36
       ? {
@@ -7198,6 +7419,51 @@ function renderComparisonContract(slide, slideData, preset, contract) {
         h: 1.08,
       };
     }
+    const textRects = [];
+    const measuringSlide = {
+      addShape() {},
+      addText(_text, opts) { textRects.push(opts); },
+    };
+    options.forEach((spec, index) => {
+      if (optionBoxes[index]) {
+        renderContractComparisonOption(measuringSlide, preset, spec, optionBoxes[index], index, dense);
+      }
+    });
+    const intersectsText = (rect) => textRects.some((textRect) => (
+      rect.x < textRect.x + textRect.w - 0.02
+      && textRect.x < rect.x + rect.w - 0.02
+      && rect.y < textRect.y + textRect.h - 0.02
+      && textRect.y < rect.y + rect.h - 0.02
+    ));
+    if (intersectsText(verdictRenderBox)) {
+      const verdictFont = roleBodyFont(preset, 12);
+      const verdictH = Math.min(1.02, Math.max(
+        0.72,
+        estimateTextHeight(verdict, verdictFont, body.w - 0.24, 1.18) + 0.24,
+      ));
+      verdictRenderBox = {
+        x: body.x,
+        y: body.y + body.h - verdictH,
+        w: body.w,
+        h: verdictH,
+      };
+      if (intersectsText(verdictRenderBox)) {
+        const bottom = Math.max(...optionBoxes.filter(Boolean).map((box) => box.y + box.h));
+        const scale = Math.max(0.1, (verdictRenderBox.y - 0.10 - body.y) / (bottom - body.y));
+        optionBoxes = optionBoxes.map((box) => box && ({
+          ...box,
+          y: body.y + (box.y - body.y) * scale,
+          h: box.h * scale,
+        }));
+      }
+    }
+  }
+  options.forEach((spec, index) => {
+    if (optionBoxes[index]) {
+      renderContractComparisonOption(slide, preset, spec, optionBoxes[index], index, dense);
+    }
+  });
+  if (verdict && verdictRenderBox) {
     const accent = preset.accent_secondary || preset.accent_primary;
     slide.addShape('rect', shapeOpts({
       x: verdictRenderBox.x, y: verdictRenderBox.y, w: verdictRenderBox.w, h: verdictRenderBox.h,
@@ -7470,82 +7736,27 @@ function renderMatrixOpenQuadrants(slide, slideData, preset, header, quadrants, 
 }
 
 function renderReadableDecisionLedger(slide, slideData, preset, header, contract, quadrants) {
-  const body = roleBodyBox(header, slideData, preset, { consumeSummary: true, footerReserve: 0.58 });
-  const items = quadrants.slice(0, 4);
+  const { planReadableRole, wrapText } = require('./readable_role_layouts.js');
+  const body = roleBodyBox(header, slideData, preset, { topGap: 0.12, consumeSummary: true, footerReserve: 0.58 });
+  const items = quadrants.map((item, index) => ({
+    value: String(index + 1).padStart(2, '0'),
+    label: safeText(item.title, `Gate ${index + 1}`),
+    caption: safeText(item.body || item.text),
+  }));
   const commitment = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
-  const bodyFont = roleBodyFont(preset, 16.0);
-  const commitmentGap = commitment ? 0.08 : 0;
-  const commitmentH = commitment
-    ? Math.min(
-      1.02,
-      Math.max(
-        0.72,
-        estimateTextHeight(commitment, bodyFont, body.w - 0.44, 1.18) + 0.20,
-      ),
-    )
-    : 0;
-  const rowsH = Math.max(1.0, body.h - commitmentGap - commitmentH);
-  const rowGap = 0.04;
-  const rowH = (rowsH - rowGap * Math.max(0, items.length - 1)) / Math.max(1, items.length);
-  const titleW = Math.min(2.05, body.w * 0.20);
-  const metadataFont = roleMetadataFont(preset, 9.0);
-
-  items.forEach((item, index) => {
-    const y = body.y + index * (rowH + rowGap);
-    const accent = index % 2 === 0 ? preset.accent_primary : preset.accent_secondary;
-    slide.addShape('rect', shapeOpts({
-      x: body.x,
-      y,
-      w: body.w,
-      h: rowH,
-      fill: { color: preset.surface || 'FFFFFF' },
-      line: { color: preset.line || 'CBD5E1', width: 0.65 },
-      objectName: `role-contract-slot:decision:ledger-${index}`,
-    }));
-    slide.addShape('rect', shapeOpts({
-      x: body.x,
-      y,
-      w: 0.08,
-      h: rowH,
-      fill: { color: accent },
-      line: { color: accent, width: 0 },
-    }));
-    slide.addText(String(index + 1).padStart(2, '0'), textOpts({
-      x: body.x + 0.22,
-      y: y + 0.08,
-      w: 0.42,
-      h: Math.max(0.22, rowH - 0.16),
-      fontFace: preset.font_heading,
-      fontSize: metadataFont,
-      bold: true,
-      color: accent,
-      valign: 'middle',
-      fit: 'shrink',
-      objectName: `metadata:decision-index-${index}`,
-    }));
-    slide.addText(safeText(item.title, `Gate ${index + 1}`), textOpts({
-      x: body.x + 0.72,
-      y: y + 0.04,
-      w: titleW - 0.42,
-      h: Math.max(0.28, rowH - 0.08),
-      fontFace: preset.font_heading,
-      fontSize: bodyFont,
-      bold: true,
-      color: accent,
-      valign: 'middle',
-      fit: 'shrink',
-    }));
-    slide.addText(safeText(item.body || item.text), textOpts({
-      x: body.x + titleW + 0.24,
-      y: y + 0.04,
-      w: Math.max(0.60, body.w - titleW - 0.42),
-      h: Math.max(0.28, rowH - 0.08),
-      fontFace: preset.font_body,
-      fontSize: bodyFont,
-      color: preset.text || preset.text_primary || '0F172A',
-      valign: 'middle',
-      fit: 'shrink',
-    }));
+  const bodyFont = roleBodyFont(preset, 15);
+  const commitmentText = wrapText(commitment, body.w - 0.44, bodyFont, preset.font_heading, true);
+  const commitmentGap = commitment ? 0.16 : 0;
+  const commitmentH = commitment ? commitmentText.h + 0.20 : 0;
+  const rowsH = body.h - commitmentGap - commitmentH;
+  const grammar = safeText(contract.grammar_id || contract.composition_grammar_id || preset.composition_grammar);
+  const layout = planReadableRole({
+    grammar, role: 'decision', variant: contract.variant, body: { ...body, h: rowsH }, items,
+    fontSize: bodyFont, fontHeading: preset.font_heading, fontBody: preset.font_body,
+  });
+  layout.placements.forEach((placement) => {
+    const { index, box, anchor } = placement;
+    renderRoleFactCard(slide, preset, items[index], box, index, anchor, false, { ...placement, role: 'decision' });
   });
 
   if (commitment) {
@@ -7559,18 +7770,17 @@ function renderReadableDecisionLedger(slide, slideData, preset, header, contract
       line: { color: preset.accent_primary || '14B8A6', width: 0.65 },
       objectName: 'role-contract-slot:decision:commitment',
     }));
-    slide.addText(commitment, textOpts({
+    slide.addText(commitmentText.text, textOpts({
       x: body.x + 0.22,
-      y: y + 0.05,
+      y: y + 0.10,
       w: body.w - 0.44,
-      h: Math.max(0.30, commitmentH - 0.10),
+      h: commitmentText.h,
       fontFace: preset.font_heading,
       fontSize: bodyFont,
       bold: true,
-      color: 'FFFFFF',
-      align: 'center',
-      valign: 'middle',
-      fit: 'shrink',
+      color: firstReadableColor(preset.bg_dark || '0F172A', ['FFFFFF', '111111'], 4.5),
+      wrap: true,
+      objectName: 'decision:commitment',
     }));
     slideData.__roleContractConsumesSummary = true;
   }
@@ -7587,8 +7797,10 @@ function renderReadableDecisionLedger(slide, slideData, preset, header, contract
     ],
   );
   if (slideData.__roleContractExecution) {
-    slideData.__roleContractExecution.adaptation = 'readable-decision-ledger';
+    slideData.__roleContractExecution.adaptation = `readable-decision:${grammar}:${layout.recipe}`;
     slideData.__roleContractExecution.source_system_id = safeText(contract.system_id);
+    slideData.__roleContractExecution.executed_slots = layout.placements.map(({ index, box }) => ({ slot: `decision_${index}`, ...box }));
+    slideData.__roleContractExecution.rendered_item_count = items.length;
   }
   return true;
 }
@@ -7730,16 +7942,14 @@ function renderPolicyDecisionBoard(slide, slideData, preset, header, contract, q
 }
 
 function renderDecisionContract(slide, slideData, preset, header, contract, quadrants) {
-  if (renderPolicyDecisionBoard(slide, slideData, preset, header, contract, quadrants)) return true;
   const minBody = Number(
     preset && preset.readability_contract && preset.readability_contract.min_body_pt,
   );
-  const denseDecisionCopy = quadrants.slice(0, 4).some((item) => (
-    safeText(item && (item.body || item.text)).length > 58
-  ));
-  if (Number.isFinite(minBody) && minBody >= 15 && denseDecisionCopy) {
-    return renderReadableDecisionLedger(slide, slideData, preset, header, contract, quadrants);
+  if (Number.isFinite(minBody) && minBody >= 15) {
+    const items = Array.isArray(slideData.quadrants) ? slideData.quadrants : quadrants;
+    return renderReadableDecisionLedger(slide, slideData, preset, header, contract, items);
   }
+  if (renderPolicyDecisionBoard(slide, slideData, preset, header, contract, quadrants)) return true;
   const body = roleBodyBox(header, slideData, preset, { consumeSummary: true, footerReserve: 0.58 });
   const dense = contract.variant === 'dense';
   quadrants.slice(0, 4).forEach((item, index) => {
@@ -9076,23 +9286,22 @@ function chartTypeForPayload(pptx, payload) {
 
 function chartColors(payload, preset) {
   const colors = [];
+  const addColor = (value) => {
+    const raw = String(value || '').replace(/^#/, '').trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(raw)) return;
+    const color = raw.toUpperCase();
+    if (!colors.includes(color)) colors.push(color);
+  };
   const options = payload && payload.options && typeof payload.options === 'object'
     ? payload.options
     : {};
   if (Array.isArray(options.chartColors)) {
-    options.chartColors.forEach((value) => {
-      const color = cleanHex(value, '');
-      if (color && !colors.includes(color)) colors.push(color);
-    });
+    options.chartColors.forEach(addColor);
   }
-  ['color1', 'color2', 'color3', 'color4'].forEach((key) => {
-    const color = cleanHex(payload && payload[key], '');
-    if (color && !colors.includes(color)) colors.push(color);
-  });
-  [preset.accent_primary, preset.accent_secondary, preset.text_muted, preset.bg_dark].forEach((value) => {
-    const color = cleanHex(value, '');
-    if (color && !colors.includes(color)) colors.push(color);
-  });
+  ['color1', 'color2', 'color3', 'color4'].forEach((key) => addColor(payload && payload[key]));
+  [preset.accent_primary, preset.accent_secondary, preset.text_muted, preset.bg_dark]
+    .filter((value) => contrastRatio(value, preset.surface || preset.bg || 'FFFFFF') >= 3.0)
+    .forEach(addColor);
   return colors.length ? colors : ['0B6B78', '1493A4', '64748B'];
 }
 
@@ -9147,7 +9356,7 @@ function renderChartFactCards(slide, preset, facts, x, y, w, h) {
       line: { color: accent, width: 0 },
     }));
     if (fact.value) {
-      slide.addText(truncate(fact.value, 12), textOpts({
+      slide.addText(safeText(fact.value), textOpts({
       x: cardX + 0.15,
       y: y + 0.08,
       w: cardW - 0.28,
@@ -9159,25 +9368,25 @@ function renderChartFactCards(slide, preset, facts, x, y, w, h) {
         fit: 'shrink',
       }));
     }
-    slide.addText(truncate(fact.label || fact.caption || '', 54), textOpts({
+    slide.addText(safeText(fact.label || fact.caption), textOpts({
       x: cardX + 0.15,
       y: y + (fact.value ? 0.52 : 0.12),
       w: cardW - 0.28,
-      h: 0.22,
+      h: Math.max(0.32, fact.caption && fact.value ? 0.42 : h - (fact.value ? 0.62 : 0.22)),
       fontFace: preset.font_heading,
-      fontSize: 8.6,
+      fontSize: roleBodyFont(preset, 8.6),
       bold: true,
       color: preset.text || preset.text_primary || '0F172A',
       fit: 'shrink',
     }));
     if (fact.caption && fact.value) {
-      slide.addText(truncate(fact.caption, 72), textOpts({
+      slide.addText(safeText(fact.caption), textOpts({
         x: cardX + 0.15,
         y: y + 0.85,
         w: cardW - 0.28,
         h: Math.max(0.16, h - 0.91),
         fontFace: preset.font_body,
-        fontSize: 7.4,
+        fontSize: roleBodyFont(preset, 7.4),
         color: preset.text_muted || '64748B',
         fit: 'shrink',
       }));
@@ -9214,12 +9423,12 @@ function renderChartFactRail(slide, preset, facts, x, y, w, h) {
     if (fact.value && compact) {
       const valueW = Math.min(Math.max(0.42, w * 0.32), 1.05);
       const compactLabel = [fact.label, fact.caption].map((item) => safeText(item)).filter(Boolean).join(' · ');
-      slide.addText(truncate(fact.value, 12), textOpts({
+      slide.addText(safeText(fact.value), textOpts({
         x: x + 0.16, y: cardY + 0.10, w: valueW, h: Math.max(0.22, cardH - 0.20),
         fontFace: preset.font_heading, fontSize: fact.value.length > 8 ? 10 : 13,
         bold: true, color: accent, valign: 'middle', fit: 'shrink',
       }));
-      slide.addText(truncate(compactLabel, 86), textOpts({
+      slide.addText(compactLabel, textOpts({
         x: x + valueW + 0.26, y: cardY + 0.10,
         w: Math.max(0.28, w - valueW - 0.42), h: Math.max(0.32, cardH - 0.20),
         fontFace: preset.font_body, fontSize: roleBodyFont(preset, 8.0), bold: true,
@@ -9228,13 +9437,13 @@ function renderChartFactRail(slide, preset, facts, x, y, w, h) {
       return;
     }
     if (fact.value) {
-      slide.addText(truncate(fact.value, 12), textOpts({
+      slide.addText(safeText(fact.value), textOpts({
         x: x + 0.16,
         y: cardY + 0.11,
         w: w - 0.32,
         h: 0.30,
         fontFace: preset.font_heading,
-        fontSize: fact.value.length > 8 ? 13 : 15,
+        fontSize: roleBodyFont(preset, fact.value.length > 8 ? 13 : 15),
         bold: true,
         color: accent,
         fit: 'shrink',
@@ -9251,7 +9460,7 @@ function renderChartFactRail(slide, preset, facts, x, y, w, h) {
       Math.max(0.32, cardY + cardH - labelY - 0.08),
       Math.max(0.34, estimateTextHeight(factLabel, labelFont, labelW, 1.18) + 0.16),
     );
-    slide.addText(truncate(factLabel, 86), textOpts({
+    slide.addText(factLabel, textOpts({
       x: x + 0.16,
       y: labelY,
       w: labelW,
@@ -9266,7 +9475,7 @@ function renderChartFactRail(slide, preset, facts, x, y, w, h) {
       const captionY = labelY + labelH + 0.08;
       const captionFont = roleBodyFont(preset, 8.0);
       const captionH = Math.max(0.22, cardY + cardH - captionY - 0.08);
-      slide.addText(truncate(fact.caption, 72), textOpts({
+      slide.addText(safeText(fact.caption), textOpts({
         x: x + 0.16,
         y: captionY,
         w: w - 0.32,
@@ -9427,12 +9636,15 @@ function renderChartThresholdBand(slide, preset, facts, note, x, y, w, h) {
 
 function renderContractChartInsight(slide, preset, fact, note, box) {
   if (!box) return;
-  const accent = preset[(fact && fact.accent) || 'accent_primary'] || preset.accent_primary;
+  const surface = preset.surface || 'FFFFFF';
+  const bodyColor = firstReadableColor(surface, [preset.text, preset.text_primary, '111111', 'FFFFFF']);
+  const mutedColor = firstReadableColor(surface, [preset.text_muted, bodyColor, '111111', 'FFFFFF']);
+  const accent = firstReadableColor(surface, [preset[(fact && fact.accent) || 'accent_primary'], preset.accent_primary, preset.accent_secondary, bodyColor], 4.5);
   const value = safeText(fact && fact.value);
   const label = safeText((fact && (fact.label || fact.caption)) || note, 'Key readout');
   slide.addShape('rect', shapeOpts({
     x: box.x, y: box.y, w: box.w, h: box.h,
-    fill: { color: preset.surface || 'FFFFFF' },
+    fill: { color: surface },
     line: { color: preset.line || 'CBD5E1', width: 0.55 },
   }));
   const horizontalBand = box.w >= 2.20 && box.h < 1.30;
@@ -9456,7 +9668,7 @@ function renderContractChartInsight(slide, preset, fact, note, box) {
         x: valueX, y: box.y + Math.max(0.10, (box.h - valueH) / 2),
         w: valueW, h: valueH,
         fontFace: preset.font_heading, fontSize: 18, bold: true,
-        color: preset.text || preset.text_primary || '0F172A', valign: 'middle', fit: 'shrink',
+        color: bodyColor, valign: 'middle', fit: 'shrink',
       }));
     }
     const labelFont = roleBodyFont(preset, 8.6);
@@ -9467,7 +9679,7 @@ function renderContractChartInsight(slide, preset, fact, note, box) {
     slide.addText(label, textOpts({
       x: labelX, y: box.y + Math.max(0.10, (box.h - labelH) / 2), w: labelW, h: labelH,
       fontFace: preset.font_body, fontSize: labelFont,
-      color: preset.text_muted || '64748B', valign: 'middle', fit: 'shrink',
+      color: mutedColor, valign: 'middle', fit: 'shrink',
     }));
     return;
   }
@@ -9486,7 +9698,7 @@ function renderContractChartInsight(slide, preset, fact, note, box) {
       x: box.x + 0.10, y: valueY,
       w: Math.max(0.28, box.w - 0.20), h: valueH,
       fontFace: preset.font_heading, fontSize: box.w < 1.45 ? 16 : 25,
-      bold: true, color: preset.text || preset.text_primary || '0F172A', fit: 'shrink',
+      bold: true, color: bodyColor, fit: 'shrink',
     }));
   }
   const labelY = value ? valueY + valueH + 0.10 : box.y + 0.10 + readoutH + 0.10;
@@ -9502,7 +9714,7 @@ function renderContractChartInsight(slide, preset, fact, note, box) {
     h: labelH,
     fontFace: preset.font_body,
     fontSize: labelFont,
-    color: preset.text_muted || '64748B', fit: 'shrink',
+    color: mutedColor, fit: 'shrink',
   }));
 }
 
@@ -9519,9 +9731,9 @@ function renderContractChartFacts(slide, preset, facts, box) {
   facts.slice(0, count).forEach((fact, index) => {
     const x = box.x + index * (width + gap);
     const accent = preset[fact.accent || (index % 2 ? 'accent_secondary' : 'accent_primary')] || preset.accent_primary;
-    slide.addText(truncate(`${fact.value || ''} ${fact.label || ''}`.trim(), 44), textOpts({
+    slide.addText(`${fact.value || ''} ${fact.label || ''}`.trim(), textOpts({
       x, y: box.y, w: width, h: box.h,
-      fontFace: preset.font_heading, fontSize: box.h < 0.65 ? 8.0 : 10.5,
+      fontFace: preset.font_heading, fontSize: roleBodyFont(preset, box.h < 0.65 ? 8.0 : 10.5),
       bold: true, color: accent, valign: 'middle', align: 'center', fit: 'shrink',
     }));
   });
@@ -9568,6 +9780,24 @@ function chartLeadFact(payload, facts = []) {
   };
 }
 
+function chartAxisBounds(payload, series) {
+  const options = payload.options || {};
+  const bounds = {};
+  for (const key of ['valAxisMinVal', 'valAxisMaxVal', 'valAxisMajorUnit']) {
+    if (typeof options[key] === 'number' && Number.isFinite(options[key])) bounds[key] = options[key];
+  }
+  if (String(payload.type).toLowerCase() === 'bar') {
+    const values = series.flatMap((item) => item.values).filter(Number.isFinite);
+    if (values.length && values.every((value) => value >= 0) && bounds.valAxisMinVal === undefined) {
+      bounds.valAxisMinVal = 0;
+    }
+    if (values.length && values.every((value) => value <= 0) && bounds.valAxisMaxVal === undefined) {
+      bounds.valAxisMaxVal = 0;
+    }
+  }
+  return bounds;
+}
+
 function renderChartContract(pptx, slide, slideData, preset, payload, facts, note, contract) {
   paintBackground(slide, preset.bg);
   const header = addDarkTitleBar(slide, preset, slideData.title || payload.title, slideData.subtitle || payload.subtitle, slideData);
@@ -9583,11 +9813,15 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
     preset && preset.readability_contract && preset.readability_contract.min_body_pt,
   );
   const insightText = `${safeText(facts[0] && facts[0].label)} ${safeText(facts[0] && facts[0].caption)}`.trim();
+  const narrowTextSlot = [insightBox, factsBox, registerBox].some((box) => (
+    box && (box.w < 2.75 || (box.h < 0.72 && box.w < 4.0))
+  ));
   const readableInsightBand = Number.isFinite(minBody)
     && minBody >= 15
     && facts.length > 0
-    && insightBox
-    && (insightBox.w < 1.55 || insightText.length > 24);
+    && ((insightBox || factsBox)
+      ? (narrowTextSlot || insightText.length > 24 || (note && !registerBox))
+      : true);
   if (policyLayout) {
     const bandH = safeText(note).length > 84 ? 0.98 : 0.82;
     const bandGap = 0.24;
@@ -9661,6 +9895,7 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
       ? firstReadableColor(chartSurface, [preset.line, '64748B', '94A3B8'], 2.0)
       : cleanHex(preset.line, 'CBD5E1');
     const chartOptions = {
+      ...chartAxisBounds(payload, series),
       x: chartBox.x + 0.12,
       y: chartBox.y + 0.10,
       w: Math.max(0.50, chartBox.w - 0.24),
@@ -9672,8 +9907,8 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
       valAxisTitle: safeText(options.valAxisTitle),
       catAxisLabelFontFace: preset.font_body,
       valAxisLabelFontFace: preset.font_body,
-      catAxisLabelFontSize: Number(options.catAxisLabelFontSize || 8),
-      valAxisLabelFontSize: Number(options.valAxisLabelFontSize || 8),
+      catAxisLabelFontSize: Number(options.catAxisLabelFontSize || roleMetadataFont(preset, 9)),
+      valAxisLabelFontSize: Number(options.valAxisLabelFontSize || roleMetadataFont(preset, 9)),
       catAxisLabelColor: axisColor,
       valAxisLabelColor: axisColor,
       catAxisTitleColor: axisColor,
@@ -9745,14 +9980,14 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
     renderContractChartInsight(slide, preset, facts[0], note, insightBox);
     renderContractChartFacts(slide, preset, facts, factsBox);
   }
-  if (registerBox && !policyLayout) {
-    const registerText = note || 'Method · baseline · denominator · uncertainty · interpretation';
+  if (registerBox && !policyLayout && note) {
+    const registerText = note;
     slide.addShape('rect', shapeOpts({
       x: registerBox.x, y: registerBox.y, w: registerBox.w, h: registerBox.h,
       fill: { color: preset.surface || 'FFFFFF' },
       line: { color: preset.line || 'CBD5E1', width: 0.5 },
     }));
-    const registerFont = roleSupportFont(preset, registerBox.h < 0.60 ? 11.0 : 12.0);
+    const registerFont = roleBodyFont(preset, registerBox.h < 0.60 ? 11.0 : 12.0);
     const registerW = Math.max(0.30, registerBox.w - 0.20);
     const availableRegisterH = Math.max(0.18, registerBox.h - 0.12);
     const registerH = Math.min(
@@ -9765,7 +10000,8 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
       w: registerW, h: registerH,
       fontFace: preset.font_body,
       fontSize: registerFont,
-      color: preset.text_muted || '64748B', align: 'center', valign: 'middle', fit: 'shrink',
+      color: firstReadableColor(preset.surface || 'FFFFFF', [preset.text_muted, preset.text, preset.text_primary, '111111', 'FFFFFF']),
+      align: 'left', valign: 'middle', fit: 'shrink',
       objectName: 'support:chart-register',
     }));
   }
@@ -9779,7 +10015,7 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
       'chart',
       ...(insightBox ? ['insight'] : []),
       ...(factsBox ? ['facts'] : []),
-      ...(registerBox ? ['register'] : []),
+      ...(registerBox && note ? ['register'] : []),
     ],
   );
   if (readableAdaptation && slideData.__roleContractExecution) {
@@ -9792,7 +10028,7 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
 function renderChart(pptx, slide, slideData, preset) {
   const payload = slideData.__chartPayload || (slideData.chart && typeof slideData.chart === 'object' ? slideData.chart : {});
   const facts = normalizeFacts(slideData.facts || slideData.stats || payload.facts).slice(0, 3);
-  const note = safeText(slideData.message || slideData.caption || payload.notes);
+  const note = safeText(slideData.interpretation || slideData.message || slideData.caption || payload.notes);
   const contract = roleContract(preset, slideData, 'chart');
   if (contract && renderChartContract(pptx, slide, slideData, preset, payload, facts, note, contract)) {
     return;
@@ -9945,6 +10181,7 @@ function renderChart(pptx, slide, slideData, preset) {
     const options = payload.options && typeof payload.options === 'object' ? payload.options : {};
     const type = chartTypeForPayload(pptx, payload);
     const chartOptions = {
+      ...chartAxisBounds(payload, series),
       x: chartX + (sparseWide ? 0.04 : 0.18),
       y: chartY + 0.14,
       w: chartW - (sparseWide ? 0.08 : 0.36),
@@ -10174,6 +10411,21 @@ function addSummaryCallout(pptx, slide, slideData, preset) {
 // Exports
 // ---------------------------------------------------------------------------
 
+function withReadableDisplayFont(renderer) {
+  return (pptx, slide, slideData, preset, ...rest) => {
+    const minBody = Number(preset && preset.readability_contract && preset.readability_contract.min_body_pt);
+    const defaultMidnightDisplay = preset && preset.style_preset === 'midnight-neon'
+      && preset.renderer_role_contract_version === 'renderer_role_contracts_v2'
+      && preset.font_heading === 'Inter' && preset.font_title === 'Inter'
+      && preset.font_body === 'Inter'
+      && Number.isFinite(minBody) && minBody >= 15;
+    const resolvedPreset = defaultMidnightDisplay
+      ? { ...preset, font_heading: 'Helvetica Neue', font_title: 'Helvetica Neue' }
+      : preset;
+    return renderer(pptx, slide, slideData, resolvedPreset, ...rest);
+  };
+}
+
 module.exports = {
   // Canvas constants, exposed so the builder can assert the same layout math.
   SLIDE_W,
@@ -10183,22 +10435,22 @@ module.exports = {
   TITLE_BAR_H,
   CONTENT_TOP,
 
-  renderTitle,
-  renderSection,
-  renderStandard,
-  renderCards,
-  renderSplit,
-  renderTimeline,
-  renderStats,
-  renderKpiHero,
-  renderTable,
-  renderLabRunResults,
-  renderComparison2col,
-  renderMatrix,
-  renderFlow,
-  renderChart,
-  renderImageSidebar,
-  renderScientificFigure,
-  renderGeneratedImage,
-  addSummaryCallout,
+  renderTitle: withReadableDisplayFont(renderTitle),
+  renderSection: withReadableDisplayFont(renderSection),
+  renderStandard: withReadableDisplayFont(renderStandard),
+  renderCards: withReadableDisplayFont(renderCards),
+  renderSplit: withReadableDisplayFont(renderSplit),
+  renderTimeline: withReadableDisplayFont(renderTimeline),
+  renderStats: withReadableDisplayFont(renderStats),
+  renderKpiHero: withReadableDisplayFont(renderKpiHero),
+  renderTable: withReadableDisplayFont(renderTable),
+  renderLabRunResults: withReadableDisplayFont(renderLabRunResults),
+  renderComparison2col: withReadableDisplayFont(renderComparison2col),
+  renderMatrix: withReadableDisplayFont(renderMatrix),
+  renderFlow: withReadableDisplayFont(renderFlow),
+  renderChart: withReadableDisplayFont(renderChart),
+  renderImageSidebar: withReadableDisplayFont(renderImageSidebar),
+  renderScientificFigure: withReadableDisplayFont(renderScientificFigure),
+  renderGeneratedImage: withReadableDisplayFont(renderGeneratedImage),
+  addSummaryCallout: withReadableDisplayFont(addSummaryCallout),
 };

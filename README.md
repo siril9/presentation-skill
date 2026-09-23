@@ -7,9 +7,9 @@ A skill for coding agents that produces editable PowerPoint decks from structure
 [![Built with pptxgenjs](https://img.shields.io/badge/renderer-pptxgenjs-2563eb.svg)](templates/pptxgenjs/README.md)
 [![skills.sh](https://skills.sh/b/siril9/presentation-skill)](https://skills.sh/siril9/presentation-skill)
 
-![v0.9 narrative role-layout systems](examples/v0.9_narrative_structures.jpg)
+![Eight narrative and process styles](examples/v0.12_narrative_process.jpg)
 
-*One topic rendered through eight color-independent narrative systems. The gallery deck remains editable.*
+*One topic, eight styles. The title and process slides change structure while the evidence stays fixed. The PowerPoints remain editable.*
 
 Ask an agent for a lab report, board memo, investor update, clinical dashboard, policy brief, or scientific figure deck. The skill writes source JSON, routes style and content structure, builds an editable `.pptx`, and runs QA instead of shipping a screenshot or a stack of centered bullets.
 
@@ -42,7 +42,7 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 - **A preset system across 13 style families.** Lab report, executive clinical, board risk memo, investor reveal, editorial report, civic science policy, and so on. Each owns a palette, font pair, density profile, and bounded visual interpretation.
 - **Eight full-deck composition grammars above the presets.** Answer Pyramid, Evidence Plate, Care Pathway, Editorial Spread, Thesis Stage, Operating Grid, Public Docket, and Telemetry Canvas own role contracts for title, section, evidence, comparison, chart, table, decision, and references. A semantic render plan keeps role and visual variant separate, uses v2 geometry only for supported pairs, and records explicit v1/legacy fallbacks instead of silently substituting layouts. Slide overrides stay bounded to `primary`, `alternate`, or `dense`.
 - **A descriptor-only style corpus (~2,200 records) atomized into a composable token atlas.** The corpus carries described palettes, layouts, density patterns, and structural motifs from public deck-like sources (no copied assets). It's processed into 311 atoms across 12 types. New workspaces route the topic to a preset and independently select a composition grammar, so an advanced model can mix bounded design signals instead of receiving one static template.
-- **A lightweight model-adaptive entrypoint.** `present.py` gives Luna one deterministic grammar, Terra two bounded choices, and Sol three. The compact brief stays under 9 KB in the release smoke; normal workspaces omit the large audit packet unless it is explicitly requested.
+- **A lightweight model-adaptive entrypoint.** `present.py` offers compact briefs, optional intake questions, and content-matched style previews. Luna, Terra, Sol, Astra, or a future model can use the same source contracts; no multi-agent setup is required. Focused repair packets and opt-in render caching keep iteration small without skipping QA.
 - **A layered QA loop with exact-review receipts.** Geometry, rendered-image inspection, placeholder detection, design rules, and optional accessibility checks catch deterministic failures. For high-stakes delivery, a human/model verdict can be bound to the exact PPTX and rendered-slide hashes, so a rebuilt deck cannot reuse stale approval.
 - **Workspace mode with a versioned Deck IR.** Planning sources live beside `outline.json`; each build derives a deterministic coordinate-free `deck_ir.json` with stable object IDs, semantic intent, evidence links, and editability metadata. Readiness diagnostics tell the agent what to fix next instead of re-running blind.
 - **Preserve-by-default reference editing.** A standalone `.pptx` can be inspected into stable slide/shape IDs, patched through registered text/alt-text actions with preconditions, and checked to prove untouched geometry, style, and text stayed unchanged.
@@ -50,17 +50,13 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 ## See it
 
-![v0.11 monochrome lab-report A/B](examples/v0.11_monochrome_lab_ab.jpg)
+![Evidence and decision slides across eight styles](examples/v0.12_evidence_decisions.jpg)
 
-*The same paper synthesis rendered as an assay notebook and a journal appendix. Content, data, and sources are frozen; only the grammar, palette, typography, and density system change.*
+*The same synthetic sensor-pilot evidence and decision gates, with 16-point body text. Style choices change the reading order, emphasis, and framing, not the facts.*
 
-![v0.9 evidence, chart, and table role-layout systems](examples/v0.9_evidence_data_structures.jpg)
+![Native charts and comparison slides across eight styles](examples/v0.12_data_comparisons.jpg)
 
-The same evidence, native chart, and editable table take eight different reading paths. Color is not counted by the structural gate.
-
-![v0.9 decision and references role-layout systems](examples/v0.9_decisions_sources.jpg)
-
-Decision conditions and source registers no longer collapse into one matrix and one table. The [64-slide gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) is an editable `.pptx`, not a sheet of screenshots.
+The [v0.12 release](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) includes all eight editable decks, their frozen source, and a separate GPT-6 Luna-authored lab example. The earlier [64-slide grammar gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) remains available.
 
 [![Codex native vs updated presentation-skill comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png)](https://github.com/siril9/presentation-skill/releases/tag/v0.7.0)
 
@@ -82,7 +78,7 @@ npx skills add https://github.com/siril9/presentation-skill \
 Add this repo as a Codex plugin marketplace, then open `/plugins` in Codex and install `presentation-skill` from the **Presentation Skill** marketplace:
 
 ```bash
-codex plugin marketplace add siril9/presentation-skill --ref v0.11.0
+codex plugin marketplace add siril9/presentation-skill --ref v0.12.0
 ```
 
 For local development against a checkout:

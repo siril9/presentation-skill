@@ -12,6 +12,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from deck_intake import build_deck_intake, intake_authoring_prompt, normalize_intake_answers
+from model_adaptive_workflow import (
+    PROFILE_ALIASES,
+    PROFILE_HELP,
+    compact_authoring_diagnostics,
+    minimal_payload_examples,
+    resolve_profile,
+)
 from style_treatment_profiles import preset_treatment_profile
 from taste_grammar_catalog import (
     COMPOSITION_GRAMMARS,
@@ -275,8 +283,14 @@ def route_composition_grammars(
     user_prompt: str,
     style_preset: str = "",
     limit: int = 3,
+    intake_answers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    text = " ".join(part for part in [topic, user_prompt] if str(part or "").strip())
+    answers = normalize_intake_answers(intake_answers)
+    explicit_style = style_preset if style_preset != "auto" else ""
+    answered_style = answers.get("style", "").lower()
+    style_preset = explicit_style or (answered_style if answered_style in PRESET_TO_GRAMMAR else "")
+    authoring_prompt = intake_authoring_prompt(user_prompt, answers, explicit_style=explicit_style)
+    text = " ".join(part for part in [topic, authoring_prompt] if str(part or "").strip())
     scored: list[dict[str, Any]] = []
     for grammar_id in COMPOSITION_GRAMMARS:
         mapped_presets = COMPOSITION_GRAMMARS[grammar_id]["style_presets"]
@@ -299,6 +313,10 @@ def route_composition_grammars(
         "route_version": "composition_grammar_route_v1",
         "catalog_version": CATALOG_VERSION,
         "topic": topic,
+        "user_prompt": user_prompt,
+        "authoring_prompt": authoring_prompt,
+        "intake_answers": answers,
+        "explicit_style_preset": explicit_style,
         "style_preset_hint": style_preset,
         "requested_variants": _requested_variants(text),
         "primary": primary,
@@ -328,6 +346,12 @@ def compact_grammar_route(route: dict[str, Any]) -> dict[str, Any]:
     return {
         "route_version": route.get("route_version"),
         "catalog_version": route.get("catalog_version"),
+        "topic": route.get("topic"),
+        "user_prompt": route.get("user_prompt"),
+        "authoring_prompt": route.get("authoring_prompt"),
+        "intake_answers": route.get("intake_answers"),
+        "explicit_style_preset": route.get("explicit_style_preset", route.get("style_preset_hint")),
+        "style_preset_hint": route.get("style_preset_hint"),
         "requested_variants": route.get("requested_variants"),
         "primary": _compact_record(_as_dict(route.get("primary"))),
         "alternatives": [
@@ -344,6 +368,7 @@ V2_ROLE_VARIANT_CANDIDATES = json.loads(_CAPABILITY_PATH.read_text(encoding="utf
 
 
 def _starter_sequence_for_candidate(candidate: dict[str, Any], slide_count: int) -> list[dict[str, Any]]:
+    slide_count = max(3, min(30, slide_count))
     arc = _as_dict(candidate.get("narrative_arc"))
     stages = [str(value) for value in _as_list(arc.get("stages")) if str(value).strip()]
     role_map = _as_dict(candidate.get("role_variant_map"))
@@ -404,30 +429,36 @@ def _starter_sequence_for_candidate(candidate: dict[str, Any], slide_count: int)
     return sequence
 
 
-def _normalize_agent_profile(value: str) -> str:
-    aliases = {
-        "auto": "balanced",
-        "fast": "fast",
-        "luna": "fast",
-        "balanced": "balanced",
-        "terra": "balanced",
-        "quality-first": "quality-first",
-        "sol": "quality-first",
-    }
-    return aliases.get(str(value or "auto").strip().lower(), "balanced")
-
-
 def quick_deck_agent_brief(
     route: dict[str, Any],
     *,
     slide_count: int,
     agent_profile: str = "auto",
+    intake_answers: dict[str, str] | None = None,
+    remaining_percent: float | None = None,
+    current_model: str | None = None,
+    available_models: list[str] | None = None,
 ) -> dict[str, Any]:
     """Return the small normal-workflow handoff a model should reason over."""
+    answers = normalize_intake_answers(intake_answers if intake_answers is not None else route.get("intake_answers"))
+    if intake_answers is not None and answers != route.get("intake_answers", {}):
+        route = route_composition_grammars(
+            topic=str(route.get("topic") or ""),
+            user_prompt=str(route.get("user_prompt") or ""),
+            style_preset=str(route.get("explicit_style_preset", route.get("style_preset_hint")) or ""),
+            intake_answers=answers,
+        )
     primary = _as_dict(route.get("primary"))
-    profile = _normalize_agent_profile(agent_profile)
-    arc = _as_dict(primary.get("narrative_arc"))
-    stages = [str(value) for value in _as_list(arc.get("stages")) if str(value).strip()]
+    prompt = str(route.get("authoring_prompt") or route.get("user_prompt") or "").strip() or str(route.get("topic") or "")
+    profile, basis = resolve_profile(agent_profile, prompt)
+    if route.get("style_preset_hint"):
+        answers["style"] = str(route["style_preset_hint"])
+    intake = build_deck_intake(
+        " ".join(str(value or "") for value in (route.get("topic"), route.get("user_prompt"))),
+        answers=answers, remaining_percent=remaining_percent,
+        current_model=current_model, available_models=available_models,
+    )
+    slide_count = max(3, min(30, slide_count))
     skill_root = Path(__file__).resolve().parent.parent
     runtime = skill_root / "scripts" / "python_runtime.py"
     entrypoint = skill_root / "scripts" / "present.py"
@@ -441,10 +472,14 @@ def quick_deck_agent_brief(
         "max_title_lines": 2,
     }
     candidate_limit = {"fast": 1, "balanced": 2, "quality-first": 3}[profile]
-    candidates = [primary, *_as_list(route.get("alternatives"))][:candidate_limit]
+    candidates = [primary, *_as_list(route.get("alternatives"))]
+    if route.get("style_preset_hint"):
+        candidates = [primary]
     route_candidates: list[dict[str, Any]] = []
     for candidate in candidates:
         if not isinstance(candidate, dict):
+            continue
+        if any(item["grammar_id"] == candidate.get("grammar_id") for item in route_candidates):
             continue
         candidate_arc = _as_dict(candidate.get("narrative_arc"))
         route_candidates.append(
@@ -459,31 +494,35 @@ def quick_deck_agent_brief(
                     "reading_path": _as_list(candidate.get("reading_path"))[:3],
                     "role_variants": _as_dict(candidate.get("role_variant_map")),
                     "must_do": _as_list(candidate.get("invariant_moves"))[:1],
+                    "avoid": _as_list(candidate.get("forbidden_moves"))[:2],
                 },
-                "starter_sequence": _starter_sequence_for_candidate(candidate, slide_count),
             }
         )
-    return {
+        if profile == "fast":
+            route_candidates[-1]["starter_sequence"] = _starter_sequence_for_candidate(candidate, slide_count)
+        if len(route_candidates) == candidate_limit:
+            break
+    brief = {
         "schema_version": "quick_deck_agent_brief/v3",
         "topic": route.get("topic"),
+        "user_request": route.get("user_prompt") or "",
         "agent_profile": profile,
+        "intake": intake,
+        "resolution_basis": basis,
+        "profile_policy": "Local workflow defaults, not model performance guarantees; use an explicit profile for other models.",
+        "agent_mode": "single-agent" if profile == "fast" else "single-agent-unless-independent-work-helps",
         "route_mode": "deterministic" if profile == "fast" else "model-select-from-bounded-candidates",
         "route_candidates": route_candidates,
         "fallback_route": {
             "style_preset": primary.get("style_preset"),
             "grammar_id": primary.get("grammar_id"),
         },
-        "story": {
-            "stages": stages,
-            "reading_path": primary.get("reading_path"),
-            "must_do": _as_list(primary.get("invariant_moves"))[:3],
-            "avoid": _as_list(primary.get("forbidden_moves"))[:3],
-        },
+        "story_guidance": "Use only the chosen candidate's story hints. Derive slide order and evidence shapes from the argument, not a fixed template.",
         "requested_variants": route.get("requested_variants"),
         "renderer": {
             "role_variants": V2_ROLE_VARIANT_CANDIDATES,
             "layout_variants": ["primary", "alternate", "dense"],
-            "role_variant_alignment": V2_ROLE_VARIANT_CANDIDATES,
+            "suggestion_policy": "Grammar role_variants are style hints, not capabilities. renderer.role_variants is authoritative; choose any supported pair and optional layout variant that fits the content.",
         },
         "outline_contract": {
             "root_required": ["title", "deck_style", "slides"],
@@ -498,19 +537,21 @@ def quick_deck_agent_brief(
             },
             "slide_common": {
                 "type": "title | content",
-                "role": "use the chosen route candidate's starter_sequence role",
-                "variant": "use the chosen route candidate's starter_sequence variant",
-                "slide_intent": "use the chosen route candidate's starter_sequence intent",
+                "role": "editable structure from renderer.role_variants",
+                "variant": "supported variant for that role",
+                "slide_intent": "topic-specific story job",
                 "title": "assertion or governing question",
                 "sources": ["stable source IDs such as S1"],
             },
             "payload_by_variant": {
-                "title": ["title", "subtitle", "kicker"],
-                "stats/cards-2/cards-3": ["facts: [{value, label, detail}]"],
+                "title/section": ["title", "subtitle?", "kicker?"],
+                "stats": ["facts: [{value: numeric KPI, label, detail?}]"],
+                "cards-2/cards-3": ["cards: [{title, body}] (exactly 2 or 3 entries)"],
                 "chart": ["chart: {type, categories, series: [{name, values}], facts?}"],
-                "table/references": ["table: {headers, rows, column_weights?}"],
+                "table": ["table: {headers, rows, column_weights?}"],
                 "comparison-2col": ["left: {title, bullets}", "right: {title, bullets}"],
-                "matrix/decision": ["quadrants: [{title, body}]", "summary_callout?"],
+                "matrix": ["quadrants: exactly 4 {title, body} objects", "summary_callout?"],
+                "standard": ["bullets: [text]"],
                 "timeline": ["milestones: [{label, title, body}]"],
             },
             "content_limits": {
@@ -521,21 +562,28 @@ def quick_deck_agent_brief(
             },
         },
         "authoring_rules": [
-            "Choose one route candidate from the evidence and audience; copy its preset, grammar, and starter_sequence together. Use the fallback when uncertain.",
-            "Adapt the chosen candidate sequence to the evidence; role names the editable structure and slide_intent names the story job.",
-            "Use only role/variant pairs in renderer.role_variant_alignment so v2 owns the geometry.",
+            "Choose one route candidate from the evidence and audience; keep its preset and grammar together. Use the fallback when uncertain and honor explicit style locks.",
+            "Story hints and any starter_sequence are optional suggestions; adapt to the evidence without copying another candidate's story.",
+            "Use only role/variant pairs in renderer.role_variants so v2 owns the geometry. Requested shapes outside that map need a supported representation or an explicit capability limitation.",
             "Avoid more than two consecutive slides with the same concrete variant.",
             "Shorten or split content before shrinking below the readability contract.",
-            "Use the finalizer report and contact sheet for one source repair pass.",
+            "Do not invent evidence or citations; label synthetic illustrations. All profiles must pass the same finalizer QA and rendered review.",
+            "Before approval, compare critical values, units, denominators, caveats, and source IDs against the supplied evidence in both outline and rendered slides. Layout QA is not a factual audit.",
         ],
         "commands": {
             "finalize": (
                 f"python3 {runtime} {entrypoint} finalize "
                 "--outline <outline.json> --output <output.pptx> --qa-dir <qa-dir>"
             ),
-            "repair_loop": "Read <qa-dir>/qa_report.json and contact sheet, edit outline.json, rerun finalize once.",
+            "repair_loop": "Read <qa-dir>/qa_report.json and contact sheet, edit outline.json, rerun affected checks until clean or report a blocker.",
         },
     }
+    if route.get("intake_answers"):
+        brief["authoring_prompt"] = prompt
+    if profile == "fast":
+        brief["outline_contract"]["minimal_payload_examples"] = minimal_payload_examples()
+        brief["diagnostics"] = compact_authoring_diagnostics()
+    return brief
 
 
 def main() -> int:
@@ -554,7 +602,8 @@ def main() -> int:
     parser.add_argument(
         "--agent-profile",
         default="auto",
-        help="auto, fast/luna, balanced/terra, or quality-first/sol",
+        choices=sorted(PROFILE_ALIASES),
+        help=PROFILE_HELP,
     )
     args = parser.parse_args()
     if args.summary or not (args.topic or args.user_prompt or args.style_preset):

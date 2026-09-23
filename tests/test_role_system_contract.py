@@ -134,7 +134,7 @@ class TasteGrammarCatalogTests(unittest.TestCase):
             text = "\n".join(shape.text for shape in slide.shapes if getattr(shape, "has_text_frame", False))
             self.assertNotIn("Northside: High", text)
 
-    def test_every_quick_brief_candidate_keeps_its_own_v2_sequence(self) -> None:
+    def test_quick_brief_candidates_keep_optional_story_hints_not_fixed_sequences(self) -> None:
         route = route_composition_grammars(
             topic="urban heat resilience",
             user_prompt="public evidence, options, implementation, and sources",
@@ -143,14 +143,17 @@ class TasteGrammarCatalogTests(unittest.TestCase):
         brief = quick_deck_agent_brief(route, slide_count=8, agent_profile="quality-first")
         candidates = brief["route_candidates"]
         self.assertGreaterEqual(len(candidates), 2)
+        self.assertNotIn("story", brief)
         for candidate in candidates:
-            self.assertEqual(len(candidate["starter_sequence"]), 8)
-            for slide in candidate["starter_sequence"]:
-                self.assertIn(slide["variant"], V2_ROLE_VARIANT_CANDIDATES[slide["role"]])
+            self.assertNotIn("starter_sequence", candidate)
+            self.assertTrue(candidate["story_shape"]["stages"])
         self.assertNotEqual(
-            candidates[0]["starter_sequence"][1]["intent"],
-            candidates[1]["starter_sequence"][1]["intent"],
+            candidates[0]["story_shape"]["stages"],
+            candidates[1]["story_shape"]["stages"],
         )
+        fast = quick_deck_agent_brief(route, slide_count=8, agent_profile="luna")
+        for slide in fast["route_candidates"][0]["starter_sequence"]:
+            self.assertIn(slide["variant"], V2_ROLE_VARIANT_CANDIDATES[slide["role"]])
 
     def test_catalog_cardinality_and_preset_distribution(self) -> None:
         taste_summary = validate_taste_grammar_catalog()

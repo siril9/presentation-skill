@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from deck_intake import ANSWER_ALIASES, FIELDS, build_deck_intake
 
 BRIEF_VERSION = "model_adaptive_deck_brief_v1"
 PROFILE_ALIASES = {
@@ -16,67 +17,79 @@ PROFILE_ALIASES = {
     "quality-first": "quality-first",
     "quality_first": "quality-first",
     "frontier": "quality-first",
+    "astra": "quality-first",
+    "gpt-6-astra": "quality-first",
     "sol": "quality-first",
+    "gpt-6-sol": "quality-first",
+    "gpt-5.6-sol": "quality-first",
     "pro": "quality-first",
     "balanced": "balanced",
     "standard": "balanced",
     "terra": "balanced",
+    "gpt-5.6-terra": "balanced",
     "fast": "fast",
     "draft": "fast",
     "luna": "fast",
+    "gpt-6-luna": "fast",
+    "gpt-5.6-luna": "fast",
 }
+
+PROFILE_HELP = (
+    "Workflow policy: auto, fast (luna), balanced (terra), quality-first (sol/astra); "
+    "full gpt-5.6-sol/terra/luna and gpt-6-astra/sol/luna aliases accepted. For other models choose an "
+    "explicit workflow profile. Aliases are local defaults, not performance claims."
+)
 
 PROFILE_CONTRACTS: dict[str, dict[str, Any]] = {
     "quality-first": {
         "intent": "Maximize narrative, evidence, and visual quality for difficult or high-stakes work.",
         "delegation": {
-            "design_scout": "optional_one",
+            "design_scout": "only_when_independent_work_is_useful",
             "data_scout": "when_local_data_or_computed_evidence_is_material",
-            "visual_critic": "required_after_render",
+            "visual_critic": "self_review_or_independent_review_when_useful",
         },
+        "workflow_order": "suggested_not_required",
         "workflow": [
-            "resolve intake and assumptions",
-            "lock a compact style and evidence plan",
-            "author source files and deterministic artifacts",
-            "run source readiness and render-free QA",
-            "render and inspect slide images",
-            "repair source and rerun affected checks",
-            "run final delivery readiness",
+            "choose a topic-fit story and visual route from the evidence",
+            "author editable source and reproducible artifacts",
+            "meet the completion rubric; repair and rerun affected checks until clean or report a blocker",
         ],
         "render_policy": "rendered_visual_review_required",
     },
     "balanced": {
-        "intent": "Produce a polished professional deck with one focused planning and repair loop.",
+        "intent": "Produce a polished professional deck with focused planning and repair.",
         "delegation": {
             "design_scout": "only_when_style_or_evidence_is_ambiguous",
             "data_scout": "only_when_local_data_needs_analysis",
-            "visual_critic": "required_after_render",
+            "visual_critic": "self_review_or_independent_review_when_useful",
         },
         "workflow": [
             "resolve intake or record best-judgment assumptions",
             "select one primary style route",
             "author source files and required artifacts",
             "run render-free QA",
-            "render, inspect, and repair once",
+            "render, inspect, and repair until clean or report a blocker",
             "run final delivery readiness",
         ],
         "render_policy": "render_final_candidate_and_review",
     },
     "fast": {
-        "intent": "Create a clean short draft quickly while preserving editable source and QA.",
+        "intent": "Use a compact single-agent route with the same editable-source and delivery QA target.",
+        "agent_mode": "single-agent",
         "delegation": {
             "design_scout": "skip",
-            "data_scout": "only_if_missing_data_blocks_the_deck",
-            "visual_critic": "inspect_final_render",
+            "data_scout": "skip",
+            "visual_critic": "self_review_final_render",
         },
         "workflow": [
             "use deterministic style routing",
             "author source files directly",
             "run render-free QA",
             "render and inspect the final candidate",
-            "escalate to balanced when warnings remain",
+            "repair source and rerun affected checks until clean or report a blocker",
+            "run final delivery readiness",
         ],
-        "render_policy": "single_final_render_then_escalate_on_warning",
+        "render_policy": "render_final_candidate_and_review",
     },
 }
 
@@ -110,7 +123,10 @@ def normalize_profile(value: str) -> str:
     key = str(value or "auto").strip().lower()
     if key not in PROFILE_ALIASES:
         valid = ", ".join(sorted(PROFILE_ALIASES))
-        raise ValueError(f"Unsupported agent profile {value!r}. Valid values: {valid}")
+        raise ValueError(
+            f"Unsupported agent profile {value!r}. For an unknown model, choose an explicit "
+            f"workflow profile: fast, balanced, or quality-first. Valid values: {valid}"
+        )
     return PROFILE_ALIASES[key]
 
 
@@ -126,37 +142,60 @@ def resolve_profile(requested: str, user_prompt: str) -> tuple[str, str]:
     return "balanced", "auto_default_professional"
 
 
+def minimal_payload_examples() -> dict[str, Any]:
+    """Variant payloads only; merge into a slide with a valid role and title."""
+    return {
+        "title": {"subtitle": "Synthetic illustration", "kicker": "DEMO"},
+        "section": {"subtitle": "Options and next steps"},
+        "stats": {"facts": [
+            {"value": "12", "label": "Sites", "detail": "Synthetic pilot"},
+            {"value": "8", "label": "Ready", "detail": "Synthetic subset"},
+        ]},
+        "cards-2": {"cards": [
+            {"title": "Scope", "body": "Start with two sites."},
+            {"title": "Gate", "body": "Review before expansion."},
+        ]},
+        "cards-3": {"cards": [
+            {"title": "Scope", "body": "Start small."},
+            {"title": "Owner", "body": "Assign one lead."},
+            {"title": "Gate", "body": "Review results."},
+        ]},
+        "chart": {"chart": {"type": "bar", "categories": ["A", "B"],
+                             "series": [{"name": "Synthetic count", "values": [12, 8]}]}},
+        "table": {"table": {"headers": ["Source", "Basis"],
+                             "rows": [["S1", "Synthetic illustration"]]}},
+        "comparison-2col": {"left": {"title": "Pilot", "bullets": ["Two sites"]},
+                            "right": {"title": "Expansion", "bullets": ["After review"]}},
+        "matrix": {"quadrants": [
+            {"title": "Scope", "body": "Two sites."},
+            {"title": "Owner", "body": "Operations lead."},
+            {"title": "Gate", "body": "Review readiness."},
+            {"title": "Stop", "body": "Pause on missing evidence."},
+        ]},
+        "standard": {"bullets": ["Approve the bounded pilot.", "Review before expansion."]},
+        "timeline": {"milestones": [
+            {"label": "Week 1", "title": "Scope", "body": "Select sites."},
+            {"label": "Week 2", "title": "Pilot", "body": "Collect observations."},
+            {"label": "Week 3", "title": "Review", "body": "Decide next steps."},
+        ]},
+    }
+
+
+def compact_authoring_diagnostics() -> list[str]:
+    return [
+        "Examples are payloads, not slides: add type, role, variant, title, and real sources; sample values are synthetic.",
+        "A role describes renderer structure, not story intent. Use a supported role/variant pair; layout variants remain optional suggestions.",
+        "stats values must be numeric; chart values must match categories; table rows must match headers; matrix needs exactly four quadrants.",
+        "Read the reported slide, rule, and suggested_fix; repair source and rerun. Unresolved QA means not ready, regardless of profile.",
+    ]
+
+
 def _as_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
 def _as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
-
-
-def _compact_questions(packet: dict[str, Any]) -> dict[str, Any]:
-    request = _as_dict(packet.get("request_user_input"))
-    questions = []
-    for item in _as_list(request.get("questions"))[:3]:
-        if not isinstance(item, dict):
-            continue
-        questions.append(
-            {
-                "id": item.get("id"),
-                "question": item.get("question"),
-                "options": [
-                    option.get("label")
-                    for option in _as_list(item.get("options"))[:3]
-                    if isinstance(option, dict) and option.get("label")
-                ],
-            }
-        )
-    return {
-        "ask_when_material": bool(questions),
-        "questions": questions,
-        "auto_resolution_ms": request.get("autoResolutionMs"),
-        "fallback": packet.get("if_user_does_not_answer"),
-    }
 
 
 def _requested_variants(user_prompt: str) -> list[str]:
@@ -250,6 +289,7 @@ def build_agent_brief(
     workspace: Path,
     user_prompt: str,
     requested_profile: str = "auto",
+    intake_answers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     profile, basis = resolve_profile(requested_profile, user_prompt)
     kickoff = _as_dict(packet.get("agent_kickoff_brief"))
@@ -263,13 +303,14 @@ def build_agent_brief(
             "requested": requested_profile,
             "resolved": profile,
             "resolution_basis": basis,
+            "policy_basis": "Local workflow defaults, not model performance guarantees; explicit profiles work with any model.",
             **PROFILE_CONTRACTS[profile],
         },
         "autonomy": {
             "local_actions": "Read and edit in-scope source files, run non-destructive builds and QA, and iterate without asking again.",
             "confirmation_required": "External writes, destructive actions, purchases, or material scope expansion.",
         },
-        "intake": _compact_questions(packet),
+        "intake": build_deck_intake(user_prompt, answers=intake_answers),
         "routing": _compact_routes(packet, user_prompt=user_prompt),
         "authoring_contract": {
             "source_of_truth": [
@@ -320,6 +361,9 @@ def build_agent_brief(
             "audit_only": "Open deck_start_packet.json only for recovery, audit, or a missing command.",
         },
     }
+    if profile == "fast":
+        brief["authoring_contract"]["minimal_payload_examples"] = minimal_payload_examples()
+        brief["authoring_contract"]["diagnostics"] = compact_authoring_diagnostics()
     encoded = json.dumps(brief, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     brief["prompt_budget"] = {
         "compact_json_chars": len(encoded),
@@ -347,7 +391,15 @@ def render_agent_brief_markdown(brief: dict[str, Any]) -> str:
         "## Workflow",
         "",
     ]
-    lines.extend(f"{idx}. {item}" for idx, item in enumerate(_as_list(profile.get("workflow")), start=1))
+    lines.extend(f"- {item}" for item in _as_list(profile.get("workflow")))
+    if profile.get("workflow_order") == "suggested_not_required":
+        lines.append("These are suggested actions, not a fixed sequence.")
+    if profile.get("agent_mode") == "single-agent":
+        lines.append("Use one agent, including final visual review; the delivery QA target is unchanged.")
+    intake = _as_dict(brief.get("intake"))
+    lines.extend(["", "## Optional Intake", "", str(intake.get("policy") or "")])
+    lines.extend(f"- {item['question']}" for item in _as_list(intake.get("questions")))
+    lines.extend(f"- Assumption ({key}): {value}" for key, value in _as_dict(intake.get("assumptions")).items())
     lines.extend(["", "## Design Route", ""])
     atom = _as_dict(routing.get("atom_seed"))
     grammar = _as_dict(routing.get("composition_grammar"))
@@ -367,6 +419,11 @@ def render_agent_brief_markdown(brief: dict[str, Any]) -> str:
         ]
     )
     lines.extend(f"- {item}" for item in _as_list(brief.get("completion_rubric")))
+    authoring = _as_dict(brief.get("authoring_contract"))
+    if authoring.get("minimal_payload_examples"):
+        lines.extend(["", "## Payload Help", ""])
+        lines.extend(f"- {item}" for item in authoring["diagnostics"])
+        lines.extend(["```json", json.dumps(authoring["minimal_payload_examples"], separators=(",", ":")), "```"])
     lines.extend(
         [
             "",
@@ -388,13 +445,23 @@ def write_agent_brief(
     requested_profile: str = "auto",
     json_path: Path | None = None,
     markdown_path: Path | None = None,
+    intake_answers: dict[str, str] | None = None,
 ) -> tuple[Path, Path, dict[str, Any]]:
     resolved_workspace = workspace.expanduser().resolve()
+    design_path = resolved_workspace / "design_brief.json"
+    if intake_answers is None and design_path.is_file():
+        design = _as_dict(json.loads(design_path.read_text(encoding="utf-8")))
+        saved = _as_dict(design.get("user_intake"))
+        intake_answers = {
+            key: value for key, value in saved.items()
+            if (key in FIELDS or key in ANSWER_ALIASES) and isinstance(value, str) and value.strip()
+        }
     brief = build_agent_brief(
         packet=packet,
         workspace=resolved_workspace,
         user_prompt=user_prompt,
         requested_profile=requested_profile,
+        intake_answers=intake_answers,
     )
     json_out = (json_path or (resolved_workspace / "agent_brief.json")).expanduser().resolve()
     md_out = (markdown_path or (resolved_workspace / "agent_brief.md")).expanduser().resolve()
@@ -410,7 +477,7 @@ def _args() -> argparse.Namespace:
     parser.add_argument("--workspace", required=True)
     parser.add_argument("--packet", default="deck_start_packet.json")
     parser.add_argument("--user-prompt", default="")
-    parser.add_argument("--agent-profile", default="auto", choices=sorted(PROFILE_ALIASES))
+    parser.add_argument("--agent-profile", default="auto", choices=sorted(PROFILE_ALIASES), help=PROFILE_HELP)
     parser.add_argument("--json-output", default="")
     parser.add_argument("--markdown-output", default="")
     return parser.parse_args()

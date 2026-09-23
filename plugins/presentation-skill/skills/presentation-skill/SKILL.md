@@ -31,6 +31,24 @@ or Office application workflows for the supported runtime.
 
 ## Choose A Route
 
+### Clarify Only What Matters
+
+The brief includes optional intake questions. Ask at most three short questions
+only when missing audience, decision, evidence, or brand information would change
+the deck. Do not ask again when the request or saved answers already cover it.
+Otherwise state reasonable assumptions and proceed. Never invent missing results.
+
+Use `present.py intake --prompt "..."` for a standalone intake packet. Pass answers
+as inline JSON, for example `--answers '{"audience":"Lab directors"}'`, to the next
+brief. Fields are `audience`, `purpose`, `evidence`, and `style`. These are design
+questions, not permission requests.
+
+If the caller supplies low remaining usage and confirms Luna is available, offer
+the current model or Luna with the same QA. Ask once; do not silently switch.
+Without known model availability, offer a leaner workflow on the current model,
+not a promise of Luna access or lower quota consumption. Never query account
+usage merely because a deck is requested.
+
 ### Quick Deck
 
 Use for a one-off 5-10 slide deck.
@@ -59,9 +77,23 @@ python3 scripts/present.py finalize \
   --qa-dir /absolute/path/qa
 ```
 
-Read `finalize_receipt.json`, `qa_report.json`, and the contact sheet. Repair
-source once, then rerun. Warning-only preflight findings are recorded; outline
-errors and final QA findings remain blocking.
+Read `finalize_receipt.json` and inspect the rendered slides. If checks fail,
+start from `repair_packet.json`: it contains affected source pointers, measured
+issues, and image paths. Repair source and rerun until the artifact passes;
+do not stop after an arbitrary number of attempts. Automated checks do not
+substitute for actual visual inspection.
+
+When style choice is genuinely uncertain, preview the same representative
+content in a few candidate styles before building the full deck:
+
+```bash
+python3 scripts/present.py audition \
+  --outline /absolute/path/outline.json --outdir /absolute/path/audition \
+  --presets lab-report editorial-minimal warm-terracotta
+```
+
+This is optional, not an extra step for every deck. Inspect `comparison.jpg`
+and select by evidence fit and hierarchy, not decoration. The source is unchanged.
 
 ### Saved Workspace
 
@@ -118,19 +150,22 @@ editing package internals.
 
 Profiles change orchestration, not the final quality definition:
 
-- `fast` / `luna`: one deterministic grammar, no scouts, render-free draft,
-  then one final render.
-- `balanced` / `terra`: two bounded grammar candidates, at most one useful
-  scout, one focused repair loop.
-- `quality-first` / `sol`: three bounded grammar candidates, optional design
-  and data scouts, full rendered review for difficult or high-stakes work.
+- `fast` / `luna`: one grammar candidate and small valid payload examples;
+  single-agent authoring with focused repairs.
+- `balanced` / `terra`: two grammar candidates; delegate only when useful.
+- `quality-first` / `sol` / `astra`: up to three grammar candidates, optional
+  evidence or design scouts, and flexible content-led composition.
 - `auto`: quality-first for high-stakes/evidence-heavy work, fast for explicit
   rough drafts, balanced otherwise.
 
-Use the smallest profile that can pass the artifact gates. Stronger models may
-choose and mix bounded treatments dynamically; they should not receive the full
-corpus or arbitrary coordinates. If uncertain, use the deterministic fallback
-recorded in the brief.
+Profiles are workflow policies, not provider/model switches or quality claims.
+One capable model can complete the entire workflow. No advisor model or
+multi-agent setup is required; use bounded advice only when it resolves a
+specific design or evidence uncertainty, then continue authoring and validation.
+All models may adapt the suggested sequence and mix supported treatments.
+Do not feed them the full corpus or arbitrary coordinates. For an unrecognized
+future model, choose a workflow profile explicitly. Use the recorded fallback
+when no content-grounded design choice is available.
 
 ## Design Decisions
 
@@ -153,8 +188,8 @@ Maintain these invariants:
   footer chrome compete with the evidence.
 - Use `role_layout_variant: primary | alternate | dense` for bounded structural
   variation. Do not place arbitrary coordinates in `outline.json`.
-- Keep one grammar coherent across the deck. Borrow at most two isolated
-  treatments when the content shape benefits.
+- Keep typography, spacing, and semantic colors coherent. Borrow supported
+  treatments when the content benefits; the suggested sequence is not mandatory.
 - For a visual A/B, freeze one outline and vary only `deck_style`; this exposes
   real grammar differences without letting content changes bias the comparison.
 - Treat auxiliary title-stage anchors as content slots, not decoration. Leave
@@ -195,10 +230,19 @@ readability in the figure script before placing the figure. Stage sourced images
 through `asset_plan.json` with attribution. Generated imagery must remain
 optional and carry prompt/model/purpose metadata.
 
+Bar charts include zero by default. Set explicit axis bounds only for an
+intentional, disclosed comparison; do not exaggerate differences through cropping.
+
 Read `references/reproducible_workflow.md` only when the deck contains computed
 evidence or generated figures.
 
 ## QA And Delivery
+
+For evidence-led decks, keep a compact source checklist of critical values,
+units, denominators, caveats, and source IDs. Compare it with both the outline
+and rendered slides before approval. A correctly rendered chart can still
+contain swapped counts, missing facts, or an unsupported inference; automated
+layout checks do not establish factual fidelity.
 
 A deliverable deck must pass:
 
@@ -206,12 +250,18 @@ A deliverable deck must pass:
 2. geometry, overflow, overlap, density, and whitespace checks;
 3. rendered contact-sheet and slide-level visual review;
 4. placeholder-text checks;
-5. accessibility checks when required;
+5. readability and accessibility checks;
 6. final delivery readiness.
 
 Visual review should search for defects: clipped text, weak contrast, awkward
 empty regions, crowded edges, tiny labels, inconsistent alignment, repeated
 grammar, and unreadable sources. Fix source and rebuild.
+
+For public proof or audited delivery, bind the actual review to the deck and
+render hashes with `scripts/visual_review_receipt.py`. Never invent a review
+receipt from automated counts. An optional `--render-cache-dir /absolute/path/cache`
+on `present.py finalize` reuses verified identical renders; content and rendering
+environment changes invalidate the cache. It never reuses a visual judgment.
 
 If rendering is unavailable in the execution environment, preserve the built
 deck and static QA report, record the deferred render stage in the receipt, and

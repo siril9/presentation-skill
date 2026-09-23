@@ -1,6 +1,6 @@
 {
   "name": "presentation-skill",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Source-first PowerPoint/PPTX generation for Codex and ChatGPT agents.",
   "author": {
     "name": "Sirilsengolraj",
@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "presentation-skill",
     "shortDescription": "Build editable PowerPoint decks with model-adaptive style routing and QA.",
-    "longDescription": "A lightweight source-first PowerPoint/PPTX workflow for Codex and ChatGPT agents. Luna, Terra, and Sol receive bounded model-appropriate grammar choices; deterministic scripts turn outline.json, data, and figures into editable decks and run geometry, visual, accessibility, placeholder, and reproducibility QA.",
+    "longDescription": "A lightweight source-first PowerPoint/PPTX workflow for coding agents. One capable model can author and refine a deck, with optional questions and style previews. Deterministic scripts preserve editable charts and tables, check readability, and expose focused repairs. Verified render caching speeds unchanged rebuilds without reusing visual approval.",
     "developerName": "Sirilsengolraj",
     "category": "Productivity",
     "capabilities": [
@@ -44,10 +44,9 @@
     ],
     "brandColor": "#2563EB",
     "screenshots": [
-      "./assets/v0.11_monochrome_lab_ab.jpg",
-      "./assets/v0.9_narrative_structures.jpg",
-      "./assets/v0.9_evidence_data_structures.jpg",
-      "./assets/v0.9_decisions_sources.jpg",
+      "./assets/v0.12_narrative_process.jpg",
+      "./assets/v0.12_evidence_decisions.jpg",
+      "./assets/v0.12_data_comparisons.jpg",
       "./assets/codex_native_vs_updated_clean_three_topics.png"
     ]
   }

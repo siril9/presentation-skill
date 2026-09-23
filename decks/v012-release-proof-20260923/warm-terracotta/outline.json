@@ -1,0 +1,273 @@
+{
+  "title": "The Urban Observatory",
+  "slides": [
+    {
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "title": "The Urban\nObservatory",
+      "sources": [
+        "D1"
+      ],
+      "kicker": "FIELD PROGRAM / 2026",
+      "subtitle": "A 90-day sensor pilot with a clear scale-up decision",
+      "footer": "Illustrative planning data"
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "stats",
+      "title": "A small network can answer a focused question",
+      "sources": [
+        "D1"
+      ],
+      "facts": [
+        {
+          "value": "24",
+          "label": "Field sensors",
+          "detail": "Six devices in each of four contrasting zones."
+        },
+        {
+          "value": "90 days",
+          "label": "Observation window",
+          "detail": "Repeat measurements through changing weather and daily activity."
+        },
+        {
+          "value": "97%",
+          "label": "Final-week uptime",
+          "detail": "Device availability improved after the first maintenance cycle."
+        },
+        {
+          "value": "$48k",
+          "label": "Pilot ceiling",
+          "detail": "Equipment, deployment, review, and contingency share one cap."
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "title": "Four gates turn measurements into a decision",
+      "sources": [
+        "D1"
+      ],
+      "milestones": [
+        {
+          "label": "Days 1-14",
+          "title": "Calibrate",
+          "body": "Test all devices together before field placement."
+        },
+        {
+          "label": "Days 15-30",
+          "title": "Deploy",
+          "body": "Install matched sensors across the four zones."
+        },
+        {
+          "label": "Days 31-75",
+          "title": "Observe",
+          "body": "Review uptime and investigate unusual readings weekly."
+        },
+        {
+          "label": "Days 76-90",
+          "title": "Decide",
+          "body": "Publish coverage gaps and the scale-up recommendation."
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "title": "Availability improved through the pilot",
+      "sources": [
+        "D1"
+      ],
+      "chart": {
+        "type": "bar",
+        "categories": [
+          "Week 1",
+          "Week 4",
+          "Week 8",
+          "Week 12"
+        ],
+        "series": [
+          {
+            "name": "Uptime (%)",
+            "values": [
+              82,
+              89,
+              94,
+              97
+            ]
+          }
+        ],
+        "facts": [
+          {
+            "value": "+15 pp",
+            "label": "Availability gain"
+          }
+        ]
+      },
+      "interpretation": "Uptime measures device availability; it does not establish measurement accuracy."
+    },
+    {
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "title": "The budget protects both coverage and review",
+      "sources": [
+        "D1"
+      ],
+      "table": {
+        "headers": [
+          "Workstream",
+          "Budget",
+          "Owner",
+          "Output"
+        ],
+        "rows": [
+          [
+            "Equipment",
+            "$22k",
+            "Field team",
+            "24 calibrated sensors"
+          ],
+          [
+            "Deployment",
+            "$12k",
+            "Operations",
+            "Four matched zones"
+          ],
+          [
+            "Analysis",
+            "$10k",
+            "Research",
+            "Quality and coverage report"
+          ],
+          [
+            "Reserve",
+            "$4k",
+            "Program lead",
+            "Repairs and replacements"
+          ]
+        ],
+        "column_weights": [
+          0.23,
+          0.14,
+          0.23,
+          0.4
+        ]
+      },
+      "interpretation": "Analysis funding is reserved before installation begins."
+    },
+    {
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "title": "Depth now or breadth before the evidence is ready?",
+      "sources": [
+        "D1"
+      ],
+      "left": {
+        "title": "Focused pilot",
+        "bullets": [
+          "24 sensors across four zones",
+          "$48k budget with review funded",
+          "Comparable measurements before expansion"
+        ]
+      },
+      "right": {
+        "title": "Immediate expansion",
+        "bullets": [
+          "60 sensors across ten zones",
+          "$110k indicative budget",
+          "More coverage; greater maintenance burden"
+        ]
+      },
+      "verdict": "Run the focused pilot; expand only after the coverage and quality review."
+    },
+    {
+      "type": "content",
+      "role": "decision",
+      "variant": "matrix",
+      "title": "Scale only when four conditions hold",
+      "sources": [
+        "D1"
+      ],
+      "quadrants": [
+        {
+          "title": "Data quality",
+          "body": "Calibration checks remain inside the agreed tolerance across all zones."
+        },
+        {
+          "title": "Coverage",
+          "body": "Every zone has enough valid observations to support a fair comparison."
+        },
+        {
+          "title": "Operations",
+          "body": "A named team can maintain sensors and resolve recurring faults."
+        },
+        {
+          "title": "Evidence",
+          "body": "The final report separates measured results from assumptions and uncertainty."
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "role": "references",
+      "variant": "table",
+      "title": "The evidence remains inspectable",
+      "sources": [
+        "D1"
+      ],
+      "table": {
+        "table_style": "references",
+        "headers": [
+          "ID",
+          "Record",
+          "Use"
+        ],
+        "rows": [
+          [
+            "D1",
+            "Illustrative program dataset",
+            "All numbers are synthetic design-test inputs"
+          ],
+          [
+            "D2",
+            "Frozen outline.json",
+            "Identical wording and data across eight styles"
+          ],
+          [
+            "D3",
+            "Build and review records",
+            "Reproducibility and visual inspection"
+          ]
+        ],
+        "column_weights": [
+          0.08,
+          0.34,
+          0.58
+        ]
+      }
+    }
+  ],
+  "deck_style": {
+    "style_preset": "warm-terracotta",
+    "composition_grammar": "policy-public-docket",
+    "style_seed": "urban-observatory-v012",
+    "header_variant": "auto",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_metadata_pt": 9,
+      "min_footer_pt": 9
+    }
+  }
+}

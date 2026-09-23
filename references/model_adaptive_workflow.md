@@ -4,6 +4,11 @@ Use this reference when choosing how much planning, delegation, and QA a deck
 needs. The renderer and source contracts stay the same across model variants;
 only the amount of model-side orchestration changes.
 
+A single capable model can own the full deck. Advisor calls are optional and
+should answer a concrete unresolved question, not duplicate authoring or create
+a mandatory planning phase. Model selection belongs to the caller's harness;
+this skill does not require Astra, Sol, or any particular model pairing.
+
 ## Core rule
 
 Keep the active prompt small. Store reproducibility detail in workspace files
@@ -17,15 +22,17 @@ and reports, then expose only the decisions needed for the current phase.
 - Preserve required facts, decisions, caveats, and next actions. Remove
   repeated process language before removing required content.
 
-This follows current GPT-5.6 guidance: use shorter prompts, define autonomy
-once, give lightweight task structure, and evaluate the final artifact rather
-than rewarding extra calls or copied intermediate state.
+This follows [OpenAI's Astra skill guidance](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra):
+precise discovery, progressive disclosure, and clear completion boundaries,
+without turning expert judgment into a rigid itinerary. Profile aliases below
+are local workflow policies, not claims about internal model architecture or
+an automatic model change. A future model can use any explicit policy.
 
 ## Execution profiles
 
 ### Quality-first
 
-Aliases: `frontier`, `sol`, `pro`.
+Aliases include `frontier`, `sol`, `astra`, `gpt-5.6-sol`, `gpt-6-astra`, `pro`.
 
 Use for high-stakes scientific, clinical, board, investor, regulatory, or
 public-release decks; difficult source synthesis; or decks with complex data
@@ -56,9 +63,10 @@ Aliases: `luna`, `draft`.
 Use for short drafts, internal working decks, and high-volume generation.
 
 - Use deterministic routing and existing renderer recipes.
-- Avoid scouts unless missing data or assets block the deck.
-- Build once with render-free QA, then render the final candidate.
-- Escalate to `balanced` if visual or readability warnings remain.
+- Use a single agent; the brief includes small valid examples for its chosen roles.
+- Author once, finalize, and repair from affected-slide feedback when necessary.
+- The same model may use a richer workflow when needed. Do not switch providers
+  or models without the caller choosing to do so; finished decks still pass all gates.
 
 ### Auto
 
@@ -100,8 +108,36 @@ Give the model:
 - exact slide IDs and measured warnings;
 - the source files and fields to edit.
 
-The repair pass should change source, rebuild, and rerun only the affected
-checks before the final full gate.
+`repair_packet.json` exposes this context without pasting the entire QA folder.
+It retains full issue counts and marks any bounded excerpts. The repair pass
+changes source and rebuilds; the final full gate remains authoritative.
+
+## Optional User Input
+
+`present.py intake --prompt "..."` returns at most three questions about missing
+consequential context. The agent decides whether asking materially improves the
+deck; otherwise it proceeds with explicit assumptions. Answers use inline JSON:
+`--answers '{"audience":"Lab directors","purpose":"Choose the next experiment"}'`.
+Pass them into `present.py brief` to preserve context without repeating questions.
+
+Only caller-provided `--remaining-percent`, `--current-model`, and
+`--available-models` can produce a low-usage choice. At 10% or less remaining,
+the packet can offer Luna if the caller confirms it is available; otherwise it
+offers the fast workflow on the current model. The default is to stay put.
+There is no account lookup, automatic switch, or claim that shared account limits
+will improve. The caller applies a change only after the user chooses it.
+
+## Optional Previews And Caching
+
+`present.py audition --outline ... --outdir ... --presets ...` compares up to
+three candidate styles using the same title, evidence, and dense data slides.
+It is useful for an ambiguous design request, not required for the fast route.
+Candidate JSON and images remain inspectable; no automatic aesthetic winner is claimed.
+
+`present.py finalize --render-cache-dir ...` opts into content- and
+environment-keyed render reuse. It still runs QA and does not cache visual
+approval. Measure cold and warm rendering separately from model authoring;
+neither is a claim about total user-request latency.
 
 ## Stable backbone
 

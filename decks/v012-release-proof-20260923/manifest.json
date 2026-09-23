@@ -1,0 +1,260 @@
+{
+  "schema_version": "readable_style_gallery/v1",
+  "synthetic_data": true,
+  "content_sha256": "2f27fa7feb14a16e013cf05a1d41c04ee87b9679b02b0e9a43693b4932b24bb1",
+  "decks": [
+    {
+      "preset": "arctic-minimal",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.297,
+      "normalized_sha256": "0c87ebc588da022a97826ab25f43c178bea63e2e7297d599083a75f6a0a865e4",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 127,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "lab-report",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.028,
+      "normalized_sha256": "cdce7790f2978ba0146c987d835420d06cad8b73cde9116b4a50796decc814e9",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 123,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "executive-clinical",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.056,
+      "normalized_sha256": "05dd95d424c200b3c93eef2780d5c97b794dbfdf049b9ef6ac844421d494a588",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 123,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "editorial-minimal",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.08,
+      "normalized_sha256": "3a870ccb92303c85f385161eefa740350cf6fe76c703d7060aecdccd0d158543",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 121,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "sunset-investor",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.09,
+      "normalized_sha256": "31b973d14574c6546ec0a467472232b74ccd397bbc02e29b28ec80bb02536fef",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 130,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "lavender-ops",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.104,
+      "normalized_sha256": "ba02ae7b345a42b604ea748784a7870b2ed215a74eb7446e64670d89f9e96573",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 130,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "warm-terracotta",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.001,
+      "normalized_sha256": "7720d71dbde1e973442a22a37e4440d920c8ac9eda76dea38f76b60a19b88c4c",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 125,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    },
+    {
+      "preset": "midnight-neon",
+      "passed": true,
+      "qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_inspection_status": "not_recorded",
+      "duration_seconds": 4.212,
+      "normalized_sha256": "e5d675e5ce18b642010422d3e9bec339035b1b50ced0bdc9e6b775d3087a2039",
+      "editability": {
+        "slides": 8,
+        "native_tables": 2,
+        "editable_text_runs": 128,
+        "native_charts": 1
+      },
+      "source_fidelity": {
+        "passed": true,
+        "missing": []
+      },
+      "reproducible": true
+    }
+  ],
+  "contact_sheets": [
+    "evidence_decisions.jpg",
+    "data_comparisons.jpg",
+    "narrative_process.jpg"
+  ]
+}

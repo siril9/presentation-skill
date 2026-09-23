@@ -17,6 +17,8 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from composition_grammar_catalog import quick_deck_agent_brief, route_composition_grammars  # noqa: E402
+from model_adaptive_workflow import PROFILE_ALIASES, PROFILE_HELP, write_agent_brief  # noqa: E402
+from deck_intake import build_deck_intake  # noqa: E402
 
 
 def _run(script: str, arguments: list[str]) -> int:
@@ -47,11 +49,16 @@ def _brief(args: argparse.Namespace) -> int:
         user_prompt=args.prompt,
         style_preset=style,
         limit=3,
+        intake_answers=args.answers,
     )
     brief = quick_deck_agent_brief(
         route,
         slide_count=max(3, min(30, args.slides)),
         agent_profile=args.profile,
+        intake_answers=args.answers,
+        remaining_percent=args.remaining_percent,
+        current_model=args.current_model,
+        available_models=args.available_models,
     )
     _write_or_print(brief, args.output)
     return 0
@@ -72,7 +79,21 @@ def _init(args: argparse.Namespace) -> int:
         command.append("--skip-start-packet")
     if args.overwrite:
         command.append("--overwrite")
-    return _run("init_deck_workspace.py", command)
+    result = _run("init_deck_workspace.py", command)
+    if result == 0 and not args.audit_packet:
+        from emit_deck_start_packet import build_packet
+
+        workspace = args.workspace.expanduser().resolve()
+        prompt = args.prompt.strip() or args.title
+        # Keep the audit packet transient; lean init still needs its model handoff.
+        _, markdown_path, _ = write_agent_brief(
+            packet=build_packet(workspace=workspace, user_prompt=prompt, mode="agent"),
+            workspace=workspace,
+            user_prompt=prompt,
+            requested_profile=args.profile,
+        )
+        print(f"Agent brief: {markdown_path}")
+    return result
 
 
 def _build(args: argparse.Namespace) -> int:
@@ -111,11 +132,49 @@ def _finalize(args: argparse.Namespace) -> int:
         command.extend(["--qa-dir", str(args.qa_dir.expanduser().resolve())])
     if args.asset_root:
         command.extend(["--asset-root", str(args.asset_root.expanduser().resolve())])
+    if args.render_cache_dir:
+        command.extend(["--render-cache-dir", str(args.render_cache_dir.expanduser().resolve())])
     return _run("finalize_quick_deck.py", command)
 
 
 def _doctor(_args: argparse.Namespace) -> int:
     return _run("runtime_doctor.py", [])
+
+
+def _audition(args: argparse.Namespace) -> int:
+    command = [
+        "--outline", str(args.outline.expanduser().resolve()),
+        "--outdir", str(args.outdir.expanduser().resolve()),
+    ]
+    if args.presets:
+        command.extend(["--presets", *args.presets])
+    return _run("audition_styles.py", command)
+
+
+def _intake(args: argparse.Namespace) -> int:
+    _write_or_print(build_deck_intake(
+        args.prompt, answers=args.answers, remaining_percent=args.remaining_percent,
+        current_model=args.current_model, available_models=args.available_models,
+    ), args.output)
+    return 0
+
+
+def _answers_json(value: str) -> dict[str, str]:
+    try:
+        answers = json.loads(value)
+        build_deck_intake("", answers=answers)
+        if not isinstance(answers, dict):
+            raise ValueError("answers must be a JSON object")
+    except (ValueError, TypeError) as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    return answers
+
+
+def _add_intake_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--answers", type=_answers_json, help="JSON object: audience, purpose, evidence, style (text answers).")
+    parser.add_argument("--remaining-percent", type=float, help="Caller-reported account usage remaining; omit when unknown. No lookup is performed.")
+    parser.add_argument("--current-model", help="Caller-reported model; never changed by this command.")
+    parser.add_argument("--available-models", nargs="+", help="Caller-confirmed available model names; no availability is inferred.")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -134,10 +193,12 @@ def _parser() -> argparse.ArgumentParser:
     brief.add_argument("--style-preset", default="auto")
     brief.add_argument(
         "--profile",
-        choices=("auto", "fast", "balanced", "quality-first", "luna", "terra", "sol"),
+        choices=sorted(PROFILE_ALIASES),
         default="auto",
+        help=PROFILE_HELP,
     )
     brief.add_argument("--output", type=Path)
+    _add_intake_options(brief)
     brief.set_defaults(handler=_brief)
 
     init = commands.add_parser("init", help="Create a rebuildable deck workspace.")
@@ -147,8 +208,9 @@ def _parser() -> argparse.ArgumentParser:
     init.add_argument("--style-preset", default="auto")
     init.add_argument(
         "--profile",
-        choices=("auto", "fast", "balanced", "quality-first", "luna", "terra", "sol"),
+        choices=sorted(PROFILE_ALIASES),
         default="auto",
+        help=PROFILE_HELP,
     )
     init.add_argument("--overwrite", action="store_true")
     init.add_argument(
@@ -169,13 +231,30 @@ def _parser() -> argparse.ArgumentParser:
     final.add_argument("--style-preset", default="auto")
     final.add_argument("--qa-dir", type=Path)
     final.add_argument("--asset-root", type=Path)
+    final.add_argument("--render-cache-dir", type=Path)
     final.set_defaults(handler=_finalize)
+
+    audition = commands.add_parser("audition", help="Optionally compare styles on a content-matched slide subset.")
+    audition.add_argument("--outline", type=Path, required=True)
+    audition.add_argument("--outdir", type=Path, required=True)
+    audition.add_argument("--presets", nargs="+", required=True)
+    audition.set_defaults(handler=_audition)
+
+    intake = commands.add_parser("intake", help="Offer optional consequential questions and caller-signaled usage choices.")
+    intake.add_argument("--prompt", required=True)
+    intake.add_argument("--output", type=Path)
+    _add_intake_options(intake)
+    intake.set_defaults(handler=_intake)
     return parser
 
 
 def main() -> int:
-    args = _parser().parse_args()
-    return int(args.handler(args))
+    parser = _parser()
+    args = parser.parse_args()
+    try:
+        return int(args.handler(args))
+    except ValueError as exc:
+        parser.error(str(exc))
 
 
 if __name__ == "__main__":

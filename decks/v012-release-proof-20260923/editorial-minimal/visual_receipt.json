@@ -1,0 +1,74 @@
+{
+  "schema_version": "visual_review_receipt_v1",
+  "review_schema_version": "visual_judgment_v1",
+  "deck": {
+    "filename": "deck.pptx",
+    "sha256": "e4f8c053414a7ba4ba5332a7fc5f4d4271903f41abc13724187b9a6f183e2236",
+    "normalized_office_sha256": "3a870ccb92303c85f385161eefa740350cf6fe76c703d7060aecdccd0d158543"
+  },
+  "renders": [
+    {
+      "name": "slide-01.jpg",
+      "sha256": "93e1c14c974777a175f9e3c3595d4f5090620ddf0fcf0f5caf6ebbfbb85bbfc2",
+      "size_bytes": 69257
+    },
+    {
+      "name": "slide-02.jpg",
+      "sha256": "f08d512d81cf9d4946b1b78a9cc7ee36f934c0789d7521e4f2cc28c56c215eef",
+      "size_bytes": 126406
+    },
+    {
+      "name": "slide-03.jpg",
+      "sha256": "7da6215818005882068454122d8958e9abbb6f6736a0f4c83b6460e672788649",
+      "size_bytes": 110175
+    },
+    {
+      "name": "slide-04.jpg",
+      "sha256": "de414cd094e72155ed2ff40e5160b10e762651e526518a4e5305e2ef18687b71",
+      "size_bytes": 103580
+    },
+    {
+      "name": "slide-05.jpg",
+      "sha256": "b87deebc06c9fbf45b56bfec8a7ddc9bbd079d60408d7d5f24b75078c5204b83",
+      "size_bytes": 127258
+    },
+    {
+      "name": "slide-06.jpg",
+      "sha256": "80fc632d114a25bfd77e268baa250990aa8357b2f8f0b51a9a39853e5abd6cfe",
+      "size_bytes": 139712
+    },
+    {
+      "name": "slide-07.jpg",
+      "sha256": "5d042861d66940a9c4526102aeed0b8ac1a228c7405cacf9450d9726a9efd93e",
+      "size_bytes": 120384
+    },
+    {
+      "name": "slide-08.jpg",
+      "sha256": "afacf767d3e3709e1061b6c087a921f578a14b1af6f132ca7a135d9b698e7db8",
+      "size_bytes": 103375
+    }
+  ],
+  "render_count": 8,
+  "reviewer": {
+    "type": "model",
+    "name": "GPT-6 Sol independent review and main-agent integration review"
+  },
+  "verdict": "pass",
+  "findings": [
+    {
+      "severity": "info",
+      "message": "Editorial gain units and the Luna expansion heading wrap more than ideal but remain readable; these are nonblocking polish opportunities."
+    },
+    {
+      "severity": "info",
+      "message": "The lavender cover eyebrow is less prominent than its title; midnight body headings remain heavy. Neither obscures required content in the reviewed renders."
+    }
+  ],
+  "reviewed_at": "2026-09-23",
+  "review_context": {
+    "scope": "Eight eight-slide gallery decks plus the eight-slide Luna example.",
+    "independent_review": "All 64 initial gallery slides reviewed; all 25 changed images and all eight Luna slides reviewed on the second pass. The terracotta collision finding was retracted after full-size inspection.",
+    "final_image_check": "63 of 64 final gallery images match the second reviewed render set byte-for-byte. Main reviewed the changed warm-terracotta comparison slide 6 at full size. All eight final Luna images match the reviewed images byte-for-byte.",
+    "factual_scope": "The gallery preserves frozen synthetic inputs. Luna's initial swapped survey counts and omitted staffing count were corrected against its supplied brief. This is not an independent validation of external research."
+  }
+}

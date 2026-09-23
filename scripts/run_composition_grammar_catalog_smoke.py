@@ -81,7 +81,8 @@ def main() -> int:
         if len(alternatives) != 2:
             failures.append(f"{label}: expected two bounded alternatives")
 
-    brief = quick_deck_agent_brief(cases[0][1], slide_count=7, agent_profile="terra")
+    unlocked = route_composition_grammars(topic="Assay validation", user_prompt="Scientific evidence and sources")
+    brief = quick_deck_agent_brief(unlocked, slide_count=7, agent_profile="terra")
     if brief.get("schema_version") != "quick_deck_agent_brief/v3":
         failures.append("quick-deck brief schema is not v3")
     outline_contract = brief.get("outline_contract") if isinstance(brief.get("outline_contract"), dict) else {}
@@ -92,8 +93,8 @@ def main() -> int:
     route_candidates = brief.get("route_candidates") if isinstance(brief.get("route_candidates"), list) else []
     if brief.get("route_mode") != "model-select-from-bounded-candidates" or len(route_candidates) != 2:
         failures.append("Terra brief must expose exactly two bounded grammar candidates")
-    fast_brief = quick_deck_agent_brief(cases[0][1], slide_count=7, agent_profile="luna")
-    quality_brief = quick_deck_agent_brief(cases[0][1], slide_count=7, agent_profile="sol")
+    fast_brief = quick_deck_agent_brief(unlocked, slide_count=7, agent_profile="luna")
+    quality_brief = quick_deck_agent_brief(unlocked, slide_count=7, agent_profile="sol")
     if fast_brief.get("route_mode") != "deterministic" or len(fast_brief.get("route_candidates") or []) != 1:
         failures.append("Luna brief must use one deterministic grammar candidate")
     if len(quality_brief.get("route_candidates") or []) != 3:

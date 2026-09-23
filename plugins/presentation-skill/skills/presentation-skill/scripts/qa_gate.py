@@ -211,6 +211,10 @@ def _args() -> argparse.Namespace:
         help="Skip rendering slides to images",
     )
     parser.add_argument(
+        "--render-cache-dir",
+        help="Opt in to reusable renders in a cache directory outside QA artifacts",
+    )
+    parser.add_argument(
         "--allow-issues",
         action="store_true",
         help="Do not fail when inventory issues are found",
@@ -397,20 +401,21 @@ def main() -> int:
             + list(render_dir.glob("slide-*.png"))
         ):
             stale.unlink()
-        render_rc, render_stdout = _run_capture(
-            [
-                py,
-                str(base / "render_slides.py"),
-                "--input",
-                str(input_path),
-                "--outdir",
-                str(render_dir),
-                "--dpi",
-                "180",
-                "--format",
-                "jpeg",
-            ]
-        )
+        render_cmd = [
+            py,
+            str(base / "render_slides.py"),
+            "--input",
+            str(input_path),
+            "--outdir",
+            str(render_dir),
+            "--dpi",
+            "180",
+            "--format",
+            "jpeg",
+        ]
+        if args.render_cache_dir:
+            render_cmd.extend(["--cache-dir", str(Path(args.render_cache_dir).expanduser().resolve())])
+        render_rc, render_stdout = _run_capture(render_cmd)
     visual_rc, visual_out = _run_capture(
         [py, str(base / "visual_qa.py"), "--input", str(input_path), "--json"]
     )

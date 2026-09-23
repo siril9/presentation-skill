@@ -1,6 +1,6 @@
 {
   "name": "presentation-skill",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Open-source presentation skill for Codex, ChatGPT agents, and OpenAI-style agents that build, edit, and QA polished PowerPoint PPTX presentations, slides, and slide decks.",
   "license": "MIT",
   "private": false,

@@ -50,6 +50,9 @@ SCRIPT_DEVELOPMENT_ONLY = {
 }
 
 SCREENSHOTS = {
+    "v0.12_narrative_process.jpg": REPO / "examples/v0.12_narrative_process.jpg",
+    "v0.12_evidence_decisions.jpg": REPO / "examples/v0.12_evidence_decisions.jpg",
+    "v0.12_data_comparisons.jpg": REPO / "examples/v0.12_data_comparisons.jpg",
     "v0.11_monochrome_lab_ab.jpg": REPO / "examples/v0.11_monochrome_lab_ab.jpg",
     "v0.9_narrative_structures.jpg": REPO / "examples/v0.9_narrative_structures.jpg",
     "v0.9_evidence_data_structures.jpg": REPO / "examples/v0.9_evidence_data_structures.jpg",

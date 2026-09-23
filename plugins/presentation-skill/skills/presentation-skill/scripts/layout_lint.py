@@ -200,6 +200,22 @@ def _shape_info(index: int, shape: Any) -> ShapeInfo:
     )
 
 
+def _has_display_section_title(slide: Any, outline_slide: dict[str, Any] | None) -> bool:
+    if not outline_slide or outline_slide.get("role") != "section":
+        return False
+    title = " ".join(str(outline_slide.get("title") or "").split()).casefold()
+    if not title:
+        return False
+    for shape in slide.shapes:
+        if " ".join(_shape_text(shape).split()).casefold() != title:
+            continue
+        runs = [run for paragraph in shape.text_frame.paragraphs
+                for run in paragraph.runs if run.text.strip()]
+        if runs and all(run.font.size is not None and run.font.size.pt >= 28 for run in runs):
+            return True
+    return False
+
+
 def _overlap_width(a: ShapeInfo, b: ShapeInfo) -> float:
     left = max(a.left, b.left)
     right = min(a.right, b.right)
@@ -730,15 +746,16 @@ def _lint_slide(
             )
         )
 
-    # Bug 5 follow-up: section dividers should be visually fuller than title
-    # openers, but title slides are intentionally sparse when they rely on the
-    # default motif. Keep section slides strict; make title-slide empty ratio
-    # advisory unless it becomes truly extreme.
+    # A semantic section with an actual display-size title is a pacing slide.
+    # Preserve the strict legacy rule for empty or small-heading sections.
     effective_max_empty_ratio = max_empty_ratio
     if slide_type == "title":
         effective_max_empty_ratio = max(max_empty_ratio, 0.76)
     elif slide_type == "section":
-        effective_max_empty_ratio = max(max_empty_ratio * 0.80, 0.50)
+        effective_max_empty_ratio = (
+            max(max_empty_ratio, 0.76) if _has_display_section_title(slide, outline_slide)
+            else max(max_empty_ratio * 0.80, 0.50)
+        )
 
     # Sparse-by-design variants (kpi-hero, comparison-2col, pull-quote) use
     # deliberate whitespace as visual emphasis; raise the empty-ratio cap

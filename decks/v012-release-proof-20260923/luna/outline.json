@@ -1,0 +1,201 @@
+{
+  "title": "Seed Library: Review Before Expansion",
+  "deck_style": {
+    "style_preset": "lab-report",
+    "composition_grammar": "scientific-evidence-plate",
+    "style_seed": "seed-library-six",
+    "palette_key": "lab_monochrome_v1",
+    "accent": "restrained",
+    "header_variant": "auto",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_footer_pt": 9,
+      "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "slides": [
+    {
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "slide_intent": "Frame the expansion decision around a synthetic pilot and its evidence limits.",
+      "title": "Seed Library: Review Before Expansion",
+      "subtitle": "A synthetic 12-week, four-branch pilot informs the next decision, not an effectiveness claim.",
+      "kicker": "DECISION BRIEF | SYNTHETIC PILOT",
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "stats",
+      "slide_intent": "Summarize the pilot's scale and distinguish counts from outcome evidence.",
+      "title": "Pilot activity is measurable; effectiveness is not established",
+      "facts": [
+        {
+          "value": 480,
+          "label": "Packets stocked",
+          "detail": "Across four branches; 18 volunteer shifts"
+        },
+        {
+          "value": 312,
+          "label": "Packets distributed",
+          "detail": "12-week pilot"
+        },
+        {
+          "value": 86,
+          "label": "Surveys returned",
+          "detail": "Self-selected responses"
+        },
+        {
+          "value": 64,
+          "label": "Reported germination",
+          "detail": "Among 86 returned surveys; not an effectiveness estimate"
+        }
+      ],
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "slide_intent": "Show how the pilot moves from inventory to an evidence review.",
+      "title": "The 12-week sequence ends with review, not automatic scale-up",
+      "milestones": [
+        {
+          "label": "Weeks 1-2",
+          "title": "Inventory",
+          "body": "Establish stock and branch coverage."
+        },
+        {
+          "label": "Weeks 3-8",
+          "title": "Distribute",
+          "body": "Track packet distribution across four branches."
+        },
+        {
+          "label": "Weeks 9-10",
+          "title": "Survey",
+          "body": "Collect voluntary follow-up responses."
+        },
+        {
+          "label": "Weeks 11-12",
+          "title": "Review",
+          "body": "Audit demand, limitations, and readiness."
+        }
+      ],
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "slide_intent": "Present observed availability over the pilot as a native editable chart.",
+      "title": "Reported seed availability rose from 72% to 94%",
+      "chart": {
+        "type": "line",
+        "categories": ["Week 1", "Week 4", "Week 8", "Week 12"],
+        "series": [
+          {
+            "name": "Availability (%)",
+            "values": [72, 84, 91, 94]
+          }
+        ],
+        "facts": ["Pilot availability measure; not a measure of gardening outcomes."]
+      },
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "slide_intent": "Show the complete proposed allocation within the $6,000 ceiling.",
+      "title": "The proposed pilot allocation totals the $6,000 ceiling",
+      "table": {
+        "headers": ["Budget item", "Amount"],
+        "rows": [
+          ["Equipment", "$1,800"],
+          ["Supplies", "$2,200"],
+          ["Volunteers", "$1,000"],
+          ["Analysis", "$600"],
+          ["Reserve", "$400"],
+          ["Total ceiling", "$6,000"]
+        ],
+        "column_weights": [3, 1]
+      },
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "slide_intent": "Contrast maintaining four branches with an estimated eight-branch expansion.",
+      "title": "Expansion doubles branch count and raises estimated cost",
+      "left": {
+        "title": "4 branches | $6,000",
+        "bullets": [
+          "Retains current footprint.",
+          "Finish pilot; audit demand.",
+          "Set gates from results."
+        ]
+      },
+      "right": {
+        "title": "8 branches | est. $11,000",
+        "bullets": [
+          "Doubles branch count.",
+          "Estimated cost exceeds $6,000 ceiling.",
+          "Defer until pilot review."
+        ]
+      },
+      "sources": ["S1", "S2"]
+    },
+    {
+      "type": "content",
+      "role": "decision",
+      "variant": "matrix",
+      "slide_intent": "Make expansion conditional on four evidence and operational gates.",
+      "title": "Complete four gates before authorizing expansion",
+      "quadrants": [
+        {
+          "title": "Stock coverage",
+          "body": "Verify availability and replenishment across branches."
+        },
+        {
+          "title": "Volunteer capacity",
+          "body": "Assess whether staffing can support additional branches."
+        },
+        {
+          "title": "Survey limitations",
+          "body": "Self-selection; 64 of 86 reported germination, not effectiveness."
+        },
+        {
+          "title": "Budget",
+          "body": "Reconcile the estimated $11,000 expansion with funding."
+        }
+      ],
+      "summary_callout": "Decision: finish the four-branch pilot and audit demand before expansion.",
+      "sources": ["S1", "S2"]
+    },
+    {
+      "type": "content",
+      "role": "references",
+      "variant": "table",
+      "slide_intent": "Identify supplied synthetic evidence and preserve its interpretation limits.",
+      "title": "Evidence basis and interpretation limits",
+      "table": {
+        "headers": ["ID", "Source", "Use and limitation"],
+        "rows": [
+          ["S1", "Synthetic pilot ledger supplied in assignment", "4 branches; 12 weeks; 480 stocked; 312 distributed; 18 volunteer shifts; availability and budget."],
+          ["S1", "Synthetic pilot survey summary supplied in assignment", "86 surveys returned; 64 reported germination among 86. Self-selected; not effectiveness evidence; no causal claim."],
+          ["S2", "Expansion scenario supplied in assignment", "Keep 4 branches at $6,000 vs expand to 8 at estimated $11,000; finish pilot and audit demand first."]
+        ],
+        "column_weights": [1, 3, 4]
+      },
+      "sources": ["S1", "S2"]
+    }
+  ]
+}

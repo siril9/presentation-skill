@@ -10,7 +10,9 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from layout_lint import ShapeInfo, _rectangle_union_area  # noqa: E402
+from layout_lint import ShapeInfo, _rectangle_union_area, _has_display_section_title  # noqa: E402
+from pptx import Presentation
+from pptx.util import Inches, Pt
 
 
 def _shape(left: float, top: float, width: float, height: float) -> ShapeInfo:
@@ -30,6 +32,21 @@ def _shape(left: float, top: float, width: float, height: float) -> ShapeInfo:
 
 
 class RectangleUnionAreaTests(unittest.TestCase):
+    def test_section_whitespace_needs_actual_display_title(self) -> None:
+        deck = Presentation()
+        slide = deck.slides.add_slide(deck.slide_layouts[6])
+        outline = {"role": "section", "title": "Evidence and next steps"}
+        self.assertFalse(_has_display_section_title(slide, outline))
+        shape = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(7), Inches(1))
+        run = shape.text_frame.paragraphs[0].add_run()
+        run.text = outline["title"]
+        run.font.size = Pt(12)
+        self.assertFalse(_has_display_section_title(slide, outline))
+        run.font.size = Pt(36)
+        self.assertTrue(_has_display_section_title(slide, outline))
+        self.assertFalse(_has_display_section_title(slide, {"role": "section", "title": "Missing title"}))
+        self.assertFalse(_has_display_section_title(slide, {"title": outline["title"]}))
+
     def test_nested_shape_is_not_double_counted(self) -> None:
         shapes = [_shape(1, 1, 4, 3), _shape(2, 2, 1, 1)]
         self.assertAlmostEqual(

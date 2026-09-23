@@ -6,9 +6,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +23,8 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from workflow_atom_context import DEFAULT_FAMILY, build_workflow_atom_context  # noqa: E402
+from repair_packet import build_repair_packet  # noqa: E402
+from office_package_hash import office_package_normalized_sha256  # noqa: E402
 
 
 QA_BLOCKING_KEYS = (
@@ -37,6 +41,17 @@ QA_BLOCKING_KEYS = (
     "accessibility_warning_count",
 )
 
+QA_FILES = (
+    "qa_report.json", "issues.json", "outline.md", "layout_lint.json",
+    "visual_qa.json", "design_rules.json", "accessibility.json",
+    "repair_packet.json", "finalize_receipt.json",
+)
+RENDER_FILES = ("render_report.json",)
+VISUAL_REVIEW_FILES = (
+    "visual_review.json", "visual_review.md", "contact_sheet.jpg",
+    "visual_review_receipt.json",
+)
+
 
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -44,6 +59,39 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _clear_owned_qa_evidence(qa_dir: Path) -> None:
+    for name in QA_FILES:
+        (qa_dir / name).unlink(missing_ok=True)
+    render_dir = qa_dir / "renders"
+    for name in RENDER_FILES:
+        (render_dir / name).unlink(missing_ok=True)
+    for pattern in ("slide-*.jpg", "slide-*.jpeg", "slide-*.png"):
+        for path in render_dir.glob(pattern):
+            if path.is_file() or path.is_symlink():
+                path.unlink(missing_ok=True)
+    review_dir = qa_dir / "visual_review"
+    for name in VISUAL_REVIEW_FILES:
+        (review_dir / name).unlink(missing_ok=True)
+
+
+def _restore_previous_output_if_equivalent(previous: Path, output: Path) -> bool:
+    if not previous.is_file() or not output.is_file():
+        return False
+    if office_package_normalized_sha256(previous) != office_package_normalized_sha256(output):
+        return False
+    output.parent.mkdir(parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(prefix=f".{output.name}-restore-", dir=output.parent)
+    try:
+        with os.fdopen(handle, "wb") as destination, previous.open("rb") as source:
+            shutil.copyfileobj(source, destination)
+            destination.flush()
+            os.fsync(destination.fileno())
+        os.replace(temporary, output)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+    return True
 
 
 def _load_outline(path: Path) -> dict[str, Any]:
@@ -62,7 +110,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 
 def _completion_status(records: list[dict[str, Any]], qa_dir: Path) -> dict[str, Any]:
-    qa = _load_json(qa_dir / "qa_report.json")
+    qa_path = qa_dir / "qa_report.json"
+    qa = _load_json(qa_path) if any(r.get("stage") == "qa" for r in records) and qa_path.is_file() else {}
     qa_counts = {key: int(qa.get(key, 0) or 0) for key in QA_BLOCKING_KEYS}
     failed_stage = next(
         (str(record.get("stage") or "") for record in records if not bool(record.get("accepted", False))),
@@ -74,7 +123,7 @@ def _completion_status(records: list[dict[str, Any]], qa_dir: Path) -> dict[str,
     static_findings = sum(qa_counts[key] for key in static_keys)
     if not failed_stage:
         category = "passed"
-        next_action = "Deliver the deck and receipt."
+        next_action = "Inspect the rendered slides, repair any visual defects in source, and record the visual judgment before delivery."
     elif failed_stage == "preflight":
         category = "outline_preflight"
         next_action = "Fix the reported outline fields, then rerun the finalizer once."
@@ -90,7 +139,7 @@ def _completion_status(records: list[dict[str, Any]], qa_dir: Path) -> dict[str,
         )
     else:
         category = "qa_findings"
-        next_action = "Read qa_report.json and the contact sheet, edit outline.json, then rerun once."
+        next_action = "Read repair_packet.json and the affected slide images, edit outline.json or its renderer, and rerun until clean or report the blocker."
     return {
         "failure_category": category,
         "failed_stage": failed_stage,
@@ -98,6 +147,7 @@ def _completion_status(records: list[dict[str, Any]], qa_dir: Path) -> dict[str,
             "passed" if qa and not render_failed else "not_completed"
         ),
         "qa_counts": qa_counts,
+        "visual_inspection_status": "not_recorded",
         "next_action": next_action,
     }
 
@@ -227,6 +277,17 @@ def _write_receipt(
         **completion,
         "stages": records,
     }
+    repair_path = qa_dir / "repair_packet.json"
+    if any(record.get("stage") == "qa" for record in records) and (qa_dir / "qa_report.json").is_file():
+        try:
+            packet = build_repair_packet(outline, qa_dir)
+            repair_path.parent.mkdir(parents=True, exist_ok=True)
+            repair_path.write_text(json.dumps(packet, separators=(",", ":")) + "\n", encoding="utf-8")
+            payload["repair_packet"] = str(repair_path)
+        except (OSError, ValueError) as exc:
+            payload["repair_packet_error"] = str(exc)
+    else:
+        repair_path.unlink(missing_ok=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -243,6 +304,7 @@ def main() -> int:
     )
     parser.add_argument("--qa-dir", type=Path)
     parser.add_argument("--asset-root", type=Path)
+    parser.add_argument("--render-cache-dir", type=Path, help="Opt in to verified identical-render reuse.")
     parser.add_argument("--min-body-pt", type=float)
     parser.add_argument("--min-support-pt", type=float)
     parser.add_argument("--min-metadata-pt", type=float)
@@ -256,6 +318,10 @@ def main() -> int:
     outline = args.outline.resolve()
     output = args.output.resolve()
     qa_dir = (args.qa_dir or output.parent / f"{output.stem}-qa").resolve()
+    if outline == output:
+        parser.error("--output must not overwrite --outline")
+    if qa_dir in {outline, output}:
+        parser.error("--qa-dir must not be the outline or output path")
     receipt_path = qa_dir / "finalize_receipt.json"
     records: list[dict[str, Any]] = []
     try:
@@ -329,25 +395,37 @@ def main() -> int:
                 "--accessibility-min-metadata-pt",
                 str(thresholds[2]),
                 "--skip-manual-review",
+                *(["--render-cache-dir", str(args.render_cache_dir.resolve())] if args.render_cache_dir else []),
             ],
             (0,),
         ),
     ]
 
-    for stage, command, accepted_returncodes in stages:
-        if not _run(stage, command, records, accepted_returncodes=accepted_returncodes):
-            receipt = _write_receipt(
-                receipt_path,
-                outline=outline,
-                output=output,
-                qa_dir=qa_dir,
-                style_preset=style_preset,
-                style_resolution_basis=style_resolution_basis,
-                thresholds=thresholds,
-                records=records,
-            )
-            print(json.dumps(receipt, indent=2, sort_keys=True))
-            return 1
+    with tempfile.TemporaryDirectory(prefix="quick-deck-previous-") as temporary:
+        previous = Path(temporary) / output.name
+        preserve_raw_output = bool(args.render_cache_dir and output.is_file())
+        if preserve_raw_output:
+            shutil.copyfile(output, previous)
+        for stage, command, accepted_returncodes in stages:
+            if stage == "qa":
+                _clear_owned_qa_evidence(qa_dir)
+            if not _run(stage, command, records, accepted_returncodes=accepted_returncodes):
+                receipt = _write_receipt(
+                    receipt_path,
+                    outline=outline,
+                    output=output,
+                    qa_dir=qa_dir,
+                    style_preset=style_preset,
+                    style_resolution_basis=style_resolution_basis,
+                    thresholds=thresholds,
+                    records=records,
+                )
+                print(json.dumps(receipt, indent=2, sort_keys=True))
+                return 1
+            if stage == "build" and preserve_raw_output:
+                restored = _restore_previous_output_if_equivalent(previous, output)
+                records[-1]["previous_output_bytes_restored"] = restored
+                records[-1]["output_sha256_after_restore"] = _sha256(output)
 
     receipt = _write_receipt(
         receipt_path,
