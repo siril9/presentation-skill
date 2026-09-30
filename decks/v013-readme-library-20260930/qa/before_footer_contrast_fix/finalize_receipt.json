@@ -1,0 +1,124 @@
+{
+  "contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/visual_review/contact_sheet.jpg",
+  "failed_stage": "",
+  "failure_category": "passed",
+  "generated_at": "2026-09-30T04:39:59.492464+00:00",
+  "next_action": "Inspect the rendered slides, repair any visual defects in source, and record the visual judgment before delivery.",
+  "outline": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/outline.json",
+  "outline_sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2",
+  "output": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/deck.pptx",
+  "output_exists": true,
+  "output_sha256": "96b94a14ad6fd117b65553ecd03b822f945453b7d6fa2216a47c06b6444371b7",
+  "passed": true,
+  "qa_counts": {
+    "accessibility_error_count": 0,
+    "accessibility_warning_count": 0,
+    "design_error_count": 0,
+    "design_warning_count": 0,
+    "geometry_error_count": 0,
+    "geometry_warning_count": 0,
+    "overflow_count": 0,
+    "overlap_count": 0,
+    "source_fidelity_error_count": 0,
+    "source_fidelity_warning_count": 0,
+    "visual_review_warning_count": 0,
+    "visual_warning_count": 0,
+    "whitespace_warning_count": 0
+  },
+  "qa_dir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa",
+  "qa_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/qa_report.json",
+  "readability": {
+    "min_body_pt": 16.0,
+    "min_metadata_pt": 9.0,
+    "min_support_pt": 13.0
+  },
+  "render_cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/.render-cache",
+    "key": "b4ef16ee995e2f87bae030b8162d8e09aecf1166346d3c6baf3c15307ba199c3",
+    "reason": "absent_or_invalid",
+    "status": "miss"
+  },
+  "render_status": "passed",
+  "repair_packet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/repair_packet.json",
+  "schema_version": "quick-deck-finalization/v1",
+  "stages": [
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0,
+        1
+      ],
+      "command": [
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/preflight.py",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/outline.json"
+      ],
+      "duration_seconds": 0.089,
+      "returncode": 0,
+      "stage": "preflight"
+    },
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0
+      ],
+      "command": [
+        "/opt/homebrew/bin/node",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/outline.json",
+        "--output",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/deck.pptx",
+        "--style-preset",
+        "editorial-minimal"
+      ],
+      "duration_seconds": 0.205,
+      "returncode": 0,
+      "stage": "build"
+    },
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0
+      ],
+      "command": [
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/qa_gate.py",
+        "--input",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/deck.pptx",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/outline.json",
+        "--outdir",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa",
+        "--style-preset",
+        "editorial-minimal",
+        "--strict-geometry",
+        "--fail-on-geometry-warnings",
+        "--fail-on-whitespace-warnings",
+        "--run-visual-review",
+        "--fail-on-visual-review-warnings",
+        "--fail-on-design-warnings",
+        "--accessibility",
+        "--strict-accessibility",
+        "--accessibility-min-body-pt",
+        "16.0",
+        "--accessibility-min-support-pt",
+        "13.0",
+        "--accessibility-min-metadata-pt",
+        "9.0",
+        "--skip-manual-review",
+        "--render-cache-dir",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/.render-cache"
+      ],
+      "duration_seconds": 6.886,
+      "returncode": 0,
+      "stage": "qa"
+    }
+  ],
+  "style_preset": "editorial-minimal",
+  "style_resolution_basis": "explicit_cli",
+  "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+  "total_duration_seconds": 7.18,
+  "visual_inspection_status": "not_recorded"
+}

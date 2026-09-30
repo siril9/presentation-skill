@@ -215,6 +215,39 @@ test('numeric zero remains a visible metric', () => {
   assert.ok(ops.some((op) => op.text === '0'));
 });
 
+test('KPI footer and page number meet 4.5 contrast on their actual dark or light background', () => {
+  const luminance = (color) => {
+    const channels = [0, 2, 4].map((start) => parseInt(color.slice(start, start + 2), 16) / 255);
+    const linear = channels.map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+    return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+  };
+  const preset = builder.applyDeckStyle(getPreset('editorial-minimal'), { deck_style: {
+    composition_grammar: 'editorial-spread', footer_mode: 'source-line', footer_page_numbers: true,
+    readability_contract: { min_metadata_pt: 9, min_footer_pt: 9 },
+  } }, 'editorial-minimal');
+  for (const theme of ['dark', 'light']) {
+    const data = { variant: 'kpi-hero', title: 'Format preference', value: '127',
+      label: 'of 240 prefer drop-in help', theme, __slideIndex: 4, __slideCount: 7,
+      footer: 'SYNTHETIC DATA; not a booking forecast', sources: ['Q3; mutually exclusive preferences'] };
+    const ops = [];
+    const slide = { addText: (text, options) => ops.push({ text, options }),
+      addShape: (shape, options) => ops.push({ shape, options }), addNotes() {} };
+    renderers.renderKpiHero({}, slide, data, preset);
+    const background = slide.background.color;
+    assert.equal(background, theme === 'dark' ? preset.bg_dark : preset.bg);
+    const footer = ops.filter((op) => op.options.objectName?.startsWith('metadata:footer-'));
+    assert.equal(footer.length, 2);
+    assert.ok(footer.some((op) => op.text.includes(data.footer) && op.text.includes(data.sources[0])));
+    assert.ok(footer.some((op) => op.text === '4/7'));
+    for (const { options } of footer) {
+      assert.equal(options.fontSize, 9);
+      const [a, b] = [luminance(options.color), luminance(background)];
+      assert.ok((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) >= 4.5, `${theme}: ${options.color}`);
+      if (theme === 'light') assert.equal(options.color, preset.text_muted, 'preserve passing light footer color');
+    }
+  }
+});
+
 test('oversized card inputs fail rather than losing the final item', () => {
   const data = { role: 'evidence', variant: 'cards-3', title: 'Review gates',
     cards: Array.from({ length: 6 }, (_, i) => ({ title: `Gate ${i}`, body: `Keep item ${i}.` })) };

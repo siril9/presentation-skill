@@ -14,7 +14,7 @@ import sys
 import time
 import zipfile
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, __version__ as pillow_version
 
 
 HERE = Path(__file__).resolve().parent
@@ -101,6 +101,73 @@ def contacts():
     overview.save(HERE / "design_studies.jpg", quality=92, optimize=True)
 
 
+def showcase():
+    """Curate whole, currently approved renders without rebuilding any deck."""
+    selections = (
+        ("lab", 3, "Enzyme storage / evidence", "Native chart with explicit units, screening threshold and descriptive readout."),
+        ("editorial", 2, "Evening ferry / sequence", "Featured moment beside two supporting events; asymmetric editorial reading order."),
+        ("lab", 4, "Enzyme storage / lot ledger", "Native table exposes individual lots, means and threshold counts instead of repeating a chart."),
+        ("library", 4, "Library after six / format", "A dark numerical pause: 127 of 240 prefer drop-in help, explicitly not a booking forecast."),
+        ("operations", 5, "Microgrid repair / process", "Owner-labelled gates form a readable operational register, not decorative steps."),
+        ("operations", 7, "Microgrid repair / decision", "Four acceptance responsibilities and a bounded release decision close the argument."),
+    )
+    width, height, margin, gap, label_height = 1800, 1013, 32, 32, 48
+    canvas = Image.new("RGB", (2 * width + 2 * margin + gap,
+                              3 * (height + label_height) + 2 * margin + 2 * gap), "#eef0f1")
+    draw, label_font = ImageDraw.Draw(canvas), font(30)
+    case_paths = {"library": REPO / "decks/v013-readme-library-20260930"}
+    records = []
+    for index, (case, number, label, reason) in enumerate(selections):
+        folder = case_paths.get(case, HERE / case)
+        outline, deck = folder / "outline.json", folder / "deck.pptx"
+        render = folder / "qa/renders" / f"slide-{number:02d}.jpg"
+        judgment_path = folder / "qa/visual_judgment.json"
+        receipt_path = folder / "qa/visual_review_receipt.json"
+        judgment, receipt = read(judgment_path), read(receipt_path)
+        approved = {item["name"]: item["sha256"] for item in receipt["renders"]}
+        source_hashes = {Path(item["path"]).name: item["sha256"] for item in
+                         judgment["review_context"]["artifacts"]["source_files"]}
+        if (judgment["verdict"] != "pass" or receipt["verdict"] != "pass"
+                or judgment.get("findings") or receipt.get("findings")
+                or digest(deck) != receipt["deck"]["sha256"]
+                or digest(render) != approved.get(render.name)
+                or digest(outline) != source_hashes.get(outline.name)):
+            raise ValueError(f"Showcase requires current approved source/deck/render hashes: {case} slide {number}")
+        x = margin + index % 2 * (width + gap)
+        y = margin + index // 2 * (height + label_height + gap)
+        with Image.open(render) as original:
+            if original.size != (width, height):
+                raise ValueError(f"Unexpected showcase render dimensions: {render}: {original.size}")
+            canvas.paste(original.convert("RGB"), (x, y))
+        draw.text((x, y + height + 9), label, font=label_font, fill="#42494d")
+        slide = read(outline)["slides"][number - 1]
+        records.append({
+            "row": index // 2 + 1, "column": index % 2 + 1,
+            "case": case, "slide": number, "title": slide["title"],
+            "variant": slide.get("variant"), "label": label, "selection_reason": reason,
+            "artifacts": {name: {"path": str(path.relative_to(REPO)), "sha256": digest(path)}
+                          for name, path in (("outline", outline), ("deck", deck), ("render", render),
+                                             ("visual_judgment", judgment_path), ("visual_receipt", receipt_path))},
+            "review_verdict": judgment["verdict"], "reviewed_at": judgment["reviewed_at"],
+        })
+    output = REPO / "examples/v0.13_showcase.jpg"
+    canvas.save(output, quality=95, subsampling=0, optimize=True)
+    selection_manifest = {
+        "schema_version": "rendered-showcase/v1", "synthetic_data": True,
+        "scope": "Six approved current-runtime renders, including the unchanged 2026-09-23 library source rebuilt with v0.13; not scientific or operational claims.",
+        "reproduce": ".venv/bin/python -B decks/v013-first-pass-20260929/build_evidence.py --showcase-only",
+        "builder": {"path": str(Path(__file__).resolve().relative_to(REPO)), "sha256": digest(Path(__file__))},
+        "output": {"path": str(output.relative_to(REPO)), "sha256": digest(output), "dimensions": list(canvas.size)},
+        "layout": {"columns": 2, "rows": 3, "slide_dimensions": [width, height],
+                   "margin_px": margin, "gap_px": gap, "label_height_px": label_height,
+                   "crop": False, "resample": False, "label_font": label_font.getname(),
+                   "label_font_px": 30, "pillow_version": pillow_version},
+        "selections": records,
+    }
+    output.with_name("v0.13_showcase_manifest.json").write_text(json.dumps(selection_manifest, indent=2) + "\n")
+    print(f"Curated six approved slides: {output}")
+
+
 def manifest():
     records = []
     for case in CASES:
@@ -151,8 +218,12 @@ def main():
     parser.add_argument("--cases", nargs="*", choices=CASES, default=list(CASES))
     parser.add_argument("--warm", action="store_true")
     parser.add_argument("--contacts-only", action="store_true")
+    parser.add_argument("--showcase-only", action="store_true", help="Curate approved renders only; do not build decks or replace contact sheets.")
     parser.add_argument("--package", type=Path, help="Write compact source, deck and review evidence after validation.")
     args = parser.parse_args()
+    if args.showcase_only:
+        showcase()
+        return 0
     if not args.contacts_only:
         with ThreadPoolExecutor(max_workers=2) as pool:
             records = list(pool.map(lambda case: build(case, args.warm), args.cases))

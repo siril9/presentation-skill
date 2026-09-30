@@ -1,6 +1,6 @@
 {
   "name": "presentation-skill",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "Source-first PowerPoint/PPTX generation for Codex and ChatGPT agents.",
   "author": {
     "name": "Sirilsengolraj",
@@ -25,8 +25,8 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "presentation-skill",
-    "shortDescription": "Build editable PowerPoint decks with model-adaptive style routing and QA.",
+    "displayName": "Presentation Skill",
+    "shortDescription": "Editable decks with visual QA",
     "longDescription": "A lightweight source-first PowerPoint/PPTX workflow for coding agents. One capable model can author and refine a deck, with optional questions and style previews. Deterministic scripts preserve editable charts and tables, check readability, and expose focused repairs. Verified render caching speeds unchanged rebuilds without reusing visual approval.",
     "developerName": "Sirilsengolraj",
     "category": "Productivity",
@@ -37,14 +37,17 @@
       "Quality assurance"
     ],
     "websiteURL": "https://github.com/siril9/presentation-skill",
+    "supportURL": "https://github.com/siril9/presentation-skill/issues",
     "defaultPrompt": [
       "Build a 7-slide editable PowerPoint deck.",
       "Turn this CSV into a lab-style PPTX report.",
       "Redesign this deck and run slide QA."
     ],
     "brandColor": "#2563EB",
+    "logo": "./assets/icon.svg",
+    "composerIcon": "./assets/icon.svg",
     "screenshots": [
-      "./assets/v0.13_design_studies.jpg",
+      "./assets/v0.13_showcase.jpg",
       "./assets/v0.13_lab_contact_sheet.jpg",
       "./assets/v0.13_editorial_contact_sheet.jpg",
       "./assets/v0.13_operations_contact_sheet.jpg",

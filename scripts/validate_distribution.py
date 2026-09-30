@@ -26,6 +26,8 @@ def _tree_bytes(root: Path) -> int:
 
 
 def main() -> int:
+    version = json.loads((ROOT / "package.json").read_text())["version"]
+    discovery = json.loads((ROOT / "agents/discovery.json").read_text())
     completed = subprocess.run(
         ["npm", "pack", "--dry-run", "--json"],
         cwd=ROOT,
@@ -47,6 +49,8 @@ def main() -> int:
     required = [
         PLUGIN / ".codex-plugin" / "plugin.json",
         PLUGIN / "skills" / "presentation-skill" / "SKILL.md",
+        PLUGIN / "skills" / "presentation-skill" / "agents" / "discovery.json",
+        PLUGIN / "skills" / "presentation-skill" / "DISCOVERY.md",
         PLUGIN / "skills" / "presentation-skill" / "scripts" / "present.py",
         PLUGIN / "skills" / "presentation-skill" / "references" / "style_token_atlas.json",
         PLUGIN / "skills" / "presentation-skill" / "references" / "style_grammar_index.json",
@@ -54,6 +58,23 @@ def main() -> int:
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     plugin_bytes = _tree_bytes(PLUGIN)
     failures = []
+    if discovery.get("version") != version:
+        failures.append("agent discovery metadata does not match the package version")
+    plugin_manifest = json.loads((PLUGIN / ".codex-plugin/plugin.json").read_text())
+    if plugin_manifest.get("version") != version:
+        failures.append("plugin listing does not match the package version")
+    proof_prefix = discovery["repository"].rstrip("/") + "/blob/main/"
+    for name, path in discovery.get("proof_assets", {}).items():
+        if str(path).startswith(proof_prefix):
+            path = path[len(proof_prefix):]
+        elif str(path).startswith("https://"):
+            continue
+        candidate = (ROOT / path).resolve()
+        if not candidate.is_relative_to(ROOT) or not candidate.is_file():
+            failures.append(f"discovery proof asset is missing or outside the repository: {name}")
+    for path in ("DISCOVERY.md", "agents/discovery.json"):
+        if path not in paths:
+            failures.append(f"npm artifact is missing discovery metadata: {path}")
     if int(package.get("size") or 0) > MAX_PACKED_BYTES:
         failures.append("npm artifact exceeds 2 MB compressed")
     if int(package.get("unpackedSize") or 0) > MAX_UNPACKED_BYTES:

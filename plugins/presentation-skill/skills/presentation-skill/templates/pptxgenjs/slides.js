@@ -1375,14 +1375,19 @@ function hasFooterChrome(slideData, preset) {
   return Boolean(model.footer || model.provenanceParts.length || model.showPageNumber);
 }
 
-function addFooter(slide, preset, slideData) {
+function addFooter(slide, preset, slideData, { dark, background } = {}) {
   const { footer, provenanceParts, footerMode, pageNumber, showPageNumber } = footerChromeModel(slideData, preset);
   if (!footer && provenanceParts.length === 0 && !showPageNumber) return;
 
   const y = SLIDE_H - FOOTER_H;
   const darkCover = (slideData.role === 'title' || slideData.type === 'title')
     && ['lavender-ops', 'sunset-investor', 'midnight-neon'].includes(preset.style_preset);
-  const footerInk = darkCover
+  const footerBackground = background || (typeof dark === 'boolean'
+    ? (dark ? (preset.bg_dark || '0F172A') : preset.bg) : null);
+  const footerInk = footerBackground
+    ? firstReadableColor(footerBackground,
+      [preset.text_muted, preset.title_footer_color, preset.text, 'CBD5E1', 'FFFFFF', '000000'], 4.5)
+    : darkCover
     ? firstReadableColor(preset.bg_dark, [preset.title_footer_color, preset.text_muted, 'CBD5E1', 'FFFFFF'], 4.5)
     : preset.text_muted;
   // Thin accent line above footer.
@@ -5717,7 +5722,7 @@ function renderKpiHero(pptx, slide, slideData, preset) {
     }));
   }
 
-  addFooter(slide, preset, slideData, { dark });
+  addFooter(slide, preset, slideData, { dark, background: bgColor });
   attachNotes(slide, slideData);
 }
 

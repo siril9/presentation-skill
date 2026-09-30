@@ -1,0 +1,374 @@
+{
+  "schema_version": "visual_review_receipt_v1",
+  "review_schema_version": "visual_judgment_v1",
+  "deck": {
+    "filename": "deck.pptx",
+    "sha256": "7931f7f18efa82ab8081a2e78777f8dda386903d6d83339c895e08010031817c",
+    "normalized_office_sha256": "de8675c9d7b59e04f3ae0e1050c329366209d594c72fe5f98d6cd01bbd206114"
+  },
+  "renders": [
+    {
+      "name": "slide-01.jpg",
+      "sha256": "1c6a8806c382ea8cf35a7c0f45d2bd3743121256de9896553dd5bca6542fa357",
+      "size_bytes": 72871
+    },
+    {
+      "name": "slide-02.jpg",
+      "sha256": "69df730bcf905d5cc4289dff63563564a97846f68d03fe97cfd321796c4dc74c",
+      "size_bytes": 90247
+    },
+    {
+      "name": "slide-03.jpg",
+      "sha256": "87cdd1a0ad658396a88558d9f536533b3ef18b89ce331df75fccd13404d933fe",
+      "size_bytes": 110483
+    },
+    {
+      "name": "slide-04.jpg",
+      "sha256": "92913ff8d98720cc44312b0007d831808be18fd06368e5292c371c632beb61a7",
+      "size_bytes": 80541
+    },
+    {
+      "name": "slide-05.jpg",
+      "sha256": "435d6d0fd58f64320e9118e94bce5dcd0df58c001fcce91c89ab6d6792c93a7b",
+      "size_bytes": 134141
+    },
+    {
+      "name": "slide-06.jpg",
+      "sha256": "d0e3d9ced558aa2816200c69416b96cef7bbf764d3a6b3c42acbe5cdb006876c",
+      "size_bytes": 108015
+    },
+    {
+      "name": "slide-07.jpg",
+      "sha256": "009b49fa6c59126ed33574defc526c5dbab54dc6282366b05e2a9b954e0e0ad9",
+      "size_bytes": 162305
+    }
+  ],
+  "render_count": 7,
+  "reviewer": {
+    "type": "model",
+    "name": "Codex"
+  },
+  "verdict": "pass",
+  "findings": [],
+  "reviewed_at": "2026-09-30T04:59:10.556168+00:00",
+  "review_context": {
+    "method": "Reopened the changed slide-04.jpg at full size with view_image(detail=original) after the shared addFooter background-aware contrast repair. Verified exact native footer/page-number colors, font sizes and actual slide background. All other six render SHA256s are byte-identical to the seven-slide set individually viewed in the preceding author inspection and independent failure review. No passing automated counts substituted for visual inspection.",
+    "scope": "Clipping, legibility, contrast, alignment, overlap, reading order, structural rhythm and visible source retention. Original synthetic arithmetic only, not external evidence, real demand or operational authorization.",
+    "images_viewed": 1,
+    "slides_reviewed": 7,
+    "contact_sheet_used_for_approval": false,
+    "independent_review": false,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/deck.pptx",
+        "sha256": "7931f7f18efa82ab8081a2e78777f8dda386903d6d83339c895e08010031817c"
+      },
+      "renders": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-01.jpg",
+          "sha256": "1c6a8806c382ea8cf35a7c0f45d2bd3743121256de9896553dd5bca6542fa357",
+          "name": "slide-01.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-02.jpg",
+          "sha256": "69df730bcf905d5cc4289dff63563564a97846f68d03fe97cfd321796c4dc74c",
+          "name": "slide-02.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-03.jpg",
+          "sha256": "87cdd1a0ad658396a88558d9f536533b3ef18b89ce331df75fccd13404d933fe",
+          "name": "slide-03.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-04.jpg",
+          "sha256": "92913ff8d98720cc44312b0007d831808be18fd06368e5292c371c632beb61a7",
+          "name": "slide-04.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-05.jpg",
+          "sha256": "435d6d0fd58f64320e9118e94bce5dcd0df58c001fcce91c89ab6d6792c93a7b",
+          "name": "slide-05.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-06.jpg",
+          "sha256": "d0e3d9ced558aa2816200c69416b96cef7bbf764d3a6b3c42acbe5cdb006876c",
+          "name": "slide-06.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-07.jpg",
+          "sha256": "009b49fa6c59126ed33574defc526c5dbab54dc6282366b05e2a9b954e0e0ad9",
+          "name": "slide-07.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/outline.json",
+          "sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/AUTHORING.md",
+          "sha256": "81b272cdd00966cb710cd2e4764d62a63cc44108ac5fda0ee50ea25a1518bee5"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/sol-design-studies-20260923/editorial/outline.json",
+          "sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/sol-design-studies-20260923/editorial/AUTHORING.md",
+          "sha256": "81b272cdd00966cb710cd2e4764d62a63cc44108ac5fda0ee50ea25a1518bee5"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/finalize_receipt.json",
+          "sha256": "e8dfd39544d08c684fe7c656cb69f0e8f248539723ea7083724b6dc0c4696d00"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/render_report.json",
+          "sha256": "6e310b4b43a2e136b5dc095a59947ec1b7540d0a1d70c5ca52c9e898c7e12664"
+        }
+      ],
+      "runtime": {
+        "version": "0.13.1",
+        "files": [
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/package.json",
+            "sha256": "a63f89dfac1003d36afd0ddd3761eee9e0a3123bc7eaa9029a5726dc7db246bb"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/package-lock.json",
+            "sha256": "e541d6ac556c713d295959e085e627a5ad5e014816058f559412ec52baba3039"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+            "sha256": "e247aaa3d650b5a0f576104ed93b73076bfc03795b12bd065b16f9170e71dca4"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/finalize_quick_deck.py",
+            "sha256": "7f3fb10c6b0207dae2202174bbc0b219cd5e8366f6bb25665842f5c6af543886"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/qa_gate.py",
+            "sha256": "f5513831a67beae126f11d1db99afbcbb8aff754fcc762412f300006403aa91f"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/source_fidelity.py",
+            "sha256": "4227fef36be5c7f8b99d2279b4e426a3b776603b12ec001b7eb81cdc14b48a96"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/render_slides.py",
+            "sha256": "0ede98916f9369aa5d8343ac480d858ca90ac7d4835cdfe2fcc8165ba26db2eb"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/templates/pptxgenjs/slides.js",
+            "sha256": "cd283799651fe57e78976d0e62dfc09c5851bcab6146074c1269a55ed2ccbb32"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/templates/pptxgenjs/readable_role_layouts.js",
+            "sha256": "1359752cd936a8cc7fe9750f1c49d329b3430f96cf994db7414661534279e010"
+          },
+          {
+            "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/templates/pptxgenjs/space_allocation.js",
+            "sha256": "f373286f23a295c746755c08cc2ce6dad98fdd1241ea2b2a270d1eaea031cb84"
+          }
+        ]
+      }
+    },
+    "qa_counts": {
+      "accessibility_error_count": 0,
+      "accessibility_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0,
+      "geometry_error_count": 0,
+      "geometry_warning_count": 0,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "source_fidelity_error_count": 0,
+      "source_fidelity_warning_count": 0,
+      "visual_review_warning_count": 0,
+      "visual_warning_count": 0,
+      "whitespace_warning_count": 0
+    },
+    "pipeline_seconds": 5.927,
+    "source_comparison": {
+      "original_outline_byte_identical": true,
+      "original_authoring_byte_identical": true,
+      "Q1_hourly_multiselect": [
+        92,
+        163,
+        151,
+        68
+      ],
+      "Q1_overlap_unknown": true,
+      "Q2_group_counts": [
+        72,
+        48,
+        54,
+        66
+      ],
+      "Q2_yes_counts": [
+        56,
+        39,
+        35,
+        37
+      ],
+      "Q2_total": 240,
+      "Q2_yes_total": 167,
+      "Q2_rounded_shares_percent": [
+        78,
+        81,
+        65,
+        56
+      ],
+      "Q3_preferences": [
+        127,
+        71,
+        42
+      ],
+      "Q3_total": 240,
+      "pilot_assumptions": "One branch, two 6-8 pm nights weekly for eight weeks; illustrative, not authorized or costed.",
+      "real_world_fact_verification": false,
+      "native_chart_count": 1,
+      "native_table_count": 1
+    },
+    "presentation_limits": [
+      "Fine source/footer text still requires full-size viewing rather than a README thumbnail.",
+      "This is the repair author's re-review, not independent reapproval. The preserved initial independent FAIL correctly describes the archived before-fix artifacts."
+    ],
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-01.jpg",
+        "render_sha256": "1c6a8806c382ea8cf35a7c0f45d2bd3743121256de9896553dd5bca6542fa357",
+        "note": "Original serif masthead and fictional-library subtitle are complete and readable; deliberate whitespace, no clipping.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      },
+      {
+        "slide": 2,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-02.jpg",
+        "render_sha256": "69df730bcf905d5cc4289dff63563564a97846f68d03fe97cfd321796c4dc74c",
+        "note": "Native chart shows the four distinct hourly selections with Local time and Respondents (of 240) axis titles. Complete overlap-unknown caption and synthetic-data footer remain visible; no inferred sum.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      },
+      {
+        "slide": 3,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-03.jpg",
+        "render_sha256": "87cdd1a0ad658396a88558d9f536533b3ef18b89ce331df75fccd13404d933fe",
+        "note": "Native table retains all four purpose groups, respondent and yes counts, rounded shares, separate-Q2 caption and n=240 footer. Header wraps cleanly without touching data.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      },
+      {
+        "slide": 4,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-04.jpg",
+        "render_sha256": "92913ff8d98720cc44312b0007d831808be18fd06368e5292c371c632beb61a7",
+        "note": "Black focal metric retains headline,127,denominator and complete synthetic/no-booking-forecast qualifier. Footer and page number are both 9pt CBD5E1 on actual black, measured14.144:1. No clipping or collision; arithmetic and source unchanged.",
+        "inspection_basis": "Changed image actually reopened after footer contrast fix"
+      },
+      {
+        "slide": 5,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-05.jpg",
+        "render_sha256": "435d6d0fd58f64320e9118e94bce5dcd0df58c001fcce91c89ab6d6792c93a7b",
+        "note": "Drop-in and workshop options remain separate, with 127/71 counts, all six bullets, the complete optional-lesson verdict and the 42-either source qualifier. Intentional asymmetric panels, no collision.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      },
+      {
+        "slide": 6,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-06.jpg",
+        "render_sha256": "d0e3d9ced558aa2816200c69416b96cef7bbf764d3a6b3c42acbe5cdb006876c",
+        "note": "Featured W0 panel and three supporting events retain all four bodies, eight-week scope, two 6-8 pm nights weekly, and pilot-not-authorization footer. Readable separation and no clipped final row.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      },
+      {
+        "slide": 7,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/renders/slide-07.jpg",
+        "render_sha256": "009b49fa6c59126ed33574defc526c5dbab54dc6282366b05e2a9b954e0e0ad9",
+        "note": "Column-major numbered decision and three neutral detail labels preserve all original prose, independent Q2/Q3 counts, staffing/safety conditions, cost/equity limitation and observed-use summary. No inferred owner labels or overlapping verdict.",
+        "inspection_basis": "SHA256-identical to the full-size render individually inspected before this fix"
+      }
+    ],
+    "review_delta": {
+      "changed_images": [
+        "slide-04.jpg"
+      ],
+      "unchanged_images_carried_forward": 6,
+      "previous_full_size_images_viewed": 7,
+      "prior_author_pass_missed_real_contrast_failure": true,
+      "independent_failure_preserved": true,
+      "before_fix": {
+        "visual_judgment.json": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/visual_judgment.json",
+          "sha256": "e90229f0c2c87b2a312acae11863f12bc5b25f9ea65c09416bde2fe11de016c9"
+        },
+        "visual_review_receipt.json": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/visual_review_receipt.json",
+          "sha256": "a7e403ddfc01677b9057f05391b1961a140a9b58b86bfe3048074ad20c810e58"
+        },
+        "finalize_receipt.json": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/finalize_receipt.json",
+          "sha256": "7426bff875f7500fd36f64e1d3e78513eed227c1e846594b2f1849e890e1f263"
+        },
+        "independent_review.md": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/independent_review.md",
+          "sha256": "7407b8e645361d76ea1b206fffc0f78124569a1e5eab311226f10c0629a247ed"
+        },
+        "deck.pptx": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/deck.pptx",
+          "sha256": "96b94a14ad6fd117b65553ecd03b822f945453b7d6fa2216a47c06b6444371b7"
+        },
+        "slide-04.jpg": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-readme-library-20260930/qa/before_footer_contrast_fix/slide-04.jpg",
+          "sha256": "54051fa072a954606e94732460beac0b4d0fedb8fc928b94f3bb2408e77ab2ea"
+        }
+      },
+      "independent_reapproval": "Pending; original independent FAIL remains unchanged, not relabelled as approval."
+    },
+    "native_footer_contrast": {
+      "slide": 4,
+      "actual_background": "000000",
+      "footer_shape_id": 6,
+      "page_number_shape_id": 7,
+      "font_size_pt": 9,
+      "old_foreground": "6B7280",
+      "old_ratio": 4.343787999625581,
+      "new_foreground": "CBD5E1",
+      "new_ratio": 14.144250479776998,
+      "required_minimum": 4.5,
+      "source_and_footer_wording_unchanged": true
+    },
+    "closed_prior_findings": [
+      {
+        "severity": "error",
+        "type": "small_dark_footer_contrast",
+        "slide": 4,
+        "resolved": true,
+        "note": "Independent P2 failure addressed in the shared renderer without source/font/PNG changes. Native footer and page number now exceed 4.5:1; updated image reopened."
+      }
+    ]
+  }
+}

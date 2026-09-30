@@ -20,10 +20,12 @@ FILES = [
     "SKILL.md",
     "DESIGN.md",
     "LICENSE",
+    "DISCOVERY.md",
     "package.json",
     "package-lock.json",
     "examples/outline.json",
     "agents/openai.yaml",
+    "agents/discovery.json",
 ]
 
 DIRECTORIES = [
@@ -47,10 +49,11 @@ SCRIPT_DEVELOPMENT_ONLY = {
     "run_focused_workflow_checks.py",
     "sync_plugin_snapshot.py",
     "validate_distribution.py",
+    "package_plugin.py",
 }
 
 SCREENSHOTS = {
-    "v0.13_design_studies.jpg": REPO / "examples/v0.13_design_studies.jpg",
+    "v0.13_showcase.jpg": REPO / "examples/v0.13_showcase.jpg",
     "v0.13_lab_contact_sheet.jpg": REPO / "examples/v0.13_lab_contact_sheet.jpg",
     "v0.13_editorial_contact_sheet.jpg": REPO / "examples/v0.13_editorial_contact_sheet.jpg",
     "v0.13_operations_contact_sheet.jpg": REPO / "examples/v0.13_operations_contact_sheet.jpg",

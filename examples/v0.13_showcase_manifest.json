@@ -1,0 +1,243 @@
+{
+  "schema_version": "rendered-showcase/v1",
+  "synthetic_data": true,
+  "scope": "Six approved current-runtime renders, including the unchanged 2026-09-23 library source rebuilt with v0.13; not scientific or operational claims.",
+  "reproduce": ".venv/bin/python -B decks/v013-first-pass-20260929/build_evidence.py --showcase-only",
+  "builder": {
+    "path": "decks/v013-first-pass-20260929/build_evidence.py",
+    "sha256": "3de9cbc7553c58d5c3c0f25fb43f9fd9855bdeef1cecf9158a60d307365ac7a5"
+  },
+  "output": {
+    "path": "examples/v0.13_showcase.jpg",
+    "sha256": "38f04dc27cd70c06ca28f0eb142f23a441c945eeb03dbfbb57fc2498558cbfad",
+    "dimensions": [
+      3696,
+      3311
+    ]
+  },
+  "layout": {
+    "columns": 2,
+    "rows": 3,
+    "slide_dimensions": [
+      1800,
+      1013
+    ],
+    "margin_px": 32,
+    "gap_px": 32,
+    "label_height_px": 48,
+    "crop": false,
+    "resample": false,
+    "label_font": [
+      "Arial",
+      "Regular"
+    ],
+    "label_font_px": 30,
+    "pillow_version": "12.3.0"
+  },
+  "selections": [
+    {
+      "row": 1,
+      "column": 1,
+      "case": "lab",
+      "slide": 3,
+      "title": "Glycerol clears the screening threshold",
+      "variant": "chart",
+      "label": "Enzyme storage / evidence",
+      "selection_reason": "Native chart with explicit units, screening threshold and descriptive readout.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-first-pass-20260929/lab/outline.json",
+          "sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0"
+        },
+        "deck": {
+          "path": "decks/v013-first-pass-20260929/lab/deck.pptx",
+          "sha256": "e5fcaf769f18e6ee602001fe94a488eebff2f039c4de51fe2a81ebde9ca1dc57"
+        },
+        "render": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/renders/slide-03.jpg",
+          "sha256": "14e9c02b1d53f66e829e7f3b4113af36c53b8e6fec76fa2d62ecb5f0e8ea373c"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/visual_judgment.json",
+          "sha256": "046b1df8142173cea6883c8d8047868f68887bd9f2a06fea010d5041d751e339"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/visual_review_receipt.json",
+          "sha256": "fc540f8e3bb8dcfea15803f5ce414eecf2fd2cebc6c7a253691dcb856dc282fe"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T00:49:48Z"
+    },
+    {
+      "row": 1,
+      "column": 2,
+      "case": "editorial",
+      "slide": 2,
+      "title": "A queue becomes the evening's clock",
+      "variant": "timeline",
+      "label": "Evening ferry / sequence",
+      "selection_reason": "Featured moment beside two supporting events; asymmetric editorial reading order.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-first-pass-20260929/editorial/outline.json",
+          "sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22"
+        },
+        "deck": {
+          "path": "decks/v013-first-pass-20260929/editorial/deck.pptx",
+          "sha256": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda"
+        },
+        "render": {
+          "path": "decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+          "sha256": "2e5a424f1d04f192ccaa272bcb6842ad4c360e59e9f988532e6d477401921aa4"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-first-pass-20260929/editorial/qa/visual_judgment.json",
+          "sha256": "035b78f83026d784b18a411c9da5a8ad4a5a397adac7c30ae41b52f7bb18e9a7"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-first-pass-20260929/editorial/qa/visual_review_receipt.json",
+          "sha256": "6a1f36cbfa5044f86eaac3aff3408f07f4076fa1e5304f658efc3db127ac78d7"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T01:45:05Z"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "case": "lab",
+      "slide": 4,
+      "title": "All three glycerol lots exceed 85%",
+      "variant": "table",
+      "label": "Enzyme storage / lot ledger",
+      "selection_reason": "Native table exposes individual lots, means and threshold counts instead of repeating a chart.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-first-pass-20260929/lab/outline.json",
+          "sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0"
+        },
+        "deck": {
+          "path": "decks/v013-first-pass-20260929/lab/deck.pptx",
+          "sha256": "e5fcaf769f18e6ee602001fe94a488eebff2f039c4de51fe2a81ebde9ca1dc57"
+        },
+        "render": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/renders/slide-04.jpg",
+          "sha256": "adedbcc40fcf2ac2774aea3dcd800e851113c76298601fb38388ff3ecb8b31dd"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/visual_judgment.json",
+          "sha256": "046b1df8142173cea6883c8d8047868f68887bd9f2a06fea010d5041d751e339"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-first-pass-20260929/lab/qa/visual_review_receipt.json",
+          "sha256": "fc540f8e3bb8dcfea15803f5ce414eecf2fd2cebc6c7a253691dcb856dc282fe"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T00:49:48Z"
+    },
+    {
+      "row": 2,
+      "column": 2,
+      "case": "library",
+      "slide": 4,
+      "title": "A room to use, not a class to book",
+      "variant": "kpi-hero",
+      "label": "Library after six / format",
+      "selection_reason": "A dark numerical pause: 127 of 240 prefer drop-in help, explicitly not a booking forecast.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-readme-library-20260930/outline.json",
+          "sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2"
+        },
+        "deck": {
+          "path": "decks/v013-readme-library-20260930/deck.pptx",
+          "sha256": "7931f7f18efa82ab8081a2e78777f8dda386903d6d83339c895e08010031817c"
+        },
+        "render": {
+          "path": "decks/v013-readme-library-20260930/qa/renders/slide-04.jpg",
+          "sha256": "92913ff8d98720cc44312b0007d831808be18fd06368e5292c371c632beb61a7"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-readme-library-20260930/qa/visual_judgment.json",
+          "sha256": "2c8af3071d6da63de7692df49796750b81599d3cd19f9ef56f4687d9a903b354"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-readme-library-20260930/qa/visual_review_receipt.json",
+          "sha256": "9860af4a994bda3290707ce3e67fc8adedab1417054801574b8b01e48ab93714"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T04:59:10.556168+00:00"
+    },
+    {
+      "row": 3,
+      "column": 1,
+      "case": "operations",
+      "slide": 5,
+      "title": "Three gates stand between budget and service",
+      "variant": "timeline",
+      "label": "Microgrid repair / process",
+      "selection_reason": "Owner-labelled gates form a readable operational register, not decorative steps.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-first-pass-20260929/operations/outline.json",
+          "sha256": "db2f80cd920e59bd31e39715808854873add887f9a5080b11a9268ed328970c1"
+        },
+        "deck": {
+          "path": "decks/v013-first-pass-20260929/operations/deck.pptx",
+          "sha256": "ae6a2deb6719bf3c5d4c1754844f80689689c0c398a879448b0068839ad45357"
+        },
+        "render": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/renders/slide-05.jpg",
+          "sha256": "f4ad54e21c9de4c18d833aeb15b5fc9ac0fccc91947bb30a93ccf25bb43078d3"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/visual_judgment.json",
+          "sha256": "0f1bfe0fd95c2860d426bc1b67f7f479a2175b110cc6490800e80ca3d66fbdb9"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/visual_review_receipt.json",
+          "sha256": "022c3f6cac27b406dad13110e8905327012a2dc83ca0a2501b73b1df53638802"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T01:37:08Z"
+    },
+    {
+      "row": 3,
+      "column": 2,
+      "case": "operations",
+      "slide": 7,
+      "title": "Close the work order, keep the uptime gate",
+      "variant": "matrix",
+      "label": "Microgrid repair / decision",
+      "selection_reason": "Four acceptance responsibilities and a bounded release decision close the argument.",
+      "artifacts": {
+        "outline": {
+          "path": "decks/v013-first-pass-20260929/operations/outline.json",
+          "sha256": "db2f80cd920e59bd31e39715808854873add887f9a5080b11a9268ed328970c1"
+        },
+        "deck": {
+          "path": "decks/v013-first-pass-20260929/operations/deck.pptx",
+          "sha256": "ae6a2deb6719bf3c5d4c1754844f80689689c0c398a879448b0068839ad45357"
+        },
+        "render": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/renders/slide-07.jpg",
+          "sha256": "d6edee831bd49778f281ec50f7323fcff892305606a812f254133782fbeff6f8"
+        },
+        "visual_judgment": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/visual_judgment.json",
+          "sha256": "0f1bfe0fd95c2860d426bc1b67f7f479a2175b110cc6490800e80ca3d66fbdb9"
+        },
+        "visual_receipt": {
+          "path": "decks/v013-first-pass-20260929/operations/qa/visual_review_receipt.json",
+          "sha256": "022c3f6cac27b406dad13110e8905327012a2dc83ca0a2501b73b1df53638802"
+        }
+      },
+      "review_verdict": "pass",
+      "reviewed_at": "2026-09-30T01:37:08Z"
+    }
+  ]
+}

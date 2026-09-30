@@ -5,11 +5,11 @@ A skill for coding agents that produces editable PowerPoint decks from structure
 [![Release](https://img.shields.io/github/v/release/siril9/presentation-skill?sort=semver)](https://github.com/siril9/presentation-skill/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-111827.svg)](LICENSE)
 [![Built with pptxgenjs](https://img.shields.io/badge/renderer-pptxgenjs-2563eb.svg)](templates/pptxgenjs/README.md)
-[![skills.sh](https://skills.sh/b/siril9/presentation-skill)](https://skills.sh/siril9/presentation-skill)
+[![skills.sh](https://skills.sh/b/siril9/presentation-skill)](https://www.skills.sh/siril9/presentation-skill/presentation-skill)
 
-![Three content-led design studies](examples/v0.13_design_studies.jpg)
+![Six editable slides: lab evidence, editorial analysis, and operations decisions](examples/v0.13_showcase.jpg)
 
-*Three different arguments, three different structures: an enzyme-storage report, a ferry-demand story, and a microgrid repair decision. Synthetic data; editable PowerPoints.*
+*Real rendered slides, not mockups. Lab evidence, editorial stories, and operations decisions, from quiet tables to a full-slide metric. Synthetic data; editable charts, tables, and text.*
 
 Ask an agent for a lab report, board memo, investor update, clinical dashboard, policy brief, or scientific figure deck. The skill writes source JSON, routes style and content structure, builds an editable `.pptx`, and runs QA instead of shipping a screenshot or a stack of centered bullets.
 
@@ -56,11 +56,13 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 Full contact sheets: [editorial](examples/v0.13_editorial_contact_sheet.jpg), [operations](examples/v0.13_operations_contact_sheet.jpg), and [lab](examples/v0.13_lab_contact_sheet.jpg).
 
+[Download the four editable decks and their source](https://github.com/siril9/presentation-skill/releases/download/v0.13.0/presentation-skill-v0.13-design-studies.zip). The [showcase manifest](examples/v0.13_showcase_manifest.json) identifies each displayed slide and its source; the images above preview directly in GitHub without a download.
+
+The [v0.13.1 release](https://github.com/siril9/presentation-skill/releases/tag/v0.13.1) also includes [After six, the library changes](https://github.com/siril9/presentation-skill/releases/download/v0.13.1/presentation-skill-v0.13.1-library-study.zip): an earlier seven-slide editorial source rebuilt unchanged with the current renderer. Its dark metric slide appears in the showcase above.
+
 The [v0.13 release](https://github.com/siril9/presentation-skill/releases/tag/v0.13.0) includes these three GPT-6.1 Sol-authored decks, their source, and one retained Luna-authored example rebuilt with the new runtime. These are design studies, not a model-quality benchmark. The earlier [eight-style controlled example](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) and [64-slide grammar gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) remain available.
 
-[![Codex native vs updated presentation-skill comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png)](https://github.com/siril9/presentation-skill/releases/tag/v0.7.0)
-
-Full release notes and comparison images are in the [v0.7.0 release](https://github.com/siril9/presentation-skill/releases/tag/v0.7.0).
+Earlier evidence: [Codex-native vs v0.7 comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png). This is a historical comparison, not a benchmark of the current release.
 
 ## Install
 
@@ -78,7 +80,7 @@ npx skills add https://github.com/siril9/presentation-skill \
 Add this repo as a Codex plugin marketplace, then open `/plugins` in Codex and install `presentation-skill` from the **Presentation Skill** marketplace:
 
 ```bash
-codex plugin marketplace add siril9/presentation-skill --ref v0.13.0
+codex plugin marketplace add siril9/presentation-skill --ref v0.13.1
 ```
 
 For local development against a checkout:
@@ -95,8 +97,8 @@ Clone or copy this repo into your Codex skills directory:
 
 ```bash
 git clone https://github.com/siril9/presentation-skill \
-  $CODEX_HOME/skills/presentation-skill
-cd $CODEX_HOME/skills/presentation-skill
+  "${CODEX_HOME:-$HOME/.codex}/skills/presentation-skill"
+cd "${CODEX_HOME:-$HOME/.codex}/skills/presentation-skill"
 npm install
 npm run setup:python
 npm run doctor
@@ -109,6 +111,8 @@ commands. Optional extraction and data workflows may additionally require
 `markitdown[pptx]`, `matplotlib`, `pandas`, or `openpyxl`.
 
 Core generation does not require LibreOffice. Render-based verification uses LibreOffice `soffice` and Poppler `pdftoppm` when available.
+
+Other coding agents can use the same `SKILL.md` through the skills.sh installer. The skill needs a local environment that can run Python and Node; a plain ChatGPT conversation is not an installation. [Discovery metadata and sharing details](DISCOVERY.md) are available for agent catalogs. This is a public GitHub skill and self-published Codex marketplace, not an assertion of official marketplace curation.
 
 ## Try It
 
