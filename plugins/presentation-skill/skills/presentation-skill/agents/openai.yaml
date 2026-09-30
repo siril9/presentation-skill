@@ -1,4 +1,4 @@
 interface:
   display_name: "Presentation Skill"
-  short_description: "Model-adaptive editable decks with visual QA"
-  default_prompt: "Use $presentation-skill to create a polished editable PowerPoint deck, choose a topic-fit structural grammar using the appropriate Luna, Terra, or Sol profile, preserve sources and editability, and verify the rendered slides."
+  short_description: "Content-led editable decks with visual QA"
+  default_prompt: "Use $presentation-skill to create a clean, content-led editable PowerPoint deck with a coherent design, suitable slide structures, reproducible source, and rendered visual QA."

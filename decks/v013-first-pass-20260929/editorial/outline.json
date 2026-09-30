@@ -1,0 +1,162 @@
+{
+  "title": "The evening does not fit the timetable",
+  "subtitle": "An original synthetic ferry-demand story",
+  "deck_style": {
+    "style_preset": "editorial-minimal",
+    "composition_grammar": "editorial-spread",
+    "style_seed": "v013-evening-ferry",
+    "font_pair": "editorial_serif_v1",
+    "visual_density": "medium",
+    "emoji_mode": "none",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "footer_source_label": "Source",
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_footer_pt": 9,
+      "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true,
+    "requested_author_model": "gpt-6.1-sol",
+    "brief_profile_used": "sol",
+    "source_ledger": "synthetic_data.json",
+    "external_assets": false,
+    "finalization_hold": "Main owns build; wait for main-ready notification."
+  },
+  "slides": [
+    {
+      "slide_id": "ferry-01",
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "slide_intent": "premise",
+      "title": "The evening does not\nfit the timetable",
+      "subtitle": "Eastbank to Westhaven, 17:00-20:00\nAn invented urban ferry story, not a ridership forecast.",
+      "kicker": "SYNTHETIC CITY / EVENING EDITION",
+      "sources": ["SYN-F1 | invented route and demand"],
+      "notes": "Eastbank and Westhaven are fictional places in this case. Serif headlines establish an editorial voice. No photographed place, external visual asset, quotation, or license is used. The route is one-way in this analysis."
+    },
+    {
+      "slide_id": "ferry-02",
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "role_layout_variant": "alternate",
+      "slide_intent": "scene",
+      "title": "A queue becomes the evening's clock",
+      "subtitle": "Three moments in the synthetic baseline, not eyewitness reporting",
+      "milestones": [
+        {"label": "17:30", "title": "Seats go unused", "body": "The first release boards 40 of 80 places. Spare seats cannot be carried forward."},
+        {"label": "19:00", "title": "The wave arrives", "body": "The 18:30-19:00 interval adds 145 arrivals. After boarding, 95 people remain in the queue."},
+        {"label": "20:00", "title": "The count is unfinished", "body": "425 people have boarded; 115 remain. The model has no later service or abandonment."}
+      ],
+      "caption": "SYN-F1. Simplified end-of-interval seat release, FIFO queue, empty initial queue. Moments describe one invented representative evening; they do not measure individual waiting times.",
+      "sources": ["SYN-F1 | synthetic baseline queue"],
+      "notes": "Each 30-minute slot ends with the stated release. Baseline releases are at 17:30, 18:00, 18:30, 19:00, 19:30, and 20:00. This abstraction deliberately omits within-interval arrivals and exact departure headways."
+    },
+    {
+      "slide_id": "ferry-03",
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "role_layout_variant": "alternate",
+      "slide_intent": "pressure",
+      "title": "The middle hour carries 47% of arrivals",
+      "subtitle": "Synthetic representative evening; arrivals are not completed boardings",
+      "chart": {
+        "type": "bar",
+        "categories": ["17:00-17:30", "17:30-18:00", "18:00-18:30", "18:30-19:00", "19:00-19:30", "19:30-20:00"],
+        "series": [
+          {"name": "Arrivals (people)", "labels": ["17:00-17:30", "17:30-18:00", "18:00-18:30", "18:30-19:00", "19:00-19:30", "19:30-20:00"], "values": [40, 65, 110, 145, 105, 75]},
+          {"name": "Baseline offered places", "labels": ["17:00-17:30", "17:30-18:00", "18:00-18:30", "18:30-19:00", "19:00-19:30", "19:30-20:00"], "values": [80, 80, 80, 80, 80, 80]}
+        ],
+        "options": {
+          "catAxisTitle": "Arrival interval; seats released at interval end",
+          "valAxisTitle": "People or offered places per 30 min",
+          "valAxisMinVal": 0,
+          "valAxisMaxVal": 160,
+          "valAxisMajorUnit": 40,
+          "showLegend": true,
+          "showValue": true
+        }
+      },
+      "facts": [
+        {"value": "540", "label": "Arrivals per evening", "detail": "5,400 across 10 identical synthetic evenings"},
+        {"value": "47%", "label": "18:00-19:00 share", "detail": "255 / 540 = 47.2%, rounded"}
+      ],
+      "caption": "SYN-F1. Ten deliberately identical evenings are a constructed case, not a sampled estimate. Six 80-place releases offer 480 places per evening. No day-to-day variability or uncertainty interval is implied.",
+      "sources": ["SYN-F1 | original synthetic arrival series"],
+      "notes": "All ten evenings use the same arrivals, so the per-evening mean equals this representative profile by construction. Arrival records are people presenting once per evening; the case does not identify unique individuals across evenings."
+    },
+    {
+      "slide_id": "ferry-04",
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "role_layout_variant": "alternate",
+      "slide_intent": "turn",
+      "title": "Move one release, not the whole promise",
+      "subtitle": "Synthetic experiment: the same 480 places, distributed differently",
+      "left": {
+        "title": "Even spacing",
+        "bullets": ["Six releases of 80 places; one after every interval.", "425 boardings; 55 places unused early.", "115 people remain at 20:00."]
+      },
+      "right": {
+        "title": "One release moved to 19:00",
+        "bullets": ["Omit 17:30; offer two 80-place releases at 19:00.", "480 boardings; no unused places in this model.", "60 people remain; the first queue rises to 40."]
+      },
+      "verdict": "55 more boardings per evening, but no added places and no elimination of the queue.",
+      "sources": ["SYN-F1/F2 | synthetic capacity scenario"],
+      "notes": "This is an offered-seat allocation test, not an operationally validated timetable. Two releases in one slot may need a second vessel or a different rotation. Crew, berth, return-leg, accessibility, and weather constraints are not modeled. Both columns share the same demand and denominator."
+    },
+    {
+      "slide_id": "ferry-05",
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "role_layout_variant": "alternate",
+      "slide_intent": "consequence",
+      "title": "The queue shrinks, but does not disappear",
+      "subtitle": "Synthetic end-of-interval people still waiting, on the same evening",
+      "table": {
+        "headers": ["Release time", "Arrivals", "Baseline queue", "Moved-release queue"],
+        "rows": [
+          ["17:30", "40", "0", "40"],
+          ["18:00", "65", "0", "25"],
+          ["18:30", "110", "30", "55"],
+          ["19:00", "145", "95", "40"],
+          ["19:30", "105", "120", "65"],
+          ["20:00", "75", "115", "60"]
+        ],
+        "column_weights": [1.1, 0.8, 1.1, 1.4],
+        "caption": "SYN-F1/F2. Queue = max(0, prior queue + arrivals - offered places). Peak sampled queue falls from 120 to 65, but early service worsens. Within-interval peak queues and waiting times are unknown."
+      },
+      "sources": ["SYN-F1/F2 | original synthetic queue ledger"],
+      "notes": "Moved offered places by interval: 0, 80, 80, 160, 80, 80. All counts are per evening. Baseline boardings: 40, 65, 80, 80, 80, 80. Moved boardings: 0, 80, 80, 160, 80, 80. No passenger abandonment or suppressed demand is assumed."
+    },
+    {
+      "slide_id": "ferry-06",
+      "type": "content",
+      "role": "decision",
+      "variant": "standard",
+      "role_layout_variant": "alternate",
+      "slide_intent": "close",
+      "title": "Test the wave, protect the early rider",
+      "subtitle": "A synthetic planning conclusion, not a service-change authorization",
+      "bullets": [
+        "Check vessel, berth, crew, and return-leg feasibility before any trial.",
+        "Measure arrivals, boardings, and timestamped waits separately; keep early riders in the evaluation.",
+        "The remaining 60 people require another answer: more capacity, later service, or a different design."
+      ],
+      "summary_callout": "Re-timing addresses 55 of the 115 queued people in this case; it cannot serve all 540 with 480 places.",
+      "sources": ["SYN-F1/F2 | all places, counts, and plans invented"],
+      "notes": "SYN-F1 is the invented demand and baseline. SYN-F2 is the invented moved-release scenario. These source IDs are internal, not external citations. Ten identical evenings yield baseline 4,250 boardings and moved 4,800 boardings, a difference of 550; no causal field result or forecast is asserted."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/.render-cache",
+    "key": "e0a2ab21542a26cfb73f82c16148c8ed08b688ef97948db6e2d0d4b0430239b6",
+    "reason": "verified",
+    "status": "hit"
+  },
+  "dpi": 180,
+  "elapsed_seconds": 0.60273,
+  "format": "jpeg",
+  "images": [
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-01.jpg",
+      "sha256": "950cab9b7c7ebc46e71f3d813a0b509257db43bf973c45da7f34444e6ff1e5e5",
+      "size": 85709
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-02.jpg",
+      "sha256": "8881012b4019fabe0c2c5e8b3219c1dec69d0335e383d842e4626bd0483c96b5",
+      "size": 119296
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-03.jpg",
+      "sha256": "88aca119b28d6348f9760b122586312b8d22cef2f0a0ef903176bd8f1d355788",
+      "size": 126673
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-04.jpg",
+      "sha256": "f491f43fb872ebe49a9acfb65cf5ec8704b447748f619eeb73b550f3bad6ea5c",
+      "size": 110099
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-05.jpg",
+      "sha256": "7e94d3a2d8c7352396760a20dafd36f00d1b1f943c4e3b27585fbf266514e56f",
+      "size": 100721
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-06.jpg",
+      "sha256": "d1173e74cbf920209087f0fe6dfd77e9417af6afe300866c37bbceccc720f26b",
+      "size": 121789
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-07.jpg",
+      "sha256": "24127d7318adfb830b332bd1eeb1f94797f8309f2f4f03b07a040e2672aaccde",
+      "size": 157413
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-08.jpg",
+      "sha256": "8ed44f7f393b20964225b4d5e77fe28e550bc4b6bad484a4c626ce8b1b101977",
+      "size": 181114
+    }
+  ],
+  "input": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+  "page_count": 8,
+  "pptx_sha256": "7b626263de057fe491a72dd3436b239d650cbdd301ae36f445460f6272b5da7d",
+  "schema_version": "slide_render_report_v1",
+  "status": "complete"
+}

@@ -1,0 +1,126 @@
+{
+  "contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/visual_review/contact_sheet.jpg",
+  "failed_stage": "",
+  "failure_category": "passed",
+  "generated_at": "2026-09-30T01:43:08.259109+00:00",
+  "next_action": "Inspect the rendered slides, repair any visual defects in source, and record the visual judgment before delivery.",
+  "outline": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+  "outline_sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22",
+  "output": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+  "output_exists": true,
+  "output_sha256": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda",
+  "passed": true,
+  "qa_counts": {
+    "accessibility_error_count": 0,
+    "accessibility_warning_count": 0,
+    "design_error_count": 0,
+    "design_warning_count": 0,
+    "geometry_error_count": 0,
+    "geometry_warning_count": 0,
+    "overflow_count": 0,
+    "overlap_count": 0,
+    "source_fidelity_error_count": 0,
+    "source_fidelity_warning_count": 0,
+    "visual_review_warning_count": 0,
+    "visual_warning_count": 0,
+    "whitespace_warning_count": 0
+  },
+  "qa_dir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa",
+  "qa_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/qa_report.json",
+  "readability": {
+    "min_body_pt": 16.0,
+    "min_metadata_pt": 9.0,
+    "min_support_pt": 13.0
+  },
+  "render_cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/.render-cache",
+    "key": "04cc8b19c1982bf83ffac95a81e06bc57c1dbc7f6416db304efc30768d63542a",
+    "reason": "verified",
+    "status": "hit"
+  },
+  "render_status": "passed",
+  "repair_packet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/repair_packet.json",
+  "schema_version": "quick-deck-finalization/v1",
+  "stages": [
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0,
+        1
+      ],
+      "command": [
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/preflight.py",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json"
+      ],
+      "duration_seconds": 0.078,
+      "returncode": 0,
+      "stage": "preflight"
+    },
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0
+      ],
+      "command": [
+        "/opt/homebrew/bin/node",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+        "--output",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+        "--style-preset",
+        "editorial-minimal"
+      ],
+      "duration_seconds": 0.182,
+      "output_sha256_after_restore": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda",
+      "previous_output_bytes_restored": true,
+      "returncode": 0,
+      "stage": "build"
+    },
+    {
+      "accepted": true,
+      "accepted_returncodes": [
+        0
+      ],
+      "command": [
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/qa_gate.py",
+        "--input",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+        "--outline",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+        "--outdir",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa",
+        "--style-preset",
+        "editorial-minimal",
+        "--strict-geometry",
+        "--fail-on-geometry-warnings",
+        "--fail-on-whitespace-warnings",
+        "--run-visual-review",
+        "--fail-on-visual-review-warnings",
+        "--fail-on-design-warnings",
+        "--accessibility",
+        "--strict-accessibility",
+        "--accessibility-min-body-pt",
+        "16.0",
+        "--accessibility-min-support-pt",
+        "13.0",
+        "--accessibility-min-metadata-pt",
+        "9.0",
+        "--skip-manual-review",
+        "--render-cache-dir",
+        "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/.render-cache"
+      ],
+      "duration_seconds": 2.122,
+      "returncode": 0,
+      "stage": "qa"
+    }
+  ],
+  "style_preset": "editorial-minimal",
+  "style_resolution_basis": "outline_design_choice",
+  "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+  "total_duration_seconds": 2.382,
+  "visual_inspection_status": "not_recorded"
+}

@@ -134,6 +134,8 @@ def _finalize(args: argparse.Namespace) -> int:
         command.extend(["--asset-root", str(args.asset_root.expanduser().resolve())])
     if args.render_cache_dir:
         command.extend(["--render-cache-dir", str(args.render_cache_dir.expanduser().resolve())])
+    if args.no_render_cache:
+        command.append("--no-render-cache")
     return _run("finalize_quick_deck.py", command)
 
 
@@ -231,7 +233,9 @@ def _parser() -> argparse.ArgumentParser:
     final.add_argument("--style-preset", default="auto")
     final.add_argument("--qa-dir", type=Path)
     final.add_argument("--asset-root", type=Path)
-    final.add_argument("--render-cache-dir", type=Path)
+    cache_options = final.add_mutually_exclusive_group()
+    cache_options.add_argument("--render-cache-dir", type=Path)
+    cache_options.add_argument("--no-render-cache", action="store_true", help="Force image conversion instead of verified reuse.")
     final.set_defaults(handler=_finalize)
 
     audition = commands.add_parser("audition", help="Optionally compare styles on a content-matched slide subset.")

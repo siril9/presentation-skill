@@ -1,0 +1,219 @@
+{
+  "schema_version": "visual_judgment_v1",
+  "reviewer": {
+    "type": "model",
+    "name": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol"
+  },
+  "reviewed_at": "2026-09-29T23:48:57Z",
+  "verdict": "fail",
+  "findings": [
+    {
+      "severity": "error",
+      "priority": "P2",
+      "slide": 4,
+      "slide_index": 3,
+      "type": "visible_source_caveat_missing_unsupported_fact_form",
+      "source_pointer": "/slides/3/chart/facts/0",
+      "message": "The source's critical caveat Pilot availability measure; not a measure of gardening outcomes. is absent from slide 4. Native text confirms no chart readout; the renderer normalizeFacts accepts objects and ignores this string-only chart.facts entry. This is a source-contract/renderer retention gap, not clipped text or a changed numeric series. Other slides' general non-effectiveness caveats do not retain this chart-specific metric boundary.",
+      "suggested_fix": "Map the existing caveat to a supported visible chart caption/readout or supported fact object, without changing the synthetic data; rebuild and re-review.",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-04.jpg",
+      "resolved": false
+    }
+  ],
+  "review_context": {
+    "method": "Independent visual inspection of every original 1800x1013 qa/renders/slide-*.jpg via view_image(detail=original), compared with source outline and synthetic_data/factual_check where present. Static QA counts were not used as visual approval.",
+    "scope": "Rendered clipping, contrast, alignment, box/chrome overlap, whitespace, data/unit/denominator/caveat retention and content-led structural variation. Synthetic arithmetic checked against provided ledgers, not external factual truth.",
+    "warm_attempt": 4,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+        "sha256": "ea446d1194b47f252b0b64430cecbfba705736354c2c8cc25eaa2c9cc1c38d50",
+        "normalized_office_sha256": "336b731e9ce35d25643f15137d94b3429607423b9a1ad0e7a9a5698cd1888321"
+      },
+      "renders": [
+        {
+          "name": "slide-01.jpg",
+          "sha256": "950cab9b7c7ebc46e71f3d813a0b509257db43bf973c45da7f34444e6ff1e5e5",
+          "size_bytes": 85709,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-01.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-02.jpg",
+          "sha256": "8881012b4019fabe0c2c5e8b3219c1dec69d0335e383d842e4626bd0483c96b5",
+          "size_bytes": 119296,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-02.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-03.jpg",
+          "sha256": "88aca119b28d6348f9760b122586312b8d22cef2f0a0ef903176bd8f1d355788",
+          "size_bytes": 126673,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-03.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-04.jpg",
+          "sha256": "6f360b57db3348e7adf82eb39b817d8a5eaf8a0b9ff8fd7f13a798083f65828f",
+          "size_bytes": 95865,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-04.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-05.jpg",
+          "sha256": "7e94d3a2d8c7352396760a20dafd36f00d1b1f943c4e3b27585fbf266514e56f",
+          "size_bytes": 100721,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-05.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-06.jpg",
+          "sha256": "d1173e74cbf920209087f0fe6dfd77e9417af6afe300866c37bbceccc720f26b",
+          "size_bytes": 121789,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-06.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-07.jpg",
+          "sha256": "24127d7318adfb830b332bd1eeb1f94797f8309f2f4f03b07a040e2672aaccde",
+          "size_bytes": 157413,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-07.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-08.jpg",
+          "sha256": "8ed44f7f393b20964225b4d5e77fe28e550bc4b6bad484a4c626ce8b1b101977",
+          "size_bytes": 181114,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-08.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+          "sha256": "2080d3fa2d84f8c007f44301300c1801647f16d9dfbb80ae829a89114aece6e2"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/run-03.json",
+          "sha256": "fbf03215b3134c891c44c8307ee7d302675eecd150c18039836592a7d54b5767"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/run-04.json",
+          "sha256": "55556d86e93557fd66fa87792e3a88a9ffbb7a966032d056eb7525cf12db23e2"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/finalize_receipt.json",
+          "sha256": "a56b621752da9b03ad2840fa5ef2e61dd2aadcf1d2d095d3f53dab8f5542e54f"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/render_report.json",
+          "sha256": "be52db041c21959674500dc75d74c843f1af2d2568ccfcd7f3cb091179054d22"
+        }
+      ],
+      "finalize_generated_at": "2026-09-29T23:43:43.149394+00:00",
+      "cold_warm_comparison": {
+        "cold_attempt": 3,
+        "warm_attempt": 4,
+        "same_pptx_sha256": true,
+        "same_outline_sha256": true,
+        "same_cache_key": true,
+        "warm_cache_status": "hit",
+        "render_hashes_match_render_report": true,
+        "cold_render_hashes_separately_archived": false
+      }
+    },
+    "source_comparison": {
+      "synthetic_data_file_present": false,
+      "factual_check_file_present": false,
+      "source_basis": "Outline and its supplied synthetic ledger/survey/expansion references; no separate assignment ledger was available in this case folder.",
+      "allocation_sum_usd": 6000,
+      "real_world_fact_verification": false
+    },
+    "structural_assessment": "Shares scientific-evidence-plate chrome with lab by design, but mixes four-fact evidence, four-step timeline, line chart, budget table, asymmetric comparison, four-gate decision and source register. No claim of a wholly distinct grammar family.",
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "slide_index": 0,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-01.jpg",
+        "render_sha256": "950cab9b7c7ebc46e71f3d813a0b509257db43bf973c45da7f34444e6ff1e5e5",
+        "note": "Synthetic-pilot opener fits; colon-to-Review spacing is visually tight but no letters are clipped."
+      },
+      {
+        "slide": 2,
+        "slide_index": 1,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-02.jpg",
+        "render_sha256": "8881012b4019fabe0c2c5e8b3219c1dec69d0335e383d842e4626bd0483c96b5",
+        "note": "All four activity facts and the 64-of-86/self-selected/non-effectiveness denominator caveat are readable."
+      },
+      {
+        "slide": 3,
+        "slide_index": 2,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-03.jpg",
+        "render_sha256": "88aca119b28d6348f9760b122586312b8d22cef2f0a0ef903176bd8f1d355788",
+        "note": "Four chronological rows fit with consistent alignment and no automatic-scale-up claim."
+      },
+      {
+        "slide": 4,
+        "slide_index": 3,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-04.jpg",
+        "render_sha256": "6f360b57db3348e7adf82eb39b817d8a5eaf8a0b9ff8fd7f13a798083f65828f",
+        "note": "Availability line/markers and Week 1/4/8/12 labels are readable on a 0-100 scale; title supplies percent context. The source chart.facts string distinguishing availability from gardening outcomes is not rendered."
+      },
+      {
+        "slide": 5,
+        "slide_index": 4,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-05.jpg",
+        "render_sha256": "7e94d3a2d8c7352396760a20dafd36f00d1b1f943c4e3b27585fbf266514e56f",
+        "note": "Budget table retains all five allocations and $6,000 total; sum is 1800+2200+1000+600+400=6000; last row remains clear of footer."
+      },
+      {
+        "slide": 6,
+        "slide_index": 5,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-06.jpg",
+        "render_sha256": "d1173e74cbf920209087f0fe6dfd77e9417af6afe300866c37bbceccc720f26b",
+        "note": "Four-versus-eight-branch comparison and $6,000 versus estimated $11,000 are legible; right heading uses a narrow stacked treatment but does not overlap body."
+      },
+      {
+        "slide": 7,
+        "slide_index": 6,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-07.jpg",
+        "render_sha256": "24127d7318adfb830b332bd1eeb1f94797f8309f2f4f03b07a040e2672aaccde",
+        "note": "Four gates and finish-pilot callout fit; 64-of-86/self-selection and $11,000 funding caveats remain visible."
+      },
+      {
+        "slide": 8,
+        "slide_index": 7,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/renders/slide-08.jpg",
+        "render_sha256": "8ed44f7f393b20964225b4d5e77fe28e550bc4b6bad484a4c626ce8b1b101977",
+        "note": "Reference register is dense but legible, retaining all three rows, synthetic provenance, survey denominator and estimated expansion cost. Source index counts rows, not distinct source IDs."
+      }
+    ],
+    "boundary": "Read-only source/core review. Only this judgment JSON was authored; no receipt was bound. Any reviewed deck/render/source hash change requires reopening review."
+  }
+}

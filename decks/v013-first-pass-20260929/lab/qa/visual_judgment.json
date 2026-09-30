@@ -1,0 +1,247 @@
+{
+  "schema_version": "visual_judgment_v1",
+  "reviewer": {
+    "type": "model",
+    "name": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol"
+  },
+  "reviewed_at": "2026-09-30T00:49:48Z",
+  "verdict": "pass",
+  "findings": [],
+  "review_context": {
+    "method": "Independent reopening of all 13 original 1800x1013 lab/editorial qa/renders/slide-*.jpg with view_image(detail=original) on warm run 07, compared with current outline, synthetic_data and factual_check. After the chart-format/category-reflow rebuild, lab slide 3 was reopened on completed run 08 and again on final warm run 09. The other six lab images and all six editorial images were SHA256-identical to the individually reviewed set. New raw and normalized PPTX hashes and cold-08/warm-09 cache evidence were independently checked; old PPTX hashes were not approved. Static QA counts were not used as visual approval.",
+    "scope": "Rendered clipping, contrast, alignment, box/chrome overlap, whitespace, data/unit/denominator/caveat retention and content-led structural variation. Synthetic arithmetic verified against provided ledgers, not external factual truth.",
+    "warm_attempt": 9,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+        "sha256": "e5fcaf769f18e6ee602001fe94a488eebff2f039c4de51fe2a81ebde9ca1dc57",
+        "normalized_office_sha256": "03d37ab6a1816d482bb2be4600547944446d0f5f3a98f6e66006a4bcfd0188b7"
+      },
+      "renders": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-01.jpg",
+          "name": "slide-01.jpg",
+          "sha256": "73aa86e175bf90cfbcca0557759bf18ac685638bd624b19efeef27fdd0c3049d",
+          "size_bytes": 81554,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-02.jpg",
+          "name": "slide-02.jpg",
+          "sha256": "9af9fc33c210ae1e774345a134371f7a416e19c637960db5a768e65bce444b05",
+          "size_bytes": 152507,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-03.jpg",
+          "name": "slide-03.jpg",
+          "sha256": "14e9c02b1d53f66e829e7f3b4113af36c53b8e6fec76fa2d62ecb5f0e8ea373c",
+          "size_bytes": 128679,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-04.jpg",
+          "name": "slide-04.jpg",
+          "sha256": "adedbcc40fcf2ac2774aea3dcd800e851113c76298601fb38388ff3ecb8b31dd",
+          "size_bytes": 100006,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-05.jpg",
+          "name": "slide-05.jpg",
+          "sha256": "3c8ce6495054f5ddf3850c9239c34a02fec5871031f3e57d635e4d2135d5906b",
+          "size_bytes": 170648,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-06.jpg",
+          "name": "slide-06.jpg",
+          "sha256": "8c88e527ae9b4e7d4fbf4b7b51066d62779ddc59e491fe586c9b015dcc1a4ad2",
+          "size_bytes": 134693,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-07.jpg",
+          "name": "slide-07.jpg",
+          "sha256": "54540621f59f0b7195f0511ae42b9789099856fdbdb8c5c4f57bda62d9ca6758",
+          "size_bytes": 134132,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json",
+          "sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/synthetic_data.json",
+          "sha256": "582e47ba50cd9dd1d6618d29017f91e48a8f947d32fe84e90650392f52e6aac9"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/factual_check.json",
+          "sha256": "f2fc11c38e84f4c3d82a8e32e9f96da7683c4b7dc64f0ac47f0e0861c27da8ec"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/run-08.json",
+          "sha256": "2eac0780043f463edf6c9615eb67dac3cc4cf1e61fff0c8121e87379e924ce37"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/run-09.json",
+          "sha256": "3e3ca254c880b71fd8847422d30c39f1c38ae9abb272d381d7e1384df760649e"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/finalize_receipt.json",
+          "sha256": "96893128853235d9fc8c400c01017dd2219df41f088dd8ce4b0381e06272fd5e"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/render_report.json",
+          "sha256": "c9da01debc13d38e1d694eb4e90a1169ed93eab141185ff3540421e8bf33603f"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/visual_review_before_shared_repairs.json",
+          "sha256": "ce6fe314ebdd47a45d480879239e13dc8a3454ef80dfdb42f788b59873fed00c"
+        }
+      ],
+      "finalize_generated_at": "2026-09-30T00:48:05.267716+00:00",
+      "cold_warm_comparison": {
+        "cold_attempt": 8,
+        "warm_attempt": 9,
+        "same_pptx_sha256": true,
+        "same_outline_sha256": true,
+        "same_cache_key": true,
+        "warm_cache_status": "hit",
+        "render_hashes_match_render_report": true,
+        "cold_render_hashes_separately_archived": false
+      },
+      "review_delta": {
+        "previous_review_attempt": 7,
+        "previous_reviewed_deck": {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+          "sha256": "208f4281e07201600830a13316ebdbbe939e1013740ceff22dc8c0afa720869a",
+          "normalized_office_sha256": "4239b3398b947bf6f9504556cf63d639f4ab3fbd7325875b81e729b492e448ab"
+        },
+        "changed_images_since_full_review": [
+          "slide-03.jpg"
+        ],
+        "source_outline_unchanged": true
+      }
+    },
+    "source_comparison": {
+      "factual_check_hashes_current": true,
+      "independent_recalculation": {
+        "means_percent": [
+          62,
+          91,
+          84
+        ],
+        "threshold_passes_out_of_3": [
+          0,
+          3,
+          1
+        ],
+        "samples": 18,
+        "wells": 36,
+        "glycerol_minus_buffer_pp": 29
+      },
+      "real_world_fact_verification": false
+    },
+    "closed_prior_findings": [
+      {
+        "type": "visible_source_caveat_missing",
+        "slide": 6,
+        "source_pointer": "/slides/5/caption",
+        "resolved": true,
+        "note": "The complete original timeline caption is visible in the current full-size image."
+      },
+      {
+        "type": "generated_semantic_label_mismatch",
+        "slide": 7,
+        "source_pointer": "/slides/6/bullets/2",
+        "resolved": true,
+        "note": "Neutral Detail 2 label replaces the misleading generated Owner label."
+      }
+    ],
+    "structural_assessment": "Content-led method table, native chart with statistic rows, lot audit table, two-column interpretation, sequential study plan and decision bands. Coherent monochrome report treatment does not substitute for structure.",
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "slide_index": 0,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-01.jpg",
+        "render_sha256": "73aa86e175bf90cfbcca0557759bf18ac685638bd624b19efeef27fdd0c3049d",
+        "note": "Quiet report opener. Full title and synthetic/no-validated-shelf-life subtitle fit with deliberate whitespace and strong contrast.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      },
+      {
+        "slide": 2,
+        "slide_index": 1,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-02.jpg",
+        "render_sha256": "9af9fc33c210ae1e774345a134371f7a416e19c637960db5a768e65bce444b05",
+        "note": "Design table is aligned and readable. 4 C, formulation concentration definitions, 18 samples, 36 wells, independent n=3, matched denominator and U/mL/micromol-per-minute caption are visible.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      },
+      {
+        "slide": 3,
+        "slide_index": 2,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-03.jpg",
+        "render_sha256": "14e9c02b1d53f66e829e7f3b4113af36c53b8e6fec76fa2d62ecb5f0e8ea373c",
+        "note": "Reopened final warm image: bars 62/91/84, zero baseline, percent axis, and two-line 5% glycerol / 2% trehalose category labels are legible and separated from the axis title. Invented 85% threshold, 29 pp contrast, lot ranges and complete two-line uncertainty caption ending 'lots follow.' remain readable without clipping.",
+        "inspection_basis": "Full-size image reopened on final warm run 09"
+      },
+      {
+        "slide": 4,
+        "slide_index": 3,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-04.jpg",
+        "render_sha256": "adedbcc40fcf2ac2774aea3dcd800e851113c76298601fb38388ff3ecb8b31dd",
+        "note": "All lot rows, means and 0/3, 3/3, 1/3 denominators fit. Matched day-0 normalization and manufacturing-variability limitation remain visible.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      },
+      {
+        "slide": 5,
+        "slide_index": 4,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-05.jpg",
+        "render_sha256": "3c8ce6495054f5ddf3850c9239c34a02fec5871031f3e57d635e4d2135d5906b",
+        "note": "Both comparison columns and the no-release/no-shelf-life verdict fit. Matrix, viscosity/recovery/contamination/freeze-thaw and time/temperature boundaries are retained.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      },
+      {
+        "slide": 6,
+        "slide_index": 5,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-06.jpg",
+        "render_sha256": "8c88e527ae9b4e7d4fbf4b7b51066d62779ddc59e491fe586c9b015dcc1a4ad2",
+        "note": "Three sequential study rows and their marker/title/body columns fit. The complete planning-only, six-lot-not-power-calculation and no-validated-shelf-life caption is now visible above the footer.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      },
+      {
+        "slide": 7,
+        "slide_index": 6,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-07.jpg",
+        "render_sha256": "54540621f59f0b7195f0511ae42b9789099856fdbdb8c5c4f57bda62d9ca6758",
+        "note": "Decision, Detail 1 and Detail 2 are neutral labels. All three source bullets and the caution about testing versus validated storage instructions are visible; no invented Owner label or overlap remains.",
+        "inspection_basis": "Byte-identical to the full-size image individually reopened on run 07"
+      }
+    ],
+    "boundary": "Read-only core/source/render review. Only qa/visual_judgment.json was authored for this deck; no visual receipt was bound. Any reviewed deck/render/source hash change requires reopening review."
+  }
+}

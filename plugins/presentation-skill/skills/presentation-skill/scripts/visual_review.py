@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -92,6 +93,25 @@ def _shape_record(slide_num: int, shape_idx: int, shape: Any) -> dict[str, Any] 
         getattr(shape, "has_text_frame", False)
         and shape.text_frame.auto_size == MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
     )
+    lines = _wrap_words(text, w, font_pt)
+    estimated_h = _estimated_text_height(lines, font_pt)
+    frame = shape.text_frame
+    inset_h = _inches(frame.margin_top + frame.margin_bottom)
+    spacing_h = sum(space.pt / 72 for paragraph in frame.paragraphs
+                    for space in (paragraph.space_before, paragraph.space_after) if space is not None)
+    candidate = (
+        estimated_h + inset_h + spacing_h >= h * 1.05
+        or (y <= 1.35 and font_pt >= 22)
+        or any(run.font.size is not None and run.font.size.pt > font_pt
+               for paragraph in frame.paragraphs for run in paragraph.runs)
+        or any(len(word) > _line_capacity(w, font_pt) for word in text.split())
+    )
+    try:
+        measured = _measured_text_layout(shape) if candidate else None
+    except (OSError, ValueError, TypeError, AttributeError):
+        measured = None
+    if measured is not None:
+        lines, estimated_h = measured
     return {
         "slide": slide_num,
         "shape_id": f"shape-{shape_idx}",
@@ -103,6 +123,8 @@ def _shape_record(slide_num: int, shape_idx: int, shape: Any) -> dict[str, Any] 
         "h": h,
         "font_pt": font_pt,
         "auto_fit": auto_fit,
+        "estimated_lines": lines,
+        "estimated_height": estimated_h,
         "right": x + w,
         "bottom": y + h,
     }
@@ -138,6 +160,143 @@ def _estimated_text_height(lines: list[str], font_pt: float) -> float:
     if not lines:
         return 0.0
     return len(lines) * (font_pt / 72.0) * 1.28
+
+
+def _font_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+@lru_cache(maxsize=1)
+def _font_files() -> tuple[Path, ...]:
+    roots = (
+        Path("/System/Library/Fonts"), Path("/Library/Fonts"),
+        Path.home() / "Library/Fonts", Path("/usr/share/fonts"),
+        Path("/usr/local/share/fonts"), Path.home() / ".local/share/fonts",
+        Path("C:/Windows/Fonts"),
+    )
+    return tuple(sorted({path for root in roots if root.is_dir()
+                         for path in root.rglob("*")
+                         if path.suffix.lower() in {".ttf", ".otf", ".ttc"}}))
+
+
+@lru_cache(maxsize=128)
+def _measurement_font(face: str, bold: bool, italic: bool, size: int) -> Any:
+    if ImageFont is None or not face or face.startswith("+"):
+        return None
+    key = _font_key(face)
+    # Match the declared family, never substitute a narrower unrelated font.
+    for path in _font_files():
+        if not _font_key(path.stem).startswith(key):
+            continue
+        for index in range(32 if path.suffix.lower() == ".ttc" else 1):
+            try:
+                font = ImageFont.truetype(str(path), size=size, index=index)
+            except (OSError, ValueError):
+                break
+            family, style = font.getname()
+            style = style.lower()
+            if (_font_key(family) == key
+                    and ("bold" in style) == bold
+                    and ("italic" in style or "oblique" in style) == italic
+                    and not any(term in style for term in ("condensed", "thin", "light", "black", "medium"))):
+                return font
+    return None
+
+
+def _measured_text_layout(shape: Any) -> tuple[list[str], float] | None:
+    """Measure declared native runs; unsupported/inherited fonts keep the fallback."""
+    frame = shape.text_frame
+    if frame._txBody.bodyPr.get("vert", "horz") != "horz":
+        return None
+    width = _inches(shape.width - frame.margin_left - frame.margin_right)
+    if width <= 0:
+        return None
+    lines: list[str] = []
+    height = _inches(frame.margin_top + frame.margin_bottom)
+    for paragraph in frame.paragraphs:
+        ppr = paragraph._p.pPr
+        if ppr is not None and (
+            any(int(ppr.get(attr, "0")) != 0 for attr in ("marL", "marR", "indent"))
+            or any(child.tag.rsplit("}", 1)[-1] in {"buChar", "buAutoNum"} for child in ppr)
+        ):
+            return None
+        chars: list[tuple[str, Any, float]] = []
+        runs = iter(paragraph.runs)
+        for child in paragraph._p:
+            kind = child.tag.rsplit("}", 1)[-1]
+            if kind == "br":
+                chars.append(("\n", None, 0.0))
+            elif kind == "r":
+                run = next(runs)
+                if not run.text:
+                    continue
+                face = run.font.name or paragraph.font.name
+                size = run.font.size or paragraph.font.size
+                if not face or size is None:
+                    return None
+                rpr = run._r.rPr
+                if rpr is not None and any(int(rpr.get(attr, "0")) for attr in ("spc", "baseline")):
+                    return None
+                bold = run.font.bold if run.font.bold is not None else paragraph.font.bold
+                italic = run.font.italic if run.font.italic is not None else paragraph.font.italic
+                font = _measurement_font(face, bool(bold), bool(italic), round(size.pt * 8))
+                if font is None:
+                    return None
+                chars.extend((char, font, size.pt) for char in run.text)
+            elif kind == "fld":
+                return None
+        if not chars:
+            if paragraph.text:
+                return None
+            continue
+        text = "".join(char for char, _, _ in chars)
+        line, line_width, line_size = "", 0.0, 0.0
+        paragraph_sizes = [size for _, _, size in chars if size]
+        default_size = max(paragraph_sizes, default=12.0)
+
+        def finish_line() -> None:
+            nonlocal line, line_width, line_size, height
+            lines.append(line.strip())
+            spacing = paragraph.line_spacing
+            if spacing is not None and hasattr(spacing, "pt"):
+                height += spacing.pt / 72
+            else:
+                height += (line_size or default_size) / 72 * (spacing if spacing is not None else 1.28)
+            line, line_width, line_size = "", 0.0, 0.0
+
+        for token in re.finditer(r"[^\s]+|[^\S\n\v]+|[\n\v]", text):
+            value = token.group()
+            if value in {"\n", "\v"}:
+                finish_line()
+                continue
+            fragments = chars[token.start():token.end()]
+            advance = 0.0
+            start = 0
+            for end in range(1, len(fragments) + 1):
+                if end == len(fragments) or fragments[end][1] is not fragments[start][1]:
+                    advance += fragments[start][1].getlength("".join(c for c, _, _ in fragments[start:end])) / 576
+                    start = end
+            if not value.isspace() and line.strip() and line_width + advance > width:
+                finish_line()
+            if value.isspace() and not line:
+                continue
+            if advance > width and not value.isspace():
+                # PowerPoint also wraps overlong unbroken words inside the box.
+                for char, font, size in fragments:
+                    char_width = font.getlength(char) / 576
+                    if line and line_width + char_width > width:
+                        finish_line()
+                    line += char
+                    line_width += char_width
+                    line_size = max(line_size, size)
+            else:
+                line += value
+                line_width += advance
+                line_size = max(line_size, *(size for _, _, size in fragments))
+        if line or not lines:
+            finish_line()
+        height += sum(space.pt / 72 for space in (paragraph.space_before, paragraph.space_after) if space is not None)
+    return lines, height
 
 
 def _issue(
@@ -186,8 +345,8 @@ def _analyze_text_shapes(prs: Presentation) -> list[dict[str, Any]]:
             h = float(record["h"])
             right = float(record["right"])
             bottom = float(record["bottom"])
-            lines = _wrap_words(text, w, font_pt)
-            estimated_h = _estimated_text_height(lines, font_pt)
+            lines = record["estimated_lines"]
+            estimated_h = float(record["estimated_height"])
             is_title_like = y <= 1.35 and font_pt >= 22
             is_footer_like = y >= slide_h - 0.75 and font_pt <= 13
             is_caption_like = font_pt <= 12.5
@@ -324,9 +483,8 @@ def _analyze_text_shapes(prs: Presentation) -> list[dict[str, Any]]:
             r for r in records if float(r["y"]) <= 1.35 and float(r["font_pt"]) >= 22
         ]
         for title in title_records:
-            title_lines = _wrap_words(str(title["text"]), float(title["w"]), float(title["font_pt"]))
             title_bottom = max(
-                float(title["y"]) + _estimated_text_height(title_lines, float(title["font_pt"])),
+                float(title["y"]) + float(title["estimated_height"]),
                 float(title["y"]) + float(title["h"]),
             )
             below = [

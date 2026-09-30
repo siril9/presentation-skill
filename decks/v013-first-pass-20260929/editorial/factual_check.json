@@ -1,0 +1,44 @@
+{
+  "status": "SOURCE_FACTS_PASS_NOT_RENDERED",
+  "checked_at_utc": "2026-09-30T01:32:25.354Z",
+  "outline_sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22",
+  "synthetic_data_sha256": "299f6b40e79e71805519ca34b46862b9f65b78e2308e716d3ac1193c9dde2ba7",
+  "common_checks": [
+    "Valid JSON and unique slide IDs",
+    "Selected brief candidate preset plus grammar",
+    "Exact brief readability contract",
+    "Supported role/variant pairs",
+    "Synthetic provenance visible per slide",
+    "Native chart zero baseline and matching dimensions",
+    "Native table dimensions and meaningful captions"
+  ],
+  "checks": [
+    "FIFO queue recurrence and all six ledger rows",
+    "Chart arrivals and baseline places linked to source",
+    "Same 540 arrivals / 480 places in each scenario",
+    "Boardings plus final queues conserve arrivals",
+    "Middle-hour share and ten-evening totals",
+    "Visible early-access penalty, waiting-time and forecast boundaries"
+  ],
+  "computed": {
+    "arrivals_per_evening": 540,
+    "offered_places_per_scenario": 480,
+    "baseline_boardings": 425,
+    "moved_boardings": 480,
+    "baseline_final_queue": 115,
+    "moved_final_queue": 60,
+    "baseline_peak_sampled_queue": 120,
+    "moved_peak_sampled_queue": 65,
+    "extra_boardings_per_evening": 55,
+    "extra_boardings_10_evenings": 550
+  },
+  "not_checked": [
+    "Renderer integration",
+    "PPTX content preservation",
+    "Native-object rendering",
+    "Geometry",
+    "Readability in rendered output",
+    "Contact sheet and per-slide visual review"
+  ],
+  "next_owner": "Main release build/measurement runner; author visual review after main-ready notification"
+}

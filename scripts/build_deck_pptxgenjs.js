@@ -309,6 +309,11 @@ function safeNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeFact(fact) {
+  // Model-authored prose is a label, not a numeric statistic.
+  return typeof fact === 'string' ? { label: fact.trim() } : fact;
+}
+
 function normalizeChartPayload(raw) {
   if (!raw || typeof raw !== 'object') return {};
   const chartType = String(raw.type || 'bar').trim().toLowerCase();
@@ -371,7 +376,8 @@ function normalizeChartPayload(raw) {
     subtitle: String(raw.subtitle || ''),
     notes: String(raw.notes || raw.message || raw.caption || ''),
     sources: Array.isArray(raw.sources) ? raw.sources : [],
-    facts: Array.isArray(raw.facts) ? raw.facts : raw.stats,
+    facts: Array.isArray(raw.facts) ? raw.facts.map(normalizeFact)
+      : Array.isArray(raw.stats) ? raw.stats.map(normalizeFact) : raw.stats,
     options,
     color1: String(raw.color1 || ''),
     color2: String(raw.color2 || ''),
@@ -1451,6 +1457,8 @@ function normalizeSlide(spec, outlineDir) {
   out.type = String(spec.type || 'content').trim().toLowerCase();
   if (out.type === 'text') out.type = 'content';
   out.variant = String(spec.variant || 'standard').trim().toLowerCase();
+  if (Array.isArray(out.facts)) out.facts = out.facts.map(normalizeFact);
+  if (Array.isArray(out.stats)) out.stats = out.stats.map(normalizeFact);
   if (spec.background_image) {
     out.background_image = resolveAssetPath(spec.background_image, outlineDir);
   }

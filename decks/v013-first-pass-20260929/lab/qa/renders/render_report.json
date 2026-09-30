@@ -1,0 +1,53 @@
+{
+  "cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/.render-cache",
+    "key": "631468f8af2b5e20d613ea79e7d907bc48338558d3959dfce9ec0dd5680dd9cd",
+    "reason": "verified",
+    "status": "hit"
+  },
+  "dpi": 180,
+  "elapsed_seconds": 0.823372,
+  "format": "jpeg",
+  "images": [
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-01.jpg",
+      "sha256": "73aa86e175bf90cfbcca0557759bf18ac685638bd624b19efeef27fdd0c3049d",
+      "size": 81554
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-02.jpg",
+      "sha256": "9af9fc33c210ae1e774345a134371f7a416e19c637960db5a768e65bce444b05",
+      "size": 152507
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-03.jpg",
+      "sha256": "14e9c02b1d53f66e829e7f3b4113af36c53b8e6fec76fa2d62ecb5f0e8ea373c",
+      "size": 128679
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-04.jpg",
+      "sha256": "adedbcc40fcf2ac2774aea3dcd800e851113c76298601fb38388ff3ecb8b31dd",
+      "size": 100006
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-05.jpg",
+      "sha256": "3c8ce6495054f5ddf3850c9239c34a02fec5871031f3e57d635e4d2135d5906b",
+      "size": 170648
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-06.jpg",
+      "sha256": "8c88e527ae9b4e7d4fbf4b7b51066d62779ddc59e491fe586c9b015dcc1a4ad2",
+      "size": 134693
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders/slide-07.jpg",
+      "sha256": "54540621f59f0b7195f0511ae42b9789099856fdbdb8c5c4f57bda62d9ca6758",
+      "size": 134132
+    }
+  ],
+  "input": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+  "page_count": 7,
+  "pptx_sha256": "e5fcaf769f18e6ee602001fe94a488eebff2f039c4de51fe2a81ebde9ca1dc57",
+  "schema_version": "slide_render_report_v1",
+  "status": "complete"
+}

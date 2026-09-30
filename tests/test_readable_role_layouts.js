@@ -22,9 +22,27 @@ const DECISIONS = [
   { title: 'Endpoints', body: 'Diagnosis and care changes are reported, but survival and cost require prospective local outcome collection.' },
   { title: 'Operations', body: 'DNA quality, interpretation coverage, confirmation, and governance remain local responsibilities with named owners and documented escalation procedures.' },
 ];
+const LONG_OPERATIONS = [
+  { title: 'Release / commissioning', body: 'Require documented site tests and authorized sign-off. No sign-off means no service release.' },
+  { title: 'Observe / operations', body: 'Track the next full 720-hour window, including planned downtime; retain every event and missing-data interval.' },
+  { title: 'Escalate / maintenance', body: 'Any connector-tagged recurrence triggers qualified reassessment. Never hide it in the aggregate uptime.' },
+  { title: 'Evaluate / facilities', body: 'At complete 720-hour coverage, target downtime <=3.6 h. Missing coverage means uptime is unverified.' },
+];
 const BASE = path.resolve(__dirname, '../decks/v011-monochrome-lab-comparison-20260823');
 const plain = (text) => Array.isArray(text) ? text.map((run) => run.text).join('') : String(text);
 const normalized = (text) => plain(text).replace(/\s+/g, ' ').trim();
+
+function lineWidths(text, fontSize, fontFace, bold = false) {
+  const widths = [0];
+  const runs = Array.isArray(text) ? text : [{ text, options: { bold } }];
+  for (const run of runs) {
+    String(run.text).split('\n').forEach((line, index) => {
+      if (index) widths.push(0);
+      widths[widths.length - 1] += textWidth(line, fontSize, fontFace, run.options?.bold ?? bold);
+    });
+  }
+  return widths;
+}
 
 function presetFor(grammar, font, floor = 15, extra = {}) {
   const preset = builder.applyDeckStyle(getPreset('lab-report'), { deck_style: {
@@ -69,7 +87,7 @@ function checkBoxes(ops, data, floor) {
     assert.ok(box.fontSize >= floor);
     assert.notEqual(box.fit, 'shrink');
     assert.ok(box.x >= 0.5 && box.y >= 0 && box.x + box.w <= 9.51 && box.y + box.h <= 5.07, JSON.stringify(box));
-    for (const line of plain(text).split('\n')) assert.ok(textWidth(line, box.fontSize, box.fontFace, box.bold) <= box.w, plain(text));
+    for (const width of lineWidths(text, box.fontSize, box.fontFace, box.bold)) assert.ok(width <= box.w, plain(text));
     const index = Number(box.objectName.split(':')[1]);
     const parent = slots[index];
     assert.ok(box.x >= parent.x - 0.001 && box.x + box.w <= parent.x + parent.w + 0.001);
@@ -89,10 +107,11 @@ function checkBoxes(ops, data, floor) {
       ? { value: item.value, label: item.label, caption: item.detail }
       : { value: String(index + 1).padStart(2, '0'), label: item.title, caption: item.body })) {
       const op = texts.find((entry) => entry.options.objectName === `${role}:${index}:${kind}`);
-      if (!op && kind !== 'value') {
+      if (!op) {
         const body = texts.find((entry) => entry.options.objectName === `${role}:${index}:body`);
         assert.ok(body, `${role}:${index}:${kind}`);
-        assert.ok(normalized(body.text).includes(normalized(value)));
+        if (kind === 'value') assert.ok(normalized(body.text).startsWith(`${value} `));
+        else assert.ok(normalized(body.text).includes(normalized(value)));
       } else {
         assert.ok(op, `${role}:${index}:${kind}`);
         assert.equal(normalized(op.text), normalized(value));
@@ -109,6 +128,12 @@ for (const grammar of Object.keys(RECIPES)) {
           test(`${grammar} ${role} ${font} ${floor}pt ${variant}`, () => {
             const preset = presetFor(grammar, font, floor);
             const data = slideData(role, variant);
+            if (grammar === 'operations-grid' && role === 'decision' && floor === 16) {
+              // Equal peer widths and safe insets make this long-copy fixture
+              // infeasible. The exact authored runtime case below must fit.
+              assert.throws(() => capture(data, preset), /Shorten or split this slide; no content was dropped/);
+              return;
+            }
             const ops = capture(data, preset);
             checkBoxes(ops, data, floor);
             assert.match(data.__roleContractExecution.adaptation, new RegExp(grammar));
@@ -205,6 +230,178 @@ test('a failed regular layout still tries a viable compact layout', () => {
   assert.equal(plan.placements.length, 1);
   assert.ok(plan.placements[0].texts.some((t) => plain(t.text).includes('denominators')));
 });
+
+test('advance-based wrapping removes only the extra character cap', () => {
+  const args = ['Minimum interval is limited; retain timing.', 2.6, 16, 'Arial', false];
+  const ordinary = wrapText(...args);
+  assert.equal(ordinary.text, 'Minimum interval is\nlimited; retain\ntiming.');
+  const measured = wrapText(...args, true);
+  assert.ok(measured.h < ordinary.h);
+  assert.equal(normalized(measured.text), args[0]);
+  for (const line of measured.text.split('\n')) assert.ok(textWidth(line, 16, 'Arial') <= 2.56);
+  assert.throws(() => wrapText('Comparability', 0.4, 16, 'Georgia', true, true), /wider text box/);
+});
+
+test('packed fallback measures bold labels and regular captions separately', () => {
+  const label = '03 Escalate / maintenance:';
+  const text = `${label} Any connector-tagged recurrence triggers qualified reassessment. Never hide it in the aggregate uptime.`;
+  const args = [text, 4, 16, 'Arial', true, true];
+  const mixed = wrapText(...args, label.length);
+  assert.ok(mixed.h < wrapText(...args).h);
+  assert.equal(normalized(mixed.text), text);
+  let offset = 0;
+  for (const line of mixed.text.split('\n')) {
+    const prefix = Math.min(line.length, Math.max(0, label.length - offset));
+    const width = textWidth(line.slice(0, prefix), 16, 'Arial', true)
+      + textWidth(line.slice(prefix), 16, 'Arial', false);
+    assert.ok(width <= 3.96);
+    offset += line.length + 1;
+  }
+});
+
+for (const grammar of Object.keys(RECIPES)) {
+  test(`${grammar}: measured fallback keeps all four decision fields at 16pt`, () => {
+    const items = LONG_OPERATIONS.map((item, index) => ({
+      value: String(index + 1).padStart(2, '0'), label: item.title, caption: item.body,
+    }));
+    const input = { grammar, role: 'decision', body: { x: 0.5, y: 1.5, w: 9, h: grammar === 'operations-grid' ? 3.2 : 2.8 },
+      items, fontSize: 16, fontHeading: 'Arial', fontBody: 'Arial' };
+    const plan = planReadableRole(input);
+    assert.match(plan.recipe, /measured-width$/);
+    assert.ok(plan.recipe.startsWith(RECIPES[grammar].decision.id));
+    assert.equal(plan.placements.length, 4);
+    assert.deepEqual(plan, planReadableRole(input));
+    for (const { index, texts, box } of plan.placements) {
+      const retained = texts.map((text) => normalized(text.text)).join(' ');
+      for (const value of Object.values(items[index])) assert.ok(retained.includes(value), value);
+      for (const text of texts) {
+        assert.equal(text.fontSize, 16);
+        assert.ok(text.x >= box.x && text.y >= box.y);
+        assert.ok(text.x + text.w <= box.x + box.w + 1e-6);
+        assert.ok(text.y + text.h <= box.y + box.h + 1e-6);
+        for (const width of lineWidths(text.text, text.fontSize, text.fontFace, text.bold)) {
+          assert.ok(width <= text.w - 0.04 + 1e-6);
+        }
+      }
+    }
+    const ordinary = planReadableRole({ ...input, body: { ...input.body, h: 5 } });
+    assert.doesNotMatch(ordinary.recipe, /measured-width/);
+  });
+}
+
+test('measured evidence fallback retains separate metrics and captions', () => {
+  const items = LONG_OPERATIONS.map((item, index) => ({
+    value: String(index + 1).padStart(2, '0'), label: item.title, caption: item.body,
+  }));
+  const plan = planReadableRole({ grammar: 'operations-grid', role: 'evidence',
+    body: { x: 0.5, y: 1.5, w: 9, h: 3.15 }, items,
+    fontSize: 16, fontHeading: 'Arial', fontBody: 'Arial' });
+  assert.match(plan.recipe, /measured-width$/);
+  assert.equal(plan.placements.length, 4);
+  for (const { index, texts, box } of plan.placements) {
+    const metric = texts.find((text) => text.kind === 'value');
+    assert.equal(metric.text, items[index].value);
+    assert.ok(metric.fontSize >= 20);
+    const retained = texts.map((text) => normalized(text.text)).join(' ');
+    assert.ok(retained.includes(items[index].label));
+    assert.ok(retained.includes(items[index].caption));
+    for (const text of texts) {
+      assert.ok(text.fontSize >= 16);
+      assert.ok(text.y + text.h <= box.y + box.h + 1e-6);
+    }
+  }
+});
+
+test('operations repair gates fit the exact lavender runtime without losing safety fields', () => {
+  const outline = JSON.parse(fs.readFileSync(path.resolve(__dirname,
+    '../decks/v013-first-pass-20260929/operations/outline.json')));
+  const data = { ...structuredClone(outline.slides[6]), __slideIndex: 6, __slideCount: outline.slides.length };
+  const preset = builder.applyDeckStyle(getPreset('lavender-ops'), outline, 'lavender-ops');
+  const ops = capture(data, preset);
+  const visible = ops.filter((op) => op.text).map((op) => normalized(op.text)).join(' ');
+  for (const item of data.quadrants) {
+    assert.ok(visible.includes(item.title));
+    assert.ok(visible.includes(item.body));
+  }
+  assert.ok(visible.includes(data.summary_callout));
+  assert.equal(data.__roleContractExecution.rendered_item_count, 4);
+  for (const [index, slot] of data.__roleContractExecution.executed_slots.entries()) {
+    const field = ops.find((op) => op.options.objectName === `decision:${index}:body`);
+    assert.ok(normalized(field.text).startsWith(String(index + 1).padStart(2, '0')));
+    assert.equal(field.options.fontSize, 16);
+    assert.notEqual(field.options.fit, 'shrink');
+    assert.ok(field.options.x - slot.x >= 0.12 - 1e-6);
+    assert.ok(slot.x + slot.w - field.options.x - field.options.w >= 0.12 - 1e-6);
+    assert.ok(field.options.y - slot.y >= 0.12 - 1e-6);
+    assert.ok(slot.y + slot.h - field.options.y - field.options.h >= 0.12 - 1e-6);
+    for (const width of lineWidths(field.text, 16, field.options.fontFace, field.options.bold)) {
+      assert.ok(width <= field.options.w - 0.04 + 1e-6);
+    }
+  }
+});
+
+for (const variant of ['primary', 'alternate', 'dense']) {
+  test(`operations decision ${variant}: aligned pairs preserve source order and spacing`, () => {
+    const outline = JSON.parse(fs.readFileSync(path.resolve(__dirname,
+      '../decks/v013-first-pass-20260929/operations/outline.json')));
+    const items = outline.slides[6].quadrants.map((item, index) => ({
+      value: String(index + 1).padStart(2, '0'), label: item.title, caption: item.body,
+    }));
+    const input = { grammar: 'operations-grid', role: 'decision', variant,
+      body: { x: 0.5, y: 1.3, w: 9, h: 3.2 }, items,
+      fontSize: 16, fontHeading: 'Helvetica Neue', fontBody: 'Helvetica Neue' };
+    const placements = planReadableRole(input).placements;
+    const boxes = placements.map(({ box }) => box);
+    assert.deepEqual([...placements].sort((a, b) => a.box.y - b.box.y || a.box.x - b.box.x)
+      .map(({ index }) => index), [0, 1, 2, 3]);
+    for (const [left, right] of [[boxes[0], boxes[1]], [boxes[2], boxes[3]]]) {
+      assert.equal(left.y, right.y);
+      assert.equal(left.h, right.h);
+      assert.equal(left.w, right.w);
+      assert.ok(right.x - left.x - left.w >= 0.12 - 1e-6);
+    }
+    assert.equal(boxes[0].x, boxes[2].x);
+    assert.equal(boxes[1].x, boxes[3].x);
+    assert.ok(boxes[2].y - boxes[0].y - boxes[0].h >= 0.12 - 1e-6);
+    for (const { index, box, texts } of placements) {
+      const retained = texts.map((text) => normalized(text.text)).join(' ');
+      for (const value of Object.values(items[index])) assert.ok(retained.includes(value));
+      for (const text of texts) {
+        assert.equal(text.fontSize, 16);
+        assert.ok(text.x - box.x >= 0.12 - 1e-6);
+        assert.ok(box.x + box.w - text.x - text.w >= 0.12 - 1e-6);
+        assert.ok(text.y - box.y >= 0.12 - 1e-6);
+        assert.ok(box.y + box.h - text.y - text.h >= 0.12 - 1e-6);
+        for (const width of lineWidths(text.text, 16, text.fontFace, text.bold)) assert.ok(width <= text.w - 0.04 + 1e-6);
+      }
+    }
+    assert.throws(() => planReadableRole({ ...input, body: { ...input.body, h: 1.8 } }),
+      /needs .*in height; available 1\.80in/);
+  });
+  test(`editorial decision ${variant}: first source item remains the feature on the left`, () => {
+    const items = [
+      { value: '01', label: 'Feature', caption: 'First authored decision.' },
+      { value: '02', label: 'Detail 1', caption: 'Next authored decision.' },
+      { value: '03', label: 'Detail 2', caption: 'Last authored decision.' },
+    ];
+    const input = { grammar: 'editorial-spread', role: 'decision', variant,
+      body: { x: 0.5, y: 1.3, w: 9, h: 4 }, items,
+      fontSize: 16, fontHeading: 'Georgia', fontBody: 'Georgia' };
+    const { placements } = planReadableRole(input);
+    const [feature, first, last] = placements.map(({ box }) => box);
+    assert.ok(feature.x < first.x);
+    assert.equal(first.x, last.x);
+    assert.ok(first.y < last.y);
+    assert.equal(feature.y, first.y);
+    assert.ok(feature.h > first.h && feature.h > last.h);
+    assert.notEqual(feature.w, first.w);
+    placements.forEach(({ index, texts }) => {
+      const retained = texts.map((text) => normalized(text.text)).join(' ');
+      for (const value of Object.values(items[index])) assert.ok(retained.includes(value));
+    });
+    assert.deepEqual(planReadableRole(input), planReadableRole(input));
+  });
+}
 
 async function proof(outdir) {
   const PptxGenJS = require('pptxgenjs');

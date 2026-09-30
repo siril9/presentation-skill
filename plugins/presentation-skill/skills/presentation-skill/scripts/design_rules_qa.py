@@ -12,6 +12,8 @@ from xml.etree import ElementTree as ET
 
 from pptx import Presentation
 
+from source_fidelity import check_source_fidelity
+
 NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
@@ -574,6 +576,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Targeted design QA")
     parser.add_argument("--input", required=True, help="Input PPTX")
     parser.add_argument("--report", help="Optional JSON report path")
+    parser.add_argument("--outline", help="Original outline JSON for mapped source-retention checks (not fact checking)")
+    parser.add_argument("--asset-root", help="Renderer asset root for source JSON references and aliases")
     parser.add_argument(
         "--banned-phrase",
         action="append",
@@ -620,6 +624,9 @@ def main() -> int:
     chart_readability_issues = check_chart_readability(pptx_path, readability_contract, chart_slide_indexes)
     issues.extend(chart_readability_issues)
 
+    fidelity = check_source_fidelity(prs, args.outline, asset_root=args.asset_root)
+    issues.extend(fidelity["issues"])
+
     payload = {
         "input": str(pptx_path),
         "issue_count": len(issues),
@@ -627,6 +634,10 @@ def main() -> int:
         "warning_count": sum(1 for item in issues if item.get("severity") == "warning"),
         "readability_contract": readability_contract,
         "readability_contract_enforced": enforce_text_readability,
+        "source_fidelity": {key: value for key, value in fidelity.items() if key != "issues"},
+        "source_fidelity_error_count": fidelity["error_count"],
+        "source_fidelity_warning_count": fidelity["warning_count"],
+        "source_fidelity_checked_count": fidelity["checked_count"],
         "slides": slide_summaries,
         "issues": issues,
         "passed": not issues,

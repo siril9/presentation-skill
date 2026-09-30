@@ -1,0 +1,264 @@
+{
+  "schema_version": "visual_judgment_v1",
+  "reviewer": {
+    "type": "model",
+    "name": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol"
+  },
+  "reviewed_at": "2026-09-29T23:48:57Z",
+  "verdict": "fail",
+  "findings": [
+    {
+      "severity": "error",
+      "priority": "P2",
+      "slide": 2,
+      "slide_index": 1,
+      "type": "visible_source_caveat_missing",
+      "source_pointer": "/slides/1/caption",
+      "message": "Slide 2 omits the entire timeline caption: SYN-F1. Simplified end-of-interval seat release, FIFO queue, empty initial queue. Moments describe one invented representative evening; they do not measure individual waiting times. The event copy retains counts/no-later-service but not these assumptions or the waiting-time inference boundary.",
+      "suggested_fix": "Retain the declared caption in a visible timeline/readout slot and re-render.",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+      "resolved": false
+    },
+    {
+      "severity": "error",
+      "priority": "P2",
+      "slide": 3,
+      "slide_index": 2,
+      "type": "native_chart_data_label_collision",
+      "source_pointer": "/slides/2/chart",
+      "related_source_pointers": [
+        "/slides/2/chart/series/0/values/5",
+        "/slides/2/chart/series/1/values/5",
+        "/slides/2/chart/options/showValue"
+      ],
+      "message": "The 19:30-20:00 grouped bars' 75 and 80 labels visually touch/merge into 7580; the 65/80 pair is also crowded. This prevents reliable reading of adjacent series. A large vacant left portion of the chart region leaves the six-category plot compressed into a small right-side area despite available slide width.",
+      "suggested_fix": "Reallocate existing chart/readout space to widen the grouped plot and separate labels; preserve all six categories, two series, units and the source caveat.",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+      "resolved": false
+    },
+    {
+      "severity": "warning",
+      "priority": "P2",
+      "slide": 2,
+      "slide_index": 1,
+      "affected_slide_indices": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "type": "heading_chrome_collision",
+      "source_pointer": "/slides/1/title",
+      "message": "Across content slides 2-6, the masthead top rule/red accent occupies the heading's glyph region. Slide 2 is especially crowded at the top edge. Native title box begins at 0.10in while top chrome lies at 0.12/0.18in, corroborating the observed collision.",
+      "suggested_fix": "Reserve a separate top-chrome/title region without shrinking the source headings.",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+      "resolved": false
+    },
+    {
+      "severity": "warning",
+      "priority": "P3",
+      "slide": 6,
+      "slide_index": 5,
+      "type": "generated_semantic_label_mismatch",
+      "source_pointer": "/slides/5/bullets/2",
+      "message": "The remaining-capacity limitation is prefixed Owner, but does not identify an owner. Alternate layout also presents numbered item 03 before 01/02, making the reading order less immediate.",
+      "suggested_fix": "Use an appropriate limitation label and a clear reading order.",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+      "resolved": false
+    }
+  ],
+  "review_context": {
+    "method": "Independent visual inspection of every original 1800x1013 qa/renders/slide-*.jpg via view_image(detail=original), compared with source outline and synthetic_data/factual_check where present. Static QA counts were not used as visual approval.",
+    "scope": "Rendered clipping, contrast, alignment, box/chrome overlap, whitespace, data/unit/denominator/caveat retention and content-led structural variation. Synthetic arithmetic checked against provided ledgers, not external factual truth.",
+    "warm_attempt": 4,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+        "sha256": "0100f9d38f4cdb9de6ff9fda2c16a6bd8be494f4d79cab842338faf3cb11fbb5",
+        "normalized_office_sha256": "cde9e66af0723a7e0217eebe4cb1b261609882e1958977785447cc9f7fe5678a"
+      },
+      "renders": [
+        {
+          "name": "slide-01.jpg",
+          "sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+          "size_bytes": 80840,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-01.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-02.jpg",
+          "sha256": "a8e45b3de1ba3e224a1bc5d2eea26616d5004c4d9b9e9b24ebb782b7e22d0009",
+          "size_bytes": 126048,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-03.jpg",
+          "sha256": "1222e675e0d5378ebf2ee620cbf978d41cda689dd04c007f26e620a86b994ace",
+          "size_bytes": 140428,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-04.jpg",
+          "sha256": "738a90b2b7960edaa870b8c9ad28175eea051a29d9677e4370ec12bc6bd47b80",
+          "size_bytes": 149765,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-04.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-05.jpg",
+          "sha256": "fc777b9043ba6754a4fb4474b69e8e0d85a0de0cb61d8b0b34a27f9c2a33f162",
+          "size_bytes": 117896,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-05.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-06.jpg",
+          "sha256": "6314c6c1c9588080c062e00099957cbba2e57e09a0db59a6c0e88229546fa22d",
+          "size_bytes": 152953,
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+          "sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/synthetic_data.json",
+          "sha256": "299f6b40e79e71805519ca34b46862b9f65b78e2308e716d3ac1193c9dde2ba7"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/factual_check.json",
+          "sha256": "98b721f93b54e63f1ebc86cf7f2a3ddcbe473daac304c530bc7fb78643a2ee5f"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/run-03.json",
+          "sha256": "9800a3e8fdac465fa9c1c1ddf72af227b6461cf56441b4b62e36a41953285ee7"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/run-04.json",
+          "sha256": "915a9bd0a81a4d031089c8e47f6c23ff0009a36eb6206111e1befe78cd9d1385"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/finalize_receipt.json",
+          "sha256": "aa7770ca13e83b13b10a59993a9813ca24a0e48fbe1ccf74d287ba10d6241c16"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/render_report.json",
+          "sha256": "495fe958ec97f065fe015114350f4e1e30e72d81d1e369d2ecbf754844f1ae95"
+        }
+      ],
+      "finalize_generated_at": "2026-09-29T23:43:39.543157+00:00",
+      "cold_warm_comparison": {
+        "cold_attempt": 3,
+        "warm_attempt": 4,
+        "same_pptx_sha256": true,
+        "same_outline_sha256": true,
+        "same_cache_key": true,
+        "warm_cache_status": "hit",
+        "render_hashes_match_render_report": true,
+        "cold_render_hashes_separately_archived": false
+      }
+    },
+    "source_comparison": {
+      "factual_check_hashes_current": true,
+      "independent_recalculation": {
+        "arrivals": 540,
+        "offered_places_per_scenario": 480,
+        "baseline_boardings": 425,
+        "moved_boardings": 480,
+        "baseline_queue": [
+          0,
+          0,
+          30,
+          95,
+          120,
+          115
+        ],
+        "moved_queue": [
+          40,
+          25,
+          55,
+          40,
+          65,
+          60
+        ],
+        "middle_hour_share_percent": 47.22222222222222
+      },
+      "real_world_fact_verification": false
+    },
+    "structural_assessment": "Not palette-only: left-masthead cover, asymmetric dark lead-event timeline, reversed alternate comparison, broad queue table and asymmetric decision distinguish this from lab/Luna. Chart allocation and heading chrome still need repair.",
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "slide_index": 0,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-01.jpg",
+        "render_sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+        "note": "Distinct serif editorial opener with left masthead/vertical rail; invented route and no-forecast subtitle fit and remain legible."
+      },
+      {
+        "slide": 2,
+        "slide_index": 1,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+        "render_sha256": "a8e45b3de1ba3e224a1bc5d2eea26616d5004c4d9b9e9b24ebb782b7e22d0009",
+        "note": "Asymmetric dark lead event and right event stack provide real structural variation; source timeline caption is absent, and headline is crowded against top rule/canvas."
+      },
+      {
+        "slide": 3,
+        "slide_index": 2,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+        "render_sha256": "1222e675e0d5378ebf2ee620cbf978d41cda689dd04c007f26e620a86b994ace",
+        "note": "Native chart values are present but adjacent data labels collide (especially 75 and 80); vacant left plot-region space leaves the six-group plot unnecessarily compressed. Units, 540, 47%, 255/540 and constructed-case caption remain visible."
+      },
+      {
+        "slide": 4,
+        "slide_index": 3,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-04.jpg",
+        "render_sha256": "738a90b2b7960edaa870b8c9ad28175eea051a29d9677e4370ec12bc6bd47b80",
+        "note": "Alternate composition legitimately reverses scenario columns while retaining correctly associated 480/60 and 425/115 results and 55-boardings verdict. Top rule intrudes into headline."
+      },
+      {
+        "slide": 5,
+        "slide_index": 4,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-05.jpg",
+        "render_sha256": "fc777b9043ba6754a4fb4474b69e8e0d85a0de0cb61d8b0b34a27f9c2a33f162",
+        "note": "All six queue rows match the synthetic ledger; formula, early-service penalty and unknown-waiting-time caption remain readable. Top rule intrudes into headline."
+      },
+      {
+        "slide": 6,
+        "slide_index": 5,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+        "render_sha256": "6314c6c1c9588080c062e00099957cbba2e57e09a0db59a6c0e88229546fa22d",
+        "note": "Asymmetric closing decision and bottom caution fit and preserve 55/115, 540/480 and feasibility boundaries; generated Owner label is not semantically appropriate. Top rule intrudes into headline."
+      }
+    ],
+    "boundary": "Read-only source/core review. Only this judgment JSON was authored; no receipt was bound. Any reviewed deck/render/source hash change requires reopening review."
+  }
+}

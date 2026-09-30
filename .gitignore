@@ -15,6 +15,7 @@ decks/**/build/**
 node_modules/
 .venv/
 .skill_telemetry/
+**/.render-cache/
 
 # Local scratch helper bundles. Keep the public repo on repo-owned code plus
 # declared npm dependencies.

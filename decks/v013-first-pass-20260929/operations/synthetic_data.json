@@ -1,0 +1,24 @@
+{
+  "synthetic": true,
+  "source_ids": ["SYN-O1", "SYN-O2"],
+  "system_boundary": "One invented critical-load bus; output within assumed operating specification",
+  "window_days": 30,
+  "window_hours": 720,
+  "coverage_hours": 720,
+  "target_availability_percent": 99.5,
+  "include_planned_downtime": true,
+  "events": [
+    {"tag": "Connector suspected", "start_hour": 110, "end_hour": 114.5, "downtime_hours": 4.5, "confirmed_cause": false},
+    {"tag": "Controller restart", "start_hour": 280, "end_hour": 281.5, "downtime_hours": 1.5},
+    {"tag": "Transfer delay", "start_hour": 450, "end_hour": 451, "downtime_hours": 1},
+    {"tag": "Planned inspection", "start_hour": 620, "end_hour": 620.5, "downtime_hours": 0.5}
+  ],
+  "options": [
+    {"name": "Inspect / reseat", "estimate_USD": 650, "bus_outage_hours": 0.75},
+    {"name": "Replace connector", "estimate_USD": 2400, "bus_outage_hours": 1.5},
+    {"name": "Replace module", "estimate_USD": 8900, "bus_outage_hours": 4}
+  ],
+  "cost_basis": "Invented parts plus labor; excludes taxes and contingency; not quotations.",
+  "counterfactual": "Same 720-hour denominator; remove all 4.5 connector-tagged hours, add 1.5 proposed repair hours, retain other events. Not a forecast or causal estimate.",
+  "unmeasured": ["Household availability", "Energy adequacy", "Repair efficacy", "Electrical safety certification", "Future fault recurrence"]
+}

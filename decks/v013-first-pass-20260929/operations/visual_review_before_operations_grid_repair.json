@@ -1,0 +1,327 @@
+{
+  "schema_version": "visual_judgment_v1",
+  "reviewer": {
+    "type": "model",
+    "name": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol"
+  },
+  "reviewed_at": "2026-09-30T00:48:44Z",
+  "verdict": "pass",
+  "findings": [],
+  "review_context": {
+    "method": "Limited reopening after completed operations run-07.json: opened only the changed slide-03.jpg through view_image(detail=original), full 1800x1013. Checked native chart data-label formats, cached values and canonical category meanings. Carried forward six earlier full-size visual reviews only after confirming their current image bytes have identical SHA-256 hashes. No automated passing counts substituted for visual approval.",
+    "scope": "Actual clipping, contrast, overlaps, spacing, readability, chart units and printed-value meaning, denominators, safety/inference caveats, and content-led structural range. Synthetic arithmetic is checked only against the supplied ledger, not real-world operating truth.",
+    "images_viewed": 1,
+    "slides_reviewed": 7,
+    "contact_sheet_used_for_approval": false,
+    "warm_attempt": null,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/deck.pptx",
+        "sha256": "47994827deba4cfe3163dba59bbdc72e2f9398750d7c123efb490924c2796d87",
+        "normalized_office_sha256": "b04c2f1e4a0eac38a8b6a8486185cfd413a0f93f850c32db2cbaa5898eecc2f9"
+      },
+      "renders": [
+        {
+          "name": "slide-01.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-01.jpg",
+          "sha256": "a674be6f385559a2b30ce806da7b7c74a02ebdbccc824c6cde6d136c01038513",
+          "size_bytes": 94919,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-02.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-02.jpg",
+          "sha256": "1716ebb1331737f6b1226a2c79000f8b40a47b289296b3d69bf3069d5df816f3",
+          "size_bytes": 163502,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-03.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-03.jpg",
+          "sha256": "7c82e2beb408993728b3090ac144d5f4982472af6aaf9893ef605f6244309e00",
+          "size_bytes": 135745,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-04.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-04.jpg",
+          "sha256": "898627822704adf07b102062af8a6762ee300c93fdb6c77831a7f9e90dcedb93",
+          "size_bytes": 148793,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-05.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-05.jpg",
+          "sha256": "f4ad54e21c9de4c18d833aeb15b5fc9ac0fccc91947bb30a93ccf25bb43078d3",
+          "size_bytes": 180416,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-06.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-06.jpg",
+          "sha256": "d59f37255f3ca1b3f487aa7c2dce6598182e1104bec803383b976b34710e5475",
+          "size_bytes": 149840,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "name": "slide-07.jpg",
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-07.jpg",
+          "sha256": "393f3299a81c5068ce13948156a9229fb55e0899976fe0fb22b9779895ac43e3",
+          "size_bytes": 215047,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+          "sha256": "e853831944e2ce7a63df6b17caea7c7146e13452256faaf528923f8f12691fc2"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/synthetic_data.json",
+          "sha256": "a69fa1aaef7eaec108b39b34804c480104ea96c1dc00257e168b246073fff7dc"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/run-07.json",
+          "sha256": "bf56069f0ec3ec869528fafe623481f1caf34da6423aef77d6d7920ae50fd439"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/finalize_receipt.json",
+          "sha256": "b7987c138e9237fbd6af5e1a441643dd7a164b770e4960aac739a7e4c4cfcf66"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/render_report.json",
+          "sha256": "8eb52a604a44f5fa089e3d9eaee381d19fa707d25f97e55d6e99f5c607b383f1"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/visual_review_before_chart_repair.json",
+          "sha256": "3bdadd1ef1529e48b5e6bc2aa45980a6ec114ef2817391df70fbc77a66236d22"
+        }
+      ],
+      "finalize_generated_at": "2026-09-30T00:46:22.475070+00:00",
+      "render_cache": {
+        "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/.render-cache",
+        "key": "99776485596f0005ffe50cf5d465fadb8e580064b55278bcfa62331701824daf",
+        "reason": "absent_or_invalid",
+        "status": "miss"
+      },
+      "repair_comparison": {
+        "prior_attempt": 6,
+        "current_attempt": 7,
+        "prior_judgment_path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/visual_review_before_chart_repair.json",
+        "prior_judgment_sha256": "3bdadd1ef1529e48b5e6bc2aa45980a6ec114ef2817391df70fbc77a66236d22",
+        "prior_verdict": "fail",
+        "prior_deck_sha256": "b9e895760d701a55e18ea00b39b84cf04711fcb54b83b9cda93507b1cc3ff5ca",
+        "current_deck_sha256": "47994827deba4cfe3163dba59bbdc72e2f9398750d7c123efb490924c2796d87",
+        "deck_changed": true,
+        "outline_unchanged": true,
+        "synthetic_data_unchanged": true,
+        "changed_images": [
+          "slide-03.jpg"
+        ],
+        "unchanged_images": [
+          "slide-01.jpg",
+          "slide-02.jpg",
+          "slide-04.jpg",
+          "slide-05.jpg",
+          "slide-06.jpg",
+          "slide-07.jpg"
+        ],
+        "all_six_carried_forward_image_hashes_identical": true
+      },
+      "native_chart": {
+        "part": "ppt/charts/chart1.xml",
+        "data_label_formats": [
+          {
+            "formatCode": "General",
+            "sourceLinked": "0"
+          },
+          {
+            "formatCode": "General",
+            "sourceLinked": "0"
+          }
+        ],
+        "cached_values": [
+          4.5,
+          1.5,
+          1,
+          0.5
+        ],
+        "cached_categories": [
+          "Connector\nsuspected",
+          "Controller\nrestart",
+          "Transfer\ndelay",
+          "Planned\ninspection"
+        ],
+        "canonical_categories_match_source": true
+      },
+      "hashes_rechecked_after_changed_image_inspection": true,
+      "context_hash_scope": "Context-file hashes record the completed run-07 snapshot. A later warm run can replace finalization/render reports; visual approval still requires the exact deck, image and source hashes recorded here."
+    },
+    "source_comparison": {
+      "event_downtime_hours": [
+        4.5,
+        1.5,
+        1,
+        0.5
+      ],
+      "total_downtime_hours": 7.5,
+      "monitored_window_hours": 720,
+      "availability_percent_rounded": 98.96,
+      "target_availability_percent": 99.5,
+      "target_downtime_allowance_hours": 3.6,
+      "above_target_allowance_hours": 3.9,
+      "connector_tag_share_percent": 60,
+      "counterfactual_downtime_hours": 4.5,
+      "counterfactual_availability_percent": 99.375,
+      "counterfactual_above_allowance_hours": 0.9,
+      "include_planned_downtime": true,
+      "confirmed_connector_causality": false,
+      "real_world_fact_verification": false
+    },
+    "structural_assessment": "Coherent operations palette and restrained rail/rule chrome with a dark opener, conditional decision bands, chart plus statistic/readout rows, repair-options ledger, sequential owner gates, same-window comparison and mirrored four-field acceptance matrix. This is meaningful content-led range, not one static layout or palette-only variation.",
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "slide_index": 0,
+        "verdict": "pass",
+        "render_sha256": "a674be6f385559a2b30ce806da7b7c74a02ebdbccc824c6cde6d136c01038513",
+        "note": "Dark opener has a clear white two-line title, legible gray subtitle and visible synthetic/one-bus boundary. Actual 98.96% availability and 99.50% planning target remain distinct. No observed clipping, overlap or source/footer obstruction.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      },
+      {
+        "slide": 2,
+        "slide_index": 1,
+        "verdict": "pass",
+        "render_sha256": "1716ebb1331737f6b1226a2c79000f8b40a47b289296b3d69bf3069d5df816f3",
+        "note": "Conditional USD 2,400 request, diagnosis prerequisite, backup/permit/part conditions, qualified-personnel limitation and not-permission callout are all readable. Three numbered fields do not collide with each other or the dark caution strip. Header and ordinal-to-rail spacing are tight but not clipped or obscured.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      },
+      {
+        "slide": 3,
+        "slide_index": 2,
+        "verdict": "pass",
+        "render_sha256": "7c82e2beb408993728b3090ac144d5f4982472af6aaf9893ef605f6244309e00",
+        "note": "Printed value labels now read 4.5, 1.5, 1 and 0.5 hours and match the supplied event ledger and 7.5 h total. Four balanced two-line categories are visibly distinct, with no touching middle labels. Native data-label format is General; cached values are exact, and newline-normalized categories equal the unchanged source. Downtime (hours), zero baseline, 720-hour window, planned-inspection inclusion, 3.9 h excess, 4.5/7.5 = 60% and hypothesis-not-proven-causality caption remain readable. No observed clipping, value/category overlap or new regression.",
+        "review_basis": "New full-size visual inspection in run-07 limited reopening, plus native XML comparison."
+      },
+      {
+        "slide": 4,
+        "slide_index": 3,
+        "verdict": "pass",
+        "render_sha256": "898627822704adf07b102062af8a6762ee300c93fdb6c77831a7f9e90dcedb93",
+        "note": "Three option rows retain USD 650/2,400/8,900, outage 0.75/1.5/4.0 h and their diagnosis/decision boundaries. Table alignment and contrast are clear. The complete cost-basis/no-quote/no-failure-probability/no-safety-approval caption is readable and separate from the footer.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      },
+      {
+        "slide": 5,
+        "slide_index": 4,
+        "verdict": "pass",
+        "render_sha256": "f4ad54e21c9de4c18d833aeb15b5fc9ac0fccc91947bb30a93ccf25bb43078d3",
+        "note": "Three sequential owner/gate rows have separate colored labels and bold activity names followed by readable full body text. Readiness stop condition, authorized local procedure, no live-work method, tests/sign-off and event-log follow-up remain explicit. The bottom caption is visible and says these are gates, not a how-to, and a functional check does not certify uptime or eliminate electrical risk. No real body/label/caption overlap.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      },
+      {
+        "slide": 6,
+        "slide_index": 5,
+        "verdict": "pass",
+        "render_sha256": "d59f37255f3ca1b3f487aa7c2dce6598182e1104bec803383b976b34710e5475",
+        "note": "Logged-window and optimistic-substitution columns are distinct and legible. The retained 720-hour denominator, 7.5 h actual, 4.5 h removal, 1.5 h repair, 4.5 h counterfactual, 99.375% and 0.9 h excess match the synthetic ledger. Subtitle says this is not a next-month prediction; the bottom verdict does not promise 99.50%. No observed clipping or collision.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      },
+      {
+        "slide": 7,
+        "slide_index": 6,
+        "verdict": "pass",
+        "render_sha256": "393f3299a81c5068ce13948156a9229fb55e0899976fe0fb22b9779895ac43e3",
+        "note": "All four owner/gate fields remain readable with visibly clear rail-to-text insets. Alternate layout mirrors numbered fields rather than cutting content. Site tests/sign-off, full 720-hour planned-downtime-inclusive observation, recurrence reassessment, <=3.6 h target and missing-coverage unverified boundary are visible. Dark callout separates readiness from actual repair, safety approval and achieved uptime. No real clipping, rail collision or footer overlap; the matrix remains compact and the 3.6 h unit wraps within its field.",
+        "review_basis": "Prior full-size review carried forward: current render SHA-256 is identical to the archived run-06 context. Image not reopened in this pass."
+      }
+    ],
+    "residuals": [
+      "The plot remains shallow, and content-page headings remain close to top chrome, but the changed slide has no observed clipping or category/value collision. The other six images retain their earlier nonblocking observations unchanged.",
+      "The final acceptance matrix remains compact; rail-to-text clearance and all safety/reliability boundaries were inspected in the prior pass and its current image hash is identical.",
+      "One changed image was viewed in this reopening, not seven new images. No live projection or display-distance test was performed.",
+      "All evidence and arithmetic are synthetic. This review does not establish repair efficacy, future uptime, electrical safety, or work authorization.",
+      "Main owns warm run-08 verification and bound receipt creation; any changed deck, render or source bytes invalidate the corresponding review."
+    ],
+    "boundary": "Preserved the prior failed judgment byte-for-byte at operations/visual_review_before_chart_repair.json and updated only operations/qa/visual_judgment.json. No source, renderer, deck, image or QA policy was edited and no receipt was created. Current pass applies only to the recorded deck/render/source hashes.",
+    "changed_images_viewed_this_pass": 1,
+    "prior_images_viewed": 7,
+    "unique_slides_visually_inspected_across_passes": 7,
+    "prior_slide_reviews_carried_forward": 6,
+    "reviewed_build_attempt": 7,
+    "warm_receipt_binding": "Pending main's run-08 verification and receipt creation. This pass makes no warm-run claim."
+  },
+  "resolved_findings": [
+    {
+      "severity": "error",
+      "priority": "P2",
+      "slide": 3,
+      "slide_index": 2,
+      "type": "visible_chart_value_precision_loss",
+      "source_pointer": "/slides/2/chart/series/0/values",
+      "source_data_pointer": "/events",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+      "source_data_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/synthetic_data.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-03.jpg",
+      "render_sha256": "d4c5b1a5c31c201d79cfcbc9af6772fb4ebf8fac86b4f1be45772450ba5e22b6",
+      "expected_values_hours": [
+        4.5,
+        1.5,
+        1,
+        0.5
+      ],
+      "observed_printed_labels": [
+        "5",
+        "2",
+        "1",
+        "1"
+      ],
+      "message": "The actual full-size chart prints 5, 2, 1, and 1 above bars representing 4.5, 1.5, 1.0, and 0.5 hours. Fractional events are rounded without disclosure; planned inspection is labeled 1 hour instead of 0.5. The printed values sum to 9 hours, contradicting the retained 7.5-hour total and the 4.5/7.5 caption. Correct bar heights and native data do not make these visible labels faithful.",
+      "suggested_fix": "Preserve the fractional precision in visible chart data-label formatting, for example one decimal place, without changing the source values, units, denominator, or caveat. Rebuild and inspect the resulting chart before approval.",
+      "resolved": true,
+      "resolved_at": "2026-09-30T00:48:44Z",
+      "resolution_render_sha256": "7c82e2beb408993728b3090ac144d5f4982472af6aaf9893ef605f6244309e00",
+      "resolution": "Original-size repaired slide shows 4.5, 1.5, 1, and 0.5. Native c:dLbls/c:numFmt formatCode is General and cached values remain exact."
+    },
+    {
+      "severity": "warning",
+      "priority": "P2",
+      "slide": 3,
+      "slide_index": 2,
+      "type": "chart_category_label_crowding",
+      "source_pointer": "/slides/2/chart/categories",
+      "source_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+      "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/renders/slide-03.jpg",
+      "render_sha256": "d4c5b1a5c31c201d79cfcbc9af6772fb4ebf8fac86b4f1be45772450ba5e22b6",
+      "message": "At original size, the middle category labels Controller restart and Transfer delay run together visually as Controller restartTransfer delay. Both words are present, but there is no clear inter-label separation on their shared baseline. This is a real scanning/readability defect, not a claim that the labels or bars are clipped.",
+      "suggested_fix": "Give the native category labels distinct readable positions through supported wrapping, label angle, or chart allocation while preserving all four category meanings and readable type. Reinspect the actual render.",
+      "resolved": true,
+      "resolved_at": "2026-09-30T00:48:44Z",
+      "resolution_render_sha256": "7c82e2beb408993728b3090ac144d5f4982472af6aaf9893ef605f6244309e00",
+      "resolution": "Original-size repaired slide shows four clearly separated balanced two-line category labels. Newline-normalized native categories exactly match the unchanged source."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "source_ids": ["SYN-F1", "SYN-F2"],
+  "route": "Invented one-way Eastbank to Westhaven service",
+  "evenings": 10,
+  "replication": "All ten evenings deliberately identical; no statistical sample inference.",
+  "interval_minutes": 30,
+  "release_times": ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00"],
+  "arrivals_people_per_evening": [40, 65, 110, 145, 105, 75],
+  "baseline_places_per_evening": [80, 80, 80, 80, 80, 80],
+  "moved_places_per_evening": [0, 80, 80, 160, 80, 80],
+  "baseline_boardings_per_evening": [40, 65, 80, 80, 80, 80],
+  "moved_boardings_per_evening": [0, 80, 80, 160, 80, 80],
+  "baseline_queue_people": [0, 0, 30, 95, 120, 115],
+  "moved_queue_people": [40, 25, 55, 40, 65, 60],
+  "assumptions": [
+    "Empty initial queue; arrivals counted once per evening, not unique people across evenings.",
+    "Seat release at interval end; FIFO; no abandonment, induced demand, or later service.",
+    "Offered places are a model input, not certified vessel capacity.",
+    "Second release at 19:00 has no proven vessel, crew, berth, or return-leg feasibility.",
+    "Within-interval arrival timing and individual waits are unknown."
+  ]
+}

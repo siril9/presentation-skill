@@ -1,0 +1,43 @@
+{
+  "status": "SOURCE_FACTS_PASS_NOT_RENDERED",
+  "checked_at_utc": "2026-09-30T01:32:25.355Z",
+  "outline_sha256": "db2f80cd920e59bd31e39715808854873add887f9a5080b11a9268ed328970c1",
+  "synthetic_data_sha256": "a69fa1aaef7eaec108b39b34804c480104ea96c1dc00257e168b246073fff7dc",
+  "common_checks": [
+    "Valid JSON and unique slide IDs",
+    "Selected brief candidate preset plus grammar",
+    "Exact brief readability contract",
+    "Supported role/variant pairs",
+    "Synthetic provenance visible per slide",
+    "Native chart zero baseline and matching dimensions",
+    "Native table dimensions and meaningful captions"
+  ],
+  "checks": [
+    "30 days / 720 hours, complete coverage, non-overlapping events",
+    "Downtime chart linked to event durations",
+    "Native option table matches USD and bus-outage estimates",
+    "Inclusive availability, allowance and variance",
+    "Same-window counterfactual and remaining target gap",
+    "Visible qualification, authorization, causality and missing-coverage boundaries"
+  ],
+  "computed": {
+    "window_hours": 720,
+    "downtime_hours": 7.5,
+    "availability_percent": 98.95833333333333,
+    "target_downtime_hours": 3.6,
+    "excess_downtime_hours": 3.9,
+    "connector_tagged_share_percent": 60,
+    "counterfactual_downtime_hours": 4.5,
+    "counterfactual_availability_percent": 99.375,
+    "counterfactual_excess_hours": 0.9
+  },
+  "not_checked": [
+    "Renderer integration",
+    "PPTX content preservation",
+    "Native-object rendering",
+    "Geometry",
+    "Readability in rendered output",
+    "Contact sheet and per-slide visual review"
+  ],
+  "next_owner": "Main release build/measurement runner; author visual review after main-ready notification"
+}

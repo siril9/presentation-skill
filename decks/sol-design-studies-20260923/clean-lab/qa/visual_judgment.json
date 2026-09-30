@@ -1,0 +1,13 @@
+{
+  "schema_version": "visual_judgment_v1",
+  "reviewer": {
+    "type": "model",
+    "name": "GPT-6 Sol"
+  },
+  "verdict": "pass",
+  "findings": [],
+  "review_context": {
+    "slides_inspected": [1, 2, 3, 4, 5, 6],
+    "scope": "Reviewed the rebuilt six-slide contact sheet and full-size slide 4 and 5 renders. Confirmed the six-well basis, limits, no-expiry caveat, and non-pooled CV qualifier are visible in their readouts. Checked legibility, clipping, contrast, chart units, footers, and synthetic-data labeling across all slides."
+  }
+}

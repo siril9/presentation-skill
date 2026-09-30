@@ -32,7 +32,8 @@ an automatic model change. A future model can use any explicit policy.
 
 ### Quality-first
 
-Aliases include `frontier`, `sol`, `astra`, `gpt-5.6-sol`, `gpt-6-astra`, `pro`.
+Aliases include `frontier`, `sol`, `astra`, `gpt-5.6-sol`, `gpt-6-sol`,
+`gpt-6.1-sol`, `gpt-6-astra`, and `pro`.
 
 Use for high-stakes scientific, clinical, board, investor, regulatory, or
 public-release decks; difficult source synthesis; or decks with complex data
@@ -133,9 +134,14 @@ will improve. The caller applies a change only after the user chooses it.
 three candidate styles using the same title, evidence, and dense data slides.
 It is useful for an ambiguous design request, not required for the fast route.
 Candidate JSON and images remain inspectable; no automatic aesthetic winner is claimed.
+A same-content preview isolates style treatment; it cannot show the full range
+of deck authoring. For a showcase, compose distinct decks around their actual
+content, varying slide sequence and supported layouts purposefully while keeping
+each deck's typography and spacing coherent.
 
-`present.py finalize --render-cache-dir ...` opts into content- and
-environment-keyed render reuse. It still runs QA and does not cache visual
+`present.py finalize` uses verified content- and environment-keyed render reuse
+in its local cache. `--render-cache-dir ...` overrides that path;
+`--no-render-cache` forces a cold render. It still runs QA and does not cache visual
 approval. Measure cold and warm rendering separately from model authoring;
 neither is a claim about total user-request latency.
 

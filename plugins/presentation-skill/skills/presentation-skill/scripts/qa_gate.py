@@ -186,6 +186,7 @@ def _args() -> argparse.Namespace:
         action="store_true",
         help="Escalate layout_lint stats_value_non_numeric from warning to error.",
     )
+    parser.add_argument("--asset-root", help="Renderer asset root for source-retention references and aliases")
     parser.add_argument(
         "--strict-geometry",
         action="store_true",
@@ -392,6 +393,24 @@ def main() -> int:
         lint_cmd.append("--strict-stats")
     _run(lint_cmd)
 
+    # Reuse the existing design operation before Office conversion so a known
+    # source loss can produce a full static repair report without a wasted render.
+    design_cmd = [
+        py, str(base / "design_rules_qa.py"), "--input", str(input_path),
+        "--report", str(design_report),
+    ]
+    if args.design_brief:
+        design_cmd.extend(["--design-brief", str(Path(args.design_brief).expanduser().resolve())])
+    if args.outline:
+        design_cmd.extend(["--outline", str(Path(args.outline).expanduser().resolve())])
+    if args.asset_root:
+        design_cmd.extend(["--asset-root", str(Path(args.asset_root).expanduser().resolve())])
+    design_report.unlink(missing_ok=True)
+    design_rc, design_stdout = _run_capture(design_cmd)
+    design_payload = _load_json(design_report)
+    source_fidelity_error_count = int(design_payload.get("source_fidelity_error_count", 0))
+    render_deferred = source_fidelity_error_count > 0 and not args.skip_render
+
     render_rc = 0
     render_stdout = ""
     if not args.skip_render:
@@ -415,21 +434,14 @@ def main() -> int:
         ]
         if args.render_cache_dir:
             render_cmd.extend(["--cache-dir", str(Path(args.render_cache_dir).expanduser().resolve())])
-        render_rc, render_stdout = _run_capture(render_cmd)
+        if render_deferred:
+            render_rc = None
+            render_stdout = "Render deferred: repair source_fidelity_findings before conversion."
+        else:
+            render_rc, render_stdout = _run_capture(render_cmd)
     visual_rc, visual_out = _run_capture(
         [py, str(base / "visual_qa.py"), "--input", str(input_path), "--json"]
     )
-    design_cmd = [
-        py,
-        str(base / "design_rules_qa.py"),
-        "--input",
-        str(input_path),
-        "--report",
-        str(design_report),
-    ]
-    if args.design_brief:
-        design_cmd.extend(["--design-brief", str(Path(args.design_brief).expanduser().resolve())])
-    design_rc, _ = _run_capture(design_cmd)
     accessibility_rc = 0
     accessibility_stdout = ""
     accessibility_payload: dict[str, Any] = {}
@@ -455,7 +467,15 @@ def main() -> int:
     visual_review_rc = 0
     visual_review_stdout = ""
     visual_review_payload: dict[str, Any] = {}
-    if args.run_visual_review:
+    if args.run_visual_review and render_deferred:
+        visual_review_rc = None
+        visual_review_payload = {
+            "deferred": True, "deferred_reason": "source_fidelity_findings",
+            "warning_count": 0, "info_count": 0, "issues": [],
+        }
+        visual_review_report.parent.mkdir(parents=True, exist_ok=True)
+        visual_review_report.write_text(json.dumps(visual_review_payload, indent=2), encoding="utf-8")
+    elif args.run_visual_review:
         visual_review_cmd = [
             py,
             str(base / "visual_review.py"),
@@ -508,7 +528,7 @@ def main() -> int:
         "schema_version": RECEIPT_VERSION,
         "failures": ["No visual-review receipt supplied."],
     }
-    if args.visual_review_receipt:
+    if args.visual_review_receipt and not render_deferred:
         visual_review_receipt_result = validate_receipt(
             receipt_path=Path(args.visual_review_receipt),
             pptx_path=input_path,
@@ -544,6 +564,8 @@ def main() -> int:
         "visual_report": str(visual_report),
         "visual_rc": visual_rc,
         "render_rc": render_rc,
+        "render_status": "deferred_source_fidelity" if render_deferred else "skipped" if args.skip_render else "passed" if render_rc == 0 else "failed",
+        "render_deferred_reason": "source_fidelity_findings" if render_deferred else "",
         "render_stdout_tail": render_stdout[-2000:],
         "rendered_slide_count": rendered_slide_count,
         "expected_slide_count": expected_slide_count,
@@ -560,6 +582,11 @@ def main() -> int:
         "design_warning_count": len(design_warnings),
         "design_report": str(design_report),
         "design_rc": design_rc,
+        "design_stdout_tail": design_stdout[-2000:],
+        "source_fidelity": design_payload.get("source_fidelity", {}),
+        "source_fidelity_error_count": source_fidelity_error_count,
+        "source_fidelity_warning_count": int(design_payload.get("source_fidelity_warning_count", 0)),
+        "source_fidelity_checked_count": int(design_payload.get("source_fidelity_checked_count", 0)),
         "design_brief": str(Path(args.design_brief).expanduser().resolve()) if args.design_brief else "",
         "accessibility_enabled": bool(args.accessibility or args.strict_accessibility),
         "accessibility_strict": bool(args.strict_accessibility),
@@ -637,19 +664,24 @@ def main() -> int:
     if design_errors:
         print("FAIL: design rules QA found error-level issues.")
         failed = True
+    if design_rc != 0 and not design_errors and not design_warnings:
+        print("FAIL: design rules QA could not complete its audit.")
+        failed = True
     if args.fail_on_design_warnings and design_warnings:
         print("FAIL: design rules QA found warning-level issues.")
         failed = True
     if args.fail_on_visual_warnings and visual_warnings:
         print("FAIL: visual QA found underfilled or sparse layouts.")
         failed = True
-    if not args.skip_render and render_rc != 0:
+    if render_deferred:
+        print("Render deferred: source_fidelity_findings require source repair.")
+    if not args.skip_render and not render_deferred and render_rc != 0:
         print("FAIL: render_slides.py failed.")
         failed = True
-    if not args.skip_render and rendered_slide_count != expected_slide_count:
+    if not args.skip_render and not render_deferred and rendered_slide_count != expected_slide_count:
         print("FAIL: rendered slide count does not match deck slide count.")
         failed = True
-    if args.run_visual_review and visual_review_rc != 0:
+    if args.run_visual_review and not render_deferred and visual_review_rc != 0:
         print("FAIL: visual review command failed.")
         failed = True
     if args.fail_on_visual_review_warnings and visual_review_warning_count:

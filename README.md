@@ -7,9 +7,9 @@ A skill for coding agents that produces editable PowerPoint decks from structure
 [![Built with pptxgenjs](https://img.shields.io/badge/renderer-pptxgenjs-2563eb.svg)](templates/pptxgenjs/README.md)
 [![skills.sh](https://skills.sh/b/siril9/presentation-skill)](https://skills.sh/siril9/presentation-skill)
 
-![Eight narrative and process styles](examples/v0.12_narrative_process.jpg)
+![Three content-led design studies](examples/v0.13_design_studies.jpg)
 
-*One topic, eight styles. The title and process slides change structure while the evidence stays fixed. The PowerPoints remain editable.*
+*Three different arguments, three different structures: an enzyme-storage report, a ferry-demand story, and a microgrid repair decision. Synthetic data; editable PowerPoints.*
 
 Ask an agent for a lab report, board memo, investor update, clinical dashboard, policy brief, or scientific figure deck. The skill writes source JSON, routes style and content structure, builds an editable `.pptx`, and runs QA instead of shipping a screenshot or a stack of centered bullets.
 
@@ -17,7 +17,7 @@ Ask an agent for a lab report, board memo, investor update, clinical dashboard, 
 
 Most agent-built slide decks pass automated checks and still look bad. Dead whitespace, centered body text, the same three-card layout used five times in a row, generic stock-icon clusters. They feel like AI output even when the words are right.
 
-This skill encodes deck design as constraints instead of vibes. A variant grammar restricts what a slide can be. A preset system fixes palette, typography, and density per style family. A descriptor-only corpus of public deck-like records gives the agent style context to pick from instead of inventing from scratch. A QA loop catches layout regressions before the deck ships.
+The model chooses the argument and composition; the skill supplies editable geometry and checks. Presets provide a coherent base, not a mandatory slide sequence. A descriptor corpus and a small original visual library offer design context on demand. The validation loop catches layout regressions and lost source content before delivery.
 
 ## When to use this skill
 
@@ -42,7 +42,7 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 - **A preset system across 13 style families.** Lab report, executive clinical, board risk memo, investor reveal, editorial report, civic science policy, and so on. Each owns a palette, font pair, density profile, and bounded visual interpretation.
 - **Eight full-deck composition grammars above the presets.** Answer Pyramid, Evidence Plate, Care Pathway, Editorial Spread, Thesis Stage, Operating Grid, Public Docket, and Telemetry Canvas own role contracts for title, section, evidence, comparison, chart, table, decision, and references. A semantic render plan keeps role and visual variant separate, uses v2 geometry only for supported pairs, and records explicit v1/legacy fallbacks instead of silently substituting layouts. Slide overrides stay bounded to `primary`, `alternate`, or `dense`.
 - **A descriptor-only style corpus (~2,200 records) atomized into a composable token atlas.** The corpus carries described palettes, layouts, density patterns, and structural motifs from public deck-like sources (no copied assets). It's processed into 311 atoms across 12 types. New workspaces route the topic to a preset and independently select a composition grammar, so an advanced model can mix bounded design signals instead of receiving one static template.
-- **A lightweight model-adaptive entrypoint.** `present.py` offers compact briefs, optional intake questions, and content-matched style previews. Luna, Terra, Sol, Astra, or a future model can use the same source contracts; no multi-agent setup is required. Focused repair packets and opt-in render caching keep iteration small without skipping QA.
+- **A lightweight model-adaptive entrypoint.** `present.py` offers compact briefs, optional intake questions, and up to three original visual references matched to the content. Luna, Terra, Sol, Astra, or a future model can use the same contracts; no multi-agent setup is required. Field-level repair packets and automatic verified render reuse keep iteration small without skipping QA.
 - **A layered QA loop with exact-review receipts.** Geometry, rendered-image inspection, placeholder detection, design rules, and optional accessibility checks catch deterministic failures. For high-stakes delivery, a human/model verdict can be bound to the exact PPTX and rendered-slide hashes, so a rebuilt deck cannot reuse stale approval.
 - **Workspace mode with a versioned Deck IR.** Planning sources live beside `outline.json`; each build derives a deterministic coordinate-free `deck_ir.json` with stable object IDs, semantic intent, evidence links, and editability metadata. Readiness diagnostics tell the agent what to fix next instead of re-running blind.
 - **Preserve-by-default reference editing.** A standalone `.pptx` can be inspected into stable slide/shape IDs, patched through registered text/alt-text actions with preconditions, and checked to prove untouched geometry, style, and text stayed unchanged.
@@ -50,13 +50,13 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 ## See it
 
-![Evidence and decision slides across eight styles](examples/v0.12_evidence_decisions.jpg)
+![Clean lab report with native charts, tables and explicit limitations](examples/v0.13_lab_contact_sheet.jpg)
 
-*The same synthetic sensor-pilot evidence and decision gates, with 16-point body text. Style choices change the reading order, emphasis, and framing, not the facts.*
+*Simple report typography, visible denominators and limitations, native charts and tables. Captions and callouts reserve space instead of covering the evidence.*
 
-![Native charts and comparison slides across eight styles](examples/v0.12_data_comparisons.jpg)
+Full contact sheets: [editorial](examples/v0.13_editorial_contact_sheet.jpg), [operations](examples/v0.13_operations_contact_sheet.jpg), and [lab](examples/v0.13_lab_contact_sheet.jpg).
 
-The [v0.12 release](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) includes all eight editable decks, their frozen source, and a separate GPT-6 Luna-authored lab example. The earlier [64-slide grammar gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) remains available.
+The [v0.13 release](https://github.com/siril9/presentation-skill/releases/tag/v0.13.0) includes these three GPT-6.1 Sol-authored decks, their source, and one retained Luna-authored example rebuilt with the new runtime. These are design studies, not a model-quality benchmark. The earlier [eight-style controlled example](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) and [64-slide grammar gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) remain available.
 
 [![Codex native vs updated presentation-skill comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png)](https://github.com/siril9/presentation-skill/releases/tag/v0.7.0)
 
@@ -78,7 +78,7 @@ npx skills add https://github.com/siril9/presentation-skill \
 Add this repo as a Codex plugin marketplace, then open `/plugins` in Codex and install `presentation-skill` from the **Presentation Skill** marketplace:
 
 ```bash
-codex plugin marketplace add siril9/presentation-skill --ref v0.12.0
+codex plugin marketplace add siril9/presentation-skill --ref v0.13.0
 ```
 
 For local development against a checkout:
@@ -182,9 +182,9 @@ Full workspace docs in [`references/deck_workspace_mode.md`](references/deck_wor
 
 1. **Geometric** — text overflow, element overlap, low-contrast text, narrow text boxes that force excessive wrapping, decorative lines positioned for single-line titles that wrapped to two, footer collisions, insufficient slide margins.
 2. **Visual** (optional, requires render) — slides are exported to JPGs and inspected with a prompt biased toward finding problems. Catches things geometric checks miss (white-band issues on dark backgrounds, mermaid pile-ups, decorative elements bleeding into content).
-3. **Content** — placeholder grep on the markitdown extract. Catches leftover `TODO`, `[insert ...]`, `xxx`, `lorem`, and template-stub strings.
+3. **Content** — placeholder detection plus mapped source-retention checks on native PowerPoint text, table cells, and chart values. Catches leftover stubs and lost captions, caveats, units, or data. This is not factual verification.
 
-A deck isn't declared ready until the geometric gate passes, the visual pass returns zero findings, and at least one fix-and-verify cycle has been run.
+A deck isn't declared ready until the deterministic gate passes and the rendered slides have been reviewed. Fix actual findings and rerun the affected checks; a rebuild cannot reuse stale visual approval.
 
 Run with `--skip-render` for fast iteration without LibreOffice; drop `--skip-render` for the full render-and-inspect pass.
 
@@ -216,6 +216,8 @@ Copy-ready community posts and curation-request text live in [`docs/PROMOTION.md
 
 ## Releases
 
+- [`v0.13.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.13.0) - content-preserving builds, aligned action panels, clearer editorial spacing, optional original visual references, and verified render reuse.
+- [`v0.12.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) - readable variety, source-led design studies, and smaller iterations.
 - [`v0.11.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.11.0) — monochrome lab and journal systems, candidate-coherent v2 routing, semantic subtitle sizing, non-inventive table readouts, cleaner title stages, plugin parity checks, and a two-deck scientific proof.
 - [`v0.10.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.10.0) — lightweight Luna/Terra/Sol routing, a single public CLI, compact default workspaces, warning-aware preflight handling, content-aware title fitting, and lean plugin/npm packaging.
 - [`v0.9.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.9.0) — full-deck role-layout compiler, eight structural systems per role, explicit v1-to-v2 workspace migration, typed readiness actions, and a 64-slide editable proof gallery.

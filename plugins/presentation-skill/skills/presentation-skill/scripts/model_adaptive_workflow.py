@@ -20,6 +20,7 @@ PROFILE_ALIASES = {
     "astra": "quality-first",
     "gpt-6-astra": "quality-first",
     "sol": "quality-first",
+    "gpt-6.1-sol": "quality-first",
     "gpt-6-sol": "quality-first",
     "gpt-5.6-sol": "quality-first",
     "pro": "quality-first",
@@ -36,7 +37,7 @@ PROFILE_ALIASES = {
 
 PROFILE_HELP = (
     "Workflow policy: auto, fast (luna), balanced (terra), quality-first (sol/astra); "
-    "full gpt-5.6-sol/terra/luna and gpt-6-astra/sol/luna aliases accepted. For other models choose an "
+    "full gpt-5.6-sol/terra/luna, gpt-6-astra/sol/luna and gpt-6.1-sol aliases accepted. For other models choose an "
     "explicit workflow profile. Aliases are local defaults, not performance claims."
 )
 
@@ -202,7 +203,77 @@ def _requested_variants(user_prompt: str) -> list[str]:
     return [variant for pattern, variant in CONTENT_SHAPE_HINTS if pattern.search(user_prompt)]
 
 
-def _compact_routes(packet: dict[str, Any], *, user_prompt: str = "") -> dict[str, Any]:
+VISUAL_REFERENCE_CATALOG = Path(__file__).resolve().parents[1] / "references" / "visual_reference_catalog.json"
+VISUAL_REFERENCE_POLICY = {
+    "catalog": str(VISUAL_REFERENCE_CATALOG.with_suffix(".md")),
+    "use": "Optional local exemplars, at most three total. Inspect only useful links; no extra model call. Borrow composition, not synthetic facts or a fixed sequence; retain one coherent base.",
+}
+
+
+def select_visual_reference_hints(
+    candidates: list[dict[str, Any]],
+    *,
+    user_prompt: str = "",
+    content_shapes: list[str] | None = None,
+    roles: list[str] | None = None,
+    limit: int = 3,
+) -> dict[str, list[dict[str, Any]]]:
+    """Rank small local descriptors; never open image bytes or the deck corpus."""
+    if limit <= 0 or not candidates or not VISUAL_REFERENCE_CATALOG.is_file():
+        return {}
+    catalog = json.loads(VISUAL_REFERENCE_CATALOG.read_text(encoding="utf-8"))
+    root = VISUAL_REFERENCE_CATALOG.parent.parent
+    words = set(re.findall(r"[a-z0-9]+", user_prompt.lower()))
+    shapes = set(content_shapes or []) | set(_requested_variants(user_prompt))
+    requested_roles = set(roles or []) | (words & {"title", "section", "evidence", "comparison", "chart", "table", "decision", "references", "support"})
+    ranked: dict[str, list[dict[str, Any]]] = {}
+    for candidate in candidates:
+        grammar_id = str(candidate.get("grammar_id") or "")
+        if not grammar_id or grammar_id in ranked:
+            continue
+        matches = []
+        for record in catalog["exemplars"]:
+            if grammar_id not in record["compatible_grammars"]:
+                continue
+            shape_matches = shapes & set(record["content_shapes"])
+            role_matches = requested_roles & set(record["roles"])
+            if (shapes or requested_roles) and not (shape_matches or role_matches):
+                continue
+            path = (root / record["path"]).resolve()
+            if not path.is_relative_to((root / "references" / "assets").resolve()) or not path.is_file():
+                continue
+            score = 12 * len(shape_matches)
+            score += 8 * len(role_matches)
+            score += 2 * len(words & set(record["purposes"]))
+            score += len(words & set(record["keywords"]))
+            if grammar_id == record["source_grammar"]:
+                score += 3
+            matches.append((score, record))
+        matches.sort(key=lambda item: (-item[0], item[1]["id"]))
+        ranked[grammar_id] = [record for _, record in matches]
+    selected: dict[str, list[dict[str, Any]]] = {}
+    used: set[str] = set()
+    # Round-robin gives alternatives one useful example before expanding a locked route.
+    while len(used) < min(3, limit):
+        before = len(used)
+        for grammar_id, records in ranked.items():
+            record = next((item for item in records if item["id"] not in used), None)
+            if record is None:
+                continue
+            selected.setdefault(grammar_id, []).append({
+                "id": record["id"],
+                "path": str((root / record["path"]).resolve()),
+                "keywords": record["keywords"],
+            })
+            used.add(record["id"])
+            if len(used) == min(3, limit):
+                break
+        if len(used) == before:
+            break
+    return selected
+
+
+def _compact_routes(packet: dict[str, Any], *, user_prompt: str = "", candidate_limit: int = 3) -> dict[str, Any]:
     kickoff = _as_dict(packet.get("agent_kickoff_brief"))
     snapshot = _as_dict(kickoff.get("route_snapshot"))
     atom = _as_dict(kickoff.get("atom_workflow_context"))
@@ -215,6 +286,18 @@ def _compact_routes(packet: dict[str, Any], *, user_prompt: str = "") -> dict[st
     execution_plan = _as_dict(atom.get("style_execution_plan"))
     treatment_plan = _as_dict(execution_plan.get("treatment_plan"))
     requested_variants = _requested_variants(user_prompt)
+    candidates = [primary_grammar, *[
+        item for item in _as_list(grammar_route.get("alternatives")) if isinstance(item, dict)
+    ]][:candidate_limit]
+    if execution_plan.get("explicit_style_lock"):
+        candidates = [primary_grammar]
+    reference_prompt = " ".join(str(value or "") for value in (
+        grammar_route.get("topic"), grammar_route.get("authoring_prompt"), user_prompt,
+    ))
+    visual_hints = select_visual_reference_hints(
+        candidates, user_prompt=reference_prompt,
+        content_shapes=[*requested_variants, *_as_list(grammar_route.get("requested_variants"))],
+    )
     preferred_variants = []
     for variant in [*_as_list(atom.get("preferred_variants")), *requested_variants]:
         if variant not in preferred_variants:
@@ -237,6 +320,7 @@ def _compact_routes(packet: dict[str, Any], *, user_prompt: str = "") -> dict[st
         },
         "composition_grammar": {
             "grammar_id": primary_grammar.get("grammar_id"),
+            "visual_references": visual_hints.get(str(primary_grammar.get("grammar_id") or ""), []),
             "lane": primary_grammar.get("lane"),
             "rhythm_pattern": _as_list(primary_grammar.get("rhythm_pattern"))[:10],
             "role_variant_map": _as_dict(primary_grammar.get("role_variant_map")),
@@ -248,11 +332,12 @@ def _compact_routes(packet: dict[str, Any], *, user_prompt: str = "") -> dict[st
                     "grammar_id": item.get("grammar_id"),
                     "lane": item.get("lane"),
                     "style_preset": item.get("style_preset"),
+                    "visual_references": visual_hints.get(str(item.get("grammar_id") or ""), []),
                 }
-                for item in _as_list(grammar_route.get("alternatives"))[:2]
-                if isinstance(item, dict)
+                for item in candidates[1:]
             ],
         },
+        "visual_reference_policy": VISUAL_REFERENCE_POLICY,
         "style_execution_plan": {
             "schema_version": execution_plan.get("schema_version"),
             "resolved_primary_preset": execution_plan.get("resolved_primary_preset"),
@@ -311,7 +396,10 @@ def build_agent_brief(
             "confirmation_required": "External writes, destructive actions, purchases, or material scope expansion.",
         },
         "intake": build_deck_intake(user_prompt, answers=intake_answers),
-        "routing": _compact_routes(packet, user_prompt=user_prompt),
+        "routing": _compact_routes(
+            packet, user_prompt=user_prompt,
+            candidate_limit={"fast": 1, "balanced": 2, "quality-first": 3}[profile],
+        ),
         "authoring_contract": {
             "source_of_truth": [
                 "outline.json",
@@ -419,6 +507,16 @@ def render_agent_brief_markdown(brief: dict[str, Any]) -> str:
         ]
     )
     lines.extend(f"- {item}" for item in _as_list(brief.get("completion_rubric")))
+    hints = [
+        hint
+        for candidate in [grammar, *_as_list(grammar.get("alternatives"))]
+        for hint in _as_list(candidate.get("visual_references"))
+    ]
+    if hints:
+        policy = _as_dict(routing.get("visual_reference_policy"))
+        lines.extend(["", "## Optional Visual References", "", str(policy.get("use") or "")])
+        lines.append(f"[Uses, density, composition and provenance]({policy['catalog']})")
+        lines.extend(f"- [{hint['id']}]({hint['path']}): {', '.join(hint['keywords'])}" for hint in hints)
     authoring = _as_dict(brief.get("authoring_contract"))
     if authoring.get("minimal_payload_examples"):
         lines.extend(["", "## Payload Help", ""])

@@ -1,0 +1,323 @@
+{
+  "schema_version": "visual_review_receipt_v1",
+  "review_schema_version": "visual_judgment_v1",
+  "deck": {
+    "filename": "deck.pptx",
+    "sha256": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda",
+    "normalized_office_sha256": "fee50f87b68845eee7732b888a7ba94e5ea3a683d10df99752ceaa95b981b02e"
+  },
+  "renders": [
+    {
+      "name": "slide-01.jpg",
+      "sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+      "size_bytes": 80840
+    },
+    {
+      "name": "slide-02.jpg",
+      "sha256": "2e5a424f1d04f192ccaa272bcb6842ad4c360e59e9f988532e6d477401921aa4",
+      "size_bytes": 142670
+    },
+    {
+      "name": "slide-03.jpg",
+      "sha256": "92d50a133a2e5a5b0228897f686fdeaac2cee1a8b2953061a08823c5f3d63025",
+      "size_bytes": 147317
+    },
+    {
+      "name": "slide-04.jpg",
+      "sha256": "97cf5d8ba6895d882cd426219034ed39db13ba0ce8e228d7b820fe5bcd61defb",
+      "size_bytes": 149268
+    },
+    {
+      "name": "slide-05.jpg",
+      "sha256": "7473ef7bdaa060099e732c47587063f9178124a4e099c583f5e0945ce840a947",
+      "size_bytes": 118381
+    },
+    {
+      "name": "slide-06.jpg",
+      "sha256": "a7dae8dfe5ddfe5e20eaa653c56608cd8fc95f36b38a441bdf3c28228277376f",
+      "size_bytes": 152659
+    }
+  ],
+  "render_count": 6,
+  "reviewer": {
+    "type": "model",
+    "name": "gpt-6.1-sol",
+    "model": "gpt-6.1-sol"
+  },
+  "verdict": "pass",
+  "findings": [],
+  "reviewed_at": "2026-09-30T01:45:05Z",
+  "review_context": {
+    "method": "Independently reopened current full-size 1800x1013 slide-03.jpg, slide-04.jpg and slide-05.jpg with view_image(detail=original) after completed warm run 15. Slides 1, 2 and 6 carry their prior independent full-size image review ONLY after SHA-256 equality checks. Compared retained source facts, axes, denominators, bodies and caveats with the unchanged source and prior source comparison. Verdict is based on actual images, not automated QA. Run 14 cold and run 15 warm PPTX hashes agree; current six image hashes match completed run 15 render report.",
+    "scope": "Rendered clipping, contrast, alignment, box/chrome overlap, whitespace, readable body text, numeric/axis/denominator/caveat retention and natural decision source order. Retention of supplied synthetic facts, not external factual truth.",
+    "reviewed_ready_attempt": 14,
+    "current_warm_attempt": 15,
+    "artifacts": {
+      "deck": {
+        "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+        "sha256": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda",
+        "normalized_office_sha256": "fee50f87b68845eee7732b888a7ba94e5ea3a683d10df99752ceaa95b981b02e"
+      },
+      "renders": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-01.jpg",
+          "sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+          "name": "slide-01.jpg",
+          "size_bytes": 80840,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+          "sha256": "2e5a424f1d04f192ccaa272bcb6842ad4c360e59e9f988532e6d477401921aa4",
+          "name": "slide-02.jpg",
+          "size_bytes": 142670,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+          "sha256": "92d50a133a2e5a5b0228897f686fdeaac2cee1a8b2953061a08823c5f3d63025",
+          "name": "slide-03.jpg",
+          "size_bytes": 147317,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-04.jpg",
+          "sha256": "97cf5d8ba6895d882cd426219034ed39db13ba0ce8e228d7b820fe5bcd61defb",
+          "name": "slide-04.jpg",
+          "size_bytes": 149268,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-05.jpg",
+          "sha256": "7473ef7bdaa060099e732c47587063f9178124a4e099c583f5e0945ce840a947",
+          "name": "slide-05.jpg",
+          "size_bytes": 118381,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+          "sha256": "a7dae8dfe5ddfe5e20eaa653c56608cd8fc95f36b38a441bdf3c28228277376f",
+          "name": "slide-06.jpg",
+          "size_bytes": 152659,
+          "dimensions": [
+            1800,
+            1013
+          ]
+        }
+      ],
+      "source_files": [
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/outline.json",
+          "sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/synthetic_data.json",
+          "sha256": "299f6b40e79e71805519ca34b46862b9f65b78e2308e716d3ac1193c9dde2ba7"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/factual_check.json",
+          "sha256": "16f691083e71b0078279de4edd318c0d8bdbd76a795389f79162f3d6e090e568"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/run-14.json",
+          "sha256": "24a3b2883eb7f0d59950065879538078967726a4492f2279b253eb49312a9a77"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/run-15.json",
+          "sha256": "ae3d9febc75f741f0f620ec0e244c4a2d65be7e31cca8a80f5b9418fd16874e6"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/finalize_receipt.json",
+          "sha256": "737b234a9be28fb01a17f3bea8acd5edfef46a5b6d2a4506bb50953f37f95634"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/render_report.json",
+          "sha256": "d89b546cde25a67454f75214672859f0382beaba18883a3c9d63a6472b54d769"
+        },
+        {
+          "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/visual_judgment_before_run14_review.json",
+          "sha256": "df9397396a93506550f716315a22b968b9e2f809dd1ccf813f77389d8e8c1c1e"
+        }
+      ],
+      "finalize_generated_at": "2026-09-30T01:43:08.259109+00:00",
+      "cold_warm_comparison": {
+        "cold_attempt": 14,
+        "warm_attempt": 15,
+        "same_pptx_sha256": true,
+        "warm_cache_status": "hit",
+        "same_cache_key": true
+      },
+      "render_hashes_match_render_report": true,
+      "pptx_hash_matches_receipt": true,
+      "review_delta": {
+        "previous_review_ready_attempt": 12,
+        "previous_review_warm_attempt": 13,
+        "changed_images": [
+          3,
+          4,
+          5
+        ],
+        "carried_byte_identical_images": [
+          1,
+          2,
+          6
+        ],
+        "source_outline_unchanged": true
+      }
+    },
+    "previous_judgment": {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/visual_judgment_before_run14_review.json",
+      "sha256": "df9397396a93506550f716315a22b968b9e2f809dd1ccf813f77389d8e8c1c1e",
+      "byte_identical_to_previous_warning_judgment": true
+    },
+    "source_comparison": {
+      "outline_sha256": "ab247a4e2a3c78f837a77d305b4247457978c42e466f1fd2bceb3cc90c274e22",
+      "visible_arrivals": [
+        40,
+        65,
+        110,
+        145,
+        105,
+        75
+      ],
+      "visible_baseline_places": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "arrivals_per_evening": 540,
+      "middle_hour_numerator": 255,
+      "middle_hour_denominator": 540,
+      "displayed_share": "47%; 255 / 540 = 47.2%, rounded",
+      "offered_places_per_scenario": 480,
+      "boardings": {
+        "baseline": 425,
+        "moved": 480
+      },
+      "final_queues": {
+        "baseline": 115,
+        "moved": 60
+      },
+      "synthetic_boundaries_retained": true,
+      "real_world_fact_verification": false
+    },
+    "closed_prior_findings": [
+      {
+        "type": "cramped_left_timeline_body",
+        "slide": 2,
+        "resolved": true,
+        "note": "Featured scene inset and complete body/caption visually fit."
+      },
+      {
+        "type": "cramped_left_chart_readout",
+        "slide": 3,
+        "resolved": true,
+        "note": "Complete 540/47% readouts and details have clear left clearance."
+      },
+      {
+        "type": "decision_source_order_and_left_body",
+        "slide": 6,
+        "resolved": true,
+        "note": "Decision/Detail 1/Detail 2 follow source order and full first body fits."
+      },
+      {
+        "type": "title_chrome_overlap",
+        "slides": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "resolved": true,
+        "note": "Title/subtitle and chrome do not visibly collide in the six current images."
+      },
+      {
+        "type": "tight_native_chart_label_spacing",
+        "slide": 3,
+        "slide_index": 2,
+        "source_pointer": "/slides/2/chart",
+        "resolved": true,
+        "note": "Current actual clustered bars have clear horizontal separation between each pair's numeric labels, including 75/80 and 65/80. All twelve values remain readable; zero baseline, axes, legend, 540/47% readouts and full caption are retained."
+      },
+      {
+        "type": "narrow_left_comparison_gutter",
+        "slide": 4,
+        "slide_index": 3,
+        "source_pointer": "/slides/3/right",
+        "resolved": true,
+        "note": "The comparison panels, full bodies and verdict now start clearly inside the vertical page spine. The moved-release body remains complete and readable with no clipping."
+      }
+    ],
+    "structural_assessment": "Distinct editorial opener, featured timeline, statistic/native-chart spread, counterfactual comparison, queue ledger and decision close. Structure is content-led, not palette-only.",
+    "slide_reviews": [
+      {
+        "slide": 1,
+        "slide_index": 0,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-01.jpg",
+        "render_sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+        "inspection_basis": "SHA-256 identical to the full-size original independently reopened for the prior run 12/13 review",
+        "note": "Full title, route/time window and invented/not-a-ridership-forecast boundary are readable. Intentional opening whitespace; clean chrome separation."
+      },
+      {
+        "slide": 2,
+        "slide_index": 1,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+        "render_sha256": "2e5a424f1d04f192ccaa272bcb6842ad4c360e59e9f988532e6d477401921aa4",
+        "inspection_basis": "SHA-256 identical to the full-size original independently reopened for the prior run 12/13 review",
+        "note": "Featured 17:30 scene now has clear left-spine and internal clearance; all three milestone bodies fit without clipping. Complete FIFO/empty-initial-queue/representative-evening/no-individual-waiting-times caption is visible."
+      },
+      {
+        "slide": 3,
+        "slide_index": 2,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+        "render_sha256": "92d50a133a2e5a5b0228897f686fdeaac2cee1a8b2953061a08823c5f3d63025",
+        "inspection_basis": "Current full-size original independently reopened after completed warm run 15",
+        "note": "All twelve native chart value labels are distinctly separated, including 75/80 and 65/80. Both 540-arrivals and 47%-share readouts and complete details fit. Six arrival intervals, zero baseline, people/offered-places-per-30-min unit, end-of-interval seat-release axis, legend and constructed-case/480-places/no-uncertainty caption remain readable. No actionable overlap or spacing warning."
+      },
+      {
+        "slide": 4,
+        "slide_index": 3,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-04.jpg",
+        "render_sha256": "97cf5d8ba6895d882cd426219034ed39db13ba0ce8e228d7b820fe5bcd61defb",
+        "inspection_basis": "Current full-size original independently reopened after completed warm run 15",
+        "note": "Comparison panels, headings, full scenario bodies and complete verdict now have clear left-spine clearance. 480 versus 425 boardings, 60 versus 115 remaining, 55 unused early places and the first-queue penalty are retained without clipped or cramped text. Scenario columns remain reversed relative to outline left/right fields, with complete labels preserving their association."
+      },
+      {
+        "slide": 5,
+        "slide_index": 4,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-05.jpg",
+        "render_sha256": "7473ef7bdaa060099e732c47587063f9178124a4e099c583f5e0945ce840a947",
+        "inspection_basis": "Current full-size original independently reopened after completed warm run 15",
+        "note": "Inset table and complete two-line caption are clearly separated from the page spine. All six rows and four headers are aligned and readable, including final queues 115/60. Queue recurrence, sampled peak 120-to-65, early-service penalty and unknown within-interval queues/waits remain visible."
+      },
+      {
+        "slide": 6,
+        "slide_index": 5,
+        "render_file": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+        "render_sha256": "a7dae8dfe5ddfe5e20eaa653c56608cd8fc95f36b38a441bdf3c28228277376f",
+        "inspection_basis": "SHA-256 identical to the full-size original independently reopened for the prior run 12/13 review",
+        "note": "Natural source order is restored: Decision first on left, Detail 1 second above Detail 2 third on right. Entire feasibility, separate measurement/early-rider and residual-60-person bodies fit with clear left clearance. Full 55-of-115/540-versus-480 closing limitation is visible; neutral labels, high contrast, no chrome or box overlap."
+      }
+    ],
+    "boundary": "Read-only core/source/render review. Only case-root prior warning judgment backup and qa/visual_judgment.json were authored. No QA suppression, core/source edit, runtime stage, test rerun or receipt binding. Frozen to exact current deck/all-six-render/source hashes; substantive hash changes require review reopening."
+  }
+}

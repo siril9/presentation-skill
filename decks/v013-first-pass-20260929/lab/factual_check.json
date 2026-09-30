@@ -1,0 +1,46 @@
+{
+  "status": "SOURCE_FACTS_PASS_NOT_RENDERED",
+  "checked_at_utc": "2026-09-30T01:32:25.352Z",
+  "outline_sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0",
+  "synthetic_data_sha256": "582e47ba50cd9dd1d6618d29017f91e48a8f947d32fe84e90650392f52e6aac9",
+  "common_checks": [
+    "Valid JSON and unique slide IDs",
+    "Selected brief candidate preset plus grammar",
+    "Exact brief readability contract",
+    "Supported role/variant pairs",
+    "Synthetic provenance visible per slide",
+    "Native chart zero baseline and matching dimensions",
+    "Native table dimensions and meaningful captions"
+  ],
+  "checks": [
+    "Matched rate ratios and equal-weight chart means",
+    "Individual lot table and threshold denominators",
+    "18 samples / 36 wells / independent n=3",
+    "29 percentage-point contrast",
+    "Visible uncertainty, release, temperature and power boundaries"
+  ],
+  "computed": {
+    "means_percent": [
+      62,
+      91,
+      84
+    ],
+    "threshold_passes_out_of_3": [
+      0,
+      3,
+      1
+    ],
+    "samples": 18,
+    "wells": 36,
+    "glycerol_minus_buffer_pp": 29
+  },
+  "not_checked": [
+    "Renderer integration",
+    "PPTX content preservation",
+    "Native-object rendering",
+    "Geometry",
+    "Readability in rendered output",
+    "Contact sheet and per-slide visual review"
+  ],
+  "next_owner": "Main release build/measurement runner; author visual review after main-ready notification"
+}

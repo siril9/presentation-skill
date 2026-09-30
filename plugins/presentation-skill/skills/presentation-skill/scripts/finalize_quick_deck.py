@@ -39,6 +39,8 @@ QA_BLOCKING_KEYS = (
     "design_warning_count",
     "accessibility_error_count",
     "accessibility_warning_count",
+    "source_fidelity_error_count",
+    "source_fidelity_warning_count",
 )
 
 QA_FILES = (
@@ -139,11 +141,16 @@ def _completion_status(records: list[dict[str, Any]], qa_dir: Path) -> dict[str,
         )
     else:
         category = "qa_findings"
-        next_action = "Read repair_packet.json and the affected slide images, edit outline.json or its renderer, and rerun until clean or report the blocker."
+        next_action = (
+            "Read the mapped source fields in repair_packet.json and restore the missing content before the deferred render. Then rerun the same finalizer."
+            if qa.get("source_fidelity_error_count") else
+            "Read repair_packet.json and the affected slide images, edit outline.json or its renderer, and rerun until clean or report the blocker."
+        )
     return {
         "failure_category": category,
         "failed_stage": failed_stage,
-        "render_status": "deferred_environment" if category == "render_environment" else (
+        "render_status": "deferred_source_fidelity" if qa.get("render_status") == "deferred_source_fidelity" else
+        "deferred_environment" if category == "render_environment" else (
             "passed" if qa and not render_failed else "not_completed"
         ),
         "qa_counts": qa_counts,
@@ -251,6 +258,9 @@ def _write_receipt(
 ) -> dict[str, Any]:
     passed = bool(records) and all(bool(record.get("accepted", False)) for record in records)
     completion = _completion_status(records, qa_dir)
+    render_report = _load_json(qa_dir / "renders" / "render_report.json") if any(
+        record.get("stage") == "qa" for record in records
+    ) else {}
     payload = {
         "schema_version": "quick-deck-finalization/v1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -274,6 +284,8 @@ def _write_receipt(
             sum(float(record.get("duration_seconds", 0) or 0) for record in records),
             3,
         ),
+        "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+        "render_cache": render_report.get("cache", {"status": "not_completed"}),
         **completion,
         "stages": records,
     }
@@ -304,7 +316,9 @@ def main() -> int:
     )
     parser.add_argument("--qa-dir", type=Path)
     parser.add_argument("--asset-root", type=Path)
-    parser.add_argument("--render-cache-dir", type=Path, help="Opt in to verified identical-render reuse.")
+    cache_options = parser.add_mutually_exclusive_group()
+    cache_options.add_argument("--render-cache-dir", type=Path, help="Override the local verified render cache.")
+    cache_options.add_argument("--no-render-cache", action="store_true", help="Force a cold render; all QA still runs.")
     parser.add_argument("--min-body-pt", type=float)
     parser.add_argument("--min-support-pt", type=float)
     parser.add_argument("--min-metadata-pt", type=float)
@@ -318,6 +332,7 @@ def main() -> int:
     outline = args.outline.resolve()
     output = args.output.resolve()
     qa_dir = (args.qa_dir or output.parent / f"{output.stem}-qa").resolve()
+    render_cache_dir = None if args.no_render_cache else (args.render_cache_dir or qa_dir / ".render-cache").resolve()
     if outline == output:
         parser.error("--output must not overwrite --outline")
     if qa_dir in {outline, output}:
@@ -395,7 +410,8 @@ def main() -> int:
                 "--accessibility-min-metadata-pt",
                 str(thresholds[2]),
                 "--skip-manual-review",
-                *(["--render-cache-dir", str(args.render_cache_dir.resolve())] if args.render_cache_dir else []),
+                *(["--asset-root", str(args.asset_root.resolve())] if args.asset_root else []),
+                *(["--render-cache-dir", str(render_cache_dir)] if render_cache_dir else []),
             ],
             (0,),
         ),
@@ -403,7 +419,7 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="quick-deck-previous-") as temporary:
         previous = Path(temporary) / output.name
-        preserve_raw_output = bool(args.render_cache_dir and output.is_file())
+        preserve_raw_output = bool(render_cache_dir and output.is_file())
         if preserve_raw_output:
             shutil.copyfile(output, previous)
         for stage, command, accepted_returncodes in stages:

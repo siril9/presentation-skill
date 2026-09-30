@@ -1,0 +1,101 @@
+{
+  "input": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+  "outdir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa",
+  "style_preset": "lab-report",
+  "max_loops": 1,
+  "overflow_count": 0,
+  "overlap_count": 0,
+  "placeholder_hits": [],
+  "issue_slide_count": 0,
+  "issue_shape_count": 0,
+  "geometry_violations": [],
+  "geometry_error_count": 0,
+  "geometry_warning_count": 0,
+  "whitespace_warning_count": 0,
+  "whitespace_warnings": [],
+  "visual_warning_count": 0,
+  "visual_info_count": 0,
+  "visual_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_qa.json",
+  "visual_rc": 0,
+  "render_rc": 0,
+  "render_status": "passed",
+  "render_deferred_reason": "",
+  "render_stdout_tail": "[render] cache hit: verified\nRendered 7 slide image(s) to /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/renders\n",
+  "rendered_slide_count": 7,
+  "expected_slide_count": 7,
+  "visual_review_warning_count": 0,
+  "visual_review_info_count": 11,
+  "visual_review_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/visual_review.json",
+  "visual_review_markdown": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/visual_review.md",
+  "visual_review_contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/contact_sheet.jpg",
+  "visual_review_rc": 0,
+  "visual_review_stdout_tail": "Visual review artifacts: /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review\nRendered slides: 7\nWarnings: 0\nInfo: 11\nContact sheet: /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/contact_sheet.jpg\nVisual review report: /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/visual_review.json\nVisual review markdown: /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/visual_review.md\n",
+  "design_error_count": 0,
+  "design_warning_count": 0,
+  "design_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/design_rules.json",
+  "design_rc": 0,
+  "design_stdout_tail": "Design rules QA: /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx\n  0 issue(s) | errors=0 warnings=0\n",
+  "source_fidelity": {
+    "enabled": true,
+    "scope": "Retained mapped source content only; not factual truth or rendered visibility.",
+    "checked_count": 71,
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "source_fidelity_error_count": 0,
+  "source_fidelity_warning_count": 0,
+  "source_fidelity_checked_count": 71,
+  "design_brief": "",
+  "accessibility_enabled": true,
+  "accessibility_strict": true,
+  "accessibility_error_count": 0,
+  "accessibility_warning_count": 0,
+  "accessibility_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/accessibility.json",
+  "accessibility_rc": 0,
+  "accessibility_stdout_tail": "{\n  \"error_count\": 0,\n  \"finding_count\": 0,\n  \"findings\": [],\n  \"input\": \"/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx\",\n  \"passed\": true,\n  \"schema\": \"pptx_accessibility_qa\",\n  \"schema_version\": \"pptx_accessibility_qa_v1\",\n  \"slide_count\": 7,\n  \"strict\": true,\n  \"thresholds\": {\n    \"large_visual_area_ratio\": 0.2,\n    \"min_body_pt\": 16.0,\n    \"min_metadata_pt\": 9.0,\n    \"min_support_pt\": 13.0\n  },\n  \"version\": 1,\n  \"warning_count\": 0\n}\n",
+  "density_score_by_slide": [
+    {
+      "slide_index": 0,
+      "density_score": 0.3462
+    },
+    {
+      "slide_index": 1,
+      "density_score": 0.7375
+    },
+    {
+      "slide_index": 2,
+      "density_score": 0.7924
+    },
+    {
+      "slide_index": 3,
+      "density_score": 0.7375
+    },
+    {
+      "slide_index": 4,
+      "density_score": 1.0
+    },
+    {
+      "slide_index": 5,
+      "density_score": 0.5906
+    },
+    {
+      "slide_index": 6,
+      "density_score": 0.694
+    }
+  ],
+  "font_families": [
+    "Calibri",
+    "Trebuchet MS"
+  ],
+  "manual_review_passed": false,
+  "legacy_manual_flag_present": false,
+  "bound_visual_review_passed": false,
+  "visual_review_receipt": {
+    "passed": false,
+    "schema_version": "visual_review_receipt_v1",
+    "failures": [
+      "No visual-review receipt supplied."
+    ]
+  },
+  "strict_geometry": true
+}

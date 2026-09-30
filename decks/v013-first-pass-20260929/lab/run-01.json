@@ -1,0 +1,143 @@
+{
+  "case": "lab",
+  "attempt": 1,
+  "warm_requested": false,
+  "author_model": "gpt-6.1-sol",
+  "command": [
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/present.py",
+    "finalize",
+    "--outline",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json",
+    "--output",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+    "--qa-dir",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa"
+  ],
+  "returncode": 1,
+  "wall_seconds": 2.069,
+  "outline_sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0",
+  "receipt": {
+    "contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/visual_review/contact_sheet.jpg",
+    "failed_stage": "qa",
+    "failure_category": "qa_findings",
+    "generated_at": "2026-09-29T23:13:55.286267+00:00",
+    "next_action": "Read repair_packet.json and the affected slide images, edit outline.json or its renderer, and rerun until clean or report the blocker.",
+    "outline": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json",
+    "outline_sha256": "369497f448b6fbbc7dd4c67ff4d93490584cfbba5435003aa7f64df5238ddab0",
+    "output": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+    "output_exists": true,
+    "output_sha256": "4bdad22acacdb719468e3bbe16fbb027f89ba83becbe0e40f6d304958a290842",
+    "passed": false,
+    "qa_counts": {
+      "accessibility_error_count": 6,
+      "accessibility_warning_count": 0,
+      "design_error_count": 2,
+      "design_warning_count": 0,
+      "geometry_error_count": 0,
+      "geometry_warning_count": 0,
+      "overflow_count": 2,
+      "overlap_count": 0,
+      "source_fidelity_error_count": 2,
+      "source_fidelity_warning_count": 0,
+      "visual_review_warning_count": 0,
+      "visual_warning_count": 0,
+      "whitespace_warning_count": 0
+    },
+    "qa_dir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa",
+    "qa_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/qa_report.json",
+    "readability": {
+      "min_body_pt": 16.0,
+      "min_metadata_pt": 9.0,
+      "min_support_pt": 13.0
+    },
+    "render_cache": {
+      "status": "not_completed"
+    },
+    "render_status": "deferred_source_fidelity",
+    "repair_packet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/repair_packet.json",
+    "schema_version": "quick-deck-finalization/v1",
+    "stages": [
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0,
+          1
+        ],
+        "command": [
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/preflight.py",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json"
+        ],
+        "duration_seconds": 0.102,
+        "returncode": 0,
+        "stage": "preflight"
+      },
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0
+        ],
+        "command": [
+          "/opt/homebrew/bin/node",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json",
+          "--output",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+          "--style-preset",
+          "lab-report"
+        ],
+        "duration_seconds": 0.4,
+        "returncode": 0,
+        "stage": "build"
+      },
+      {
+        "accepted": false,
+        "accepted_returncodes": [
+          0
+        ],
+        "command": [
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/qa_gate.py",
+          "--input",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/deck.pptx",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/outline.json",
+          "--outdir",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa",
+          "--style-preset",
+          "lab-report",
+          "--strict-geometry",
+          "--fail-on-geometry-warnings",
+          "--fail-on-whitespace-warnings",
+          "--run-visual-review",
+          "--fail-on-visual-review-warnings",
+          "--fail-on-design-warnings",
+          "--accessibility",
+          "--strict-accessibility",
+          "--accessibility-min-body-pt",
+          "16.0",
+          "--accessibility-min-support-pt",
+          "13.0",
+          "--accessibility-min-metadata-pt",
+          "9.0",
+          "--skip-manual-review",
+          "--render-cache-dir",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/lab/qa/.render-cache"
+        ],
+        "duration_seconds": 1.389,
+        "returncode": 1,
+        "stage": "qa"
+      }
+    ],
+    "style_preset": "lab-report",
+    "style_resolution_basis": "outline_design_choice",
+    "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+    "total_duration_seconds": 1.891,
+    "visual_inspection_status": "not_recorded"
+  },
+  "render_cache": {},
+  "timing_scope": "pipeline only; excludes model authoring and visual review"
+}

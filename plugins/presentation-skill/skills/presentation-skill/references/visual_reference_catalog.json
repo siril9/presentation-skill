@@ -1,0 +1,655 @@
+{
+  "schema_version": "visual_reference_catalog_v1",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 Siril Sengolraj",
+  "license_file": "LICENSE",
+  "origin": "Original repository Sol design studies, 2026-09-23; synthetic scenarios, not measured evidence or a benchmark.",
+  "source_review": "decks/sol-design-studies-20260923/review.md",
+  "snapshot_transform": "sharp: resize to 1200px width without enlargement; JPEG quality 82, 4:4:4 chroma. Full slide retained, no crop, recolor or generated replacement.",
+  "asset_bytes": 875916,
+  "exemplars": [
+    {
+      "id": "lab-cover",
+      "roles": [
+        "title"
+      ],
+      "content_shapes": [
+        "title"
+      ],
+      "purposes": [
+        "lab",
+        "assay",
+        "scientific",
+        "opening"
+      ],
+      "keywords": [
+        "title",
+        "restrained",
+        "lab"
+      ],
+      "density": "sparse",
+      "composition": "Left-aligned two-line title, short scope, white field, restrained red rule and source footer.",
+      "mixing": "Keep the base report typography and footer; borrow only the sparse cover hierarchy.",
+      "compatible_grammars": [
+        "scientific-evidence-plate",
+        "clinical-care-pathway",
+        "consulting-answer-pyramid",
+        "policy-public-docket"
+      ],
+      "path": "references/assets/visual_references/lab_cover.jpg",
+      "source_grammar": "scientific-evidence-plate",
+      "snapshot": {
+        "bytes": 40800,
+        "sha256": "d0e5c6b4ae7521f6c921d502fead321620141ef7fceadb21d51fd890fbb7ec8c",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "clean-lab",
+        "slide": 1,
+        "source_outline": "decks/sol-design-studies-20260923/clean-lab/outline.json",
+        "source_outline_sha256": "ca8ef3e39ed343fc6d2a82d162f7f43d8e529a7b5f514eea17c11634a4cca626",
+        "source_render": "decks/sol-design-studies-20260923/clean-lab/qa/renders/slide-01.jpg",
+        "source_render_sha256": "dee66eba8174db2d8e36da9557c74276881cfa83eb92be05eb0a76f754ac4323",
+        "source_role": "title",
+        "source_variant": "title",
+        "source_title": "Assay signal\nstability",
+        "review": "decks/sol-design-studies-20260923/clean-lab/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "lab-trend",
+      "roles": [
+        "chart",
+        "evidence"
+      ],
+      "content_shapes": [
+        "chart"
+      ],
+      "purposes": [
+        "lab",
+        "assay",
+        "scientific",
+        "trend",
+        "drift",
+        "threshold"
+      ],
+      "keywords": [
+        "chart",
+        "trend",
+        "threshold"
+      ],
+      "density": "medium: four series, four timepoints, one interpretation",
+      "composition": "Wide line chart above a full-width interpretation; explicit baseline, truncated-axis disclosure and technical-well basis.",
+      "mixing": "Use the plot/readout allocation in the base grammar; preserve units, bounds and denominator.",
+      "compatible_grammars": [
+        "scientific-evidence-plate",
+        "clinical-care-pathway",
+        "technical-telemetry-canvas",
+        "consulting-answer-pyramid"
+      ],
+      "path": "references/assets/visual_references/lab_trend.jpg",
+      "source_grammar": "scientific-evidence-plate",
+      "snapshot": {
+        "bytes": 61942,
+        "sha256": "fb4545be80463c7f7f30c8e2b90d7d4d49ca81fa4a7bb8374a7c1104b3198297",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "clean-lab",
+        "slide": 3,
+        "source_outline": "decks/sol-design-studies-20260923/clean-lab/outline.json",
+        "source_outline_sha256": "ca8ef3e39ed343fc6d2a82d162f7f43d8e529a7b5f514eea17c11634a4cca626",
+        "source_render": "decks/sol-design-studies-20260923/clean-lab/qa/renders/slide-03.jpg",
+        "source_render_sha256": "021a1e77139743ceffc9dc59ccfa607f4a424a6a5f4395e52fc95ab6ecb207d1",
+        "source_role": "chart",
+        "source_variant": "chart",
+        "source_title": "Signal declines modestly across 28 days",
+        "review": "decks/sol-design-studies-20260923/clean-lab/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "lab-endpoints",
+      "roles": [
+        "table",
+        "evidence",
+        "support"
+      ],
+      "content_shapes": [
+        "table",
+        "lab-run-results"
+      ],
+      "purposes": [
+        "lab",
+        "assay",
+        "scientific",
+        "limits",
+        "endpoint",
+        "results",
+        "appendix"
+      ],
+      "keywords": [
+        "table",
+        "limits",
+        "denominator"
+      ],
+      "density": "medium: five columns, three rows, caveat readout",
+      "composition": "Compact ruled endpoint ledger with distinct readout below; six-well basis, limits and no-expiry caveat remain visible.",
+      "mixing": "Borrow the ledger and caveat allocation without adopting a second page frame.",
+      "compatible_grammars": [
+        "scientific-evidence-plate",
+        "clinical-care-pathway",
+        "consulting-answer-pyramid"
+      ],
+      "path": "references/assets/visual_references/lab_endpoints.jpg",
+      "source_grammar": "scientific-evidence-plate",
+      "snapshot": {
+        "bytes": 72522,
+        "sha256": "e7e37a46923f07f00366a1548311d292d08d46ceed0cd9be3426ad95a6315b5b",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "clean-lab",
+        "slide": 4,
+        "source_outline": "decks/sol-design-studies-20260923/clean-lab/outline.json",
+        "source_outline_sha256": "ca8ef3e39ed343fc6d2a82d162f7f43d8e529a7b5f514eea17c11634a4cca626",
+        "source_render": "decks/sol-design-studies-20260923/clean-lab/qa/renders/slide-04.jpg",
+        "source_render_sha256": "10ed3c520512874989f360316a82b4dec5da03abb8ae56fb5ffb406f98c2691c",
+        "source_role": "table",
+        "source_variant": "table",
+        "source_title": "Every lot remains inside the day-28 limits",
+        "review": "decks/sol-design-studies-20260923/clean-lab/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "lab-evidence-gate",
+      "roles": [
+        "comparison",
+        "decision"
+      ],
+      "content_shapes": [
+        "comparison-2col",
+        "standard"
+      ],
+      "purposes": [
+        "lab",
+        "assay",
+        "scientific",
+        "decision",
+        "limits",
+        "gate",
+        "validation"
+      ],
+      "keywords": [
+        "comparison",
+        "decision",
+        "caveats"
+      ],
+      "density": "medium: two columns, three statements each",
+      "composition": "Open paired columns separate synthetic screen findings from the next evidence gate.",
+      "mixing": "Use paired evidence/limits for a restrained decision; retain base title and footer, not a mandatory closing role.",
+      "compatible_grammars": [
+        "scientific-evidence-plate",
+        "clinical-care-pathway",
+        "consulting-answer-pyramid",
+        "policy-public-docket"
+      ],
+      "path": "references/assets/visual_references/lab_evidence_gate.jpg",
+      "source_grammar": "scientific-evidence-plate",
+      "snapshot": {
+        "bytes": 68962,
+        "sha256": "2677a03d854cbf37d3667c31e716a74225802e4c6a5b5f45e19dc90c7203316f",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "clean-lab",
+        "slide": 6,
+        "source_outline": "decks/sol-design-studies-20260923/clean-lab/outline.json",
+        "source_outline_sha256": "ca8ef3e39ed343fc6d2a82d162f7f43d8e529a7b5f514eea17c11634a4cca626",
+        "source_render": "decks/sol-design-studies-20260923/clean-lab/qa/renders/slide-06.jpg",
+        "source_render_sha256": "89535de6437fbbaa7c08278da9617b3b19b60e73ab2d86fc5c56952491107ce6",
+        "source_role": "comparison",
+        "source_variant": "comparison-2col",
+        "source_title": "No shelf-life claim from this screen",
+        "review": "decks/sol-design-studies-20260923/clean-lab/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "editorial-chart",
+      "roles": [
+        "chart",
+        "evidence"
+      ],
+      "content_shapes": [
+        "chart"
+      ],
+      "purposes": [
+        "editorial",
+        "library",
+        "survey",
+        "demand",
+        "public",
+        "story"
+      ],
+      "keywords": [
+        "chart",
+        "sidecar",
+        "survey"
+      ],
+      "density": "medium: four bars and a short sidecar",
+      "composition": "Asymmetric wide bar chart with a narrow readout rail; serif heading and separate synthetic multi-select disclosure.",
+      "mixing": "Borrow chart/sidecar proportion; retain base type and do not sum overlapping responses.",
+      "compatible_grammars": [
+        "editorial-spread",
+        "policy-public-docket",
+        "investor-thesis-stage",
+        "consulting-answer-pyramid"
+      ],
+      "path": "references/assets/visual_references/editorial_chart.jpg",
+      "source_grammar": "editorial-spread",
+      "snapshot": {
+        "bytes": 54462,
+        "sha256": "13278394963673adeb02733ed31670880b05e178538a6e3501387dba910a8dbb",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "editorial",
+        "slide": 2,
+        "source_outline": "decks/sol-design-studies-20260923/editorial/outline.json",
+        "source_outline_sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2",
+        "source_render": "decks/sol-design-studies-20260923/editorial/qa/renders/slide-02.jpg",
+        "source_render_sha256": "cc85954984a8141472ece17092e77928b6923947c56e2f26af18b290d4cba7cd",
+        "source_role": "chart",
+        "source_variant": "chart",
+        "source_title": "Q1 / Demand concentrates before eight",
+        "review": "decks/sol-design-studies-20260923/editorial/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "editorial-focal-metric",
+      "roles": [
+        "evidence"
+      ],
+      "content_shapes": [
+        "stats",
+        "kpi-hero"
+      ],
+      "purposes": [
+        "editorial",
+        "library",
+        "synthesis",
+        "metric",
+        "pause"
+      ],
+      "keywords": [
+        "metric",
+        "contrast",
+        "denominator"
+      ],
+      "density": "sparse: one metric and its denominator",
+      "composition": "Black full field, one red metric, white denominator and quiet source line form an intentional rhythm break.",
+      "mixing": "Optional single focal-metric pause, not a new dark deck theme. Use a supported stats payload when v2 is required.",
+      "compatible_grammars": [
+        "editorial-spread",
+        "investor-thesis-stage",
+        "policy-public-docket"
+      ],
+      "path": "references/assets/visual_references/editorial_focal_metric.jpg",
+      "source_grammar": "editorial-spread",
+      "snapshot": {
+        "bytes": 46482,
+        "sha256": "a7f2e9f129f9a736a1f4e5e8c4324fcdce10196d80cf8564a6f8c171bb7e5ef3",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "editorial",
+        "slide": 4,
+        "source_outline": "decks/sol-design-studies-20260923/editorial/outline.json",
+        "source_outline_sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2",
+        "source_render": "decks/sol-design-studies-20260923/editorial/qa/renders/slide-04.jpg",
+        "source_render_sha256": "54051fa072a954606e94732460beac0b4d0fedb8fc928b94f3bb2408e77ab2ea",
+        "source_role": null,
+        "source_variant": "kpi-hero",
+        "source_title": "A room to use, not a class to book",
+        "review": "decks/sol-design-studies-20260923/editorial/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "editorial-pilot",
+      "roles": [
+        "evidence",
+        "support"
+      ],
+      "content_shapes": [
+        "timeline",
+        "flow"
+      ],
+      "purposes": [
+        "editorial",
+        "library",
+        "pilot",
+        "sequence",
+        "implementation",
+        "roadmap"
+      ],
+      "keywords": [
+        "timeline",
+        "asymmetric",
+        "pilot"
+      ],
+      "density": "medium: preparation anchor plus three stages",
+      "composition": "Solid preparation block on the left, three open event rows on the right; no decorative timeline card grid.",
+      "mixing": "Borrow unequal staging for a bounded pilot while keeping coherent spacing and type.",
+      "compatible_grammars": [
+        "editorial-spread",
+        "policy-public-docket",
+        "investor-thesis-stage"
+      ],
+      "path": "references/assets/visual_references/editorial_pilot.jpg",
+      "source_grammar": "editorial-spread",
+      "snapshot": {
+        "bytes": 63463,
+        "sha256": "581cd0c7bab7d7bb4d185564c67c5a7e2d37abfd848eeadc844783f41a514d58",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "editorial",
+        "slide": 6,
+        "source_outline": "decks/sol-design-studies-20260923/editorial/outline.json",
+        "source_outline_sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2",
+        "source_render": "decks/sol-design-studies-20260923/editorial/qa/renders/slide-06.jpg",
+        "source_render_sha256": "762b20a968609882ddc179578ec405e01c496cddfb3e35eac41ba95aa4d1ff23",
+        "source_role": "evidence",
+        "source_variant": "timeline",
+        "source_title": "An eight-week test, not a new permanent hour",
+        "review": "decks/sol-design-studies-20260923/editorial/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "editorial-decision",
+      "roles": [
+        "decision",
+        "support"
+      ],
+      "content_shapes": [
+        "standard"
+      ],
+      "purposes": [
+        "editorial",
+        "library",
+        "decision",
+        "owner",
+        "accountability",
+        "recommendation"
+      ],
+      "keywords": [
+        "decision",
+        "owners",
+        "caveats"
+      ],
+      "density": "dense: four numbered decision fields and one verdict",
+      "composition": "Open two-by-two decision fields identify action, evidence trigger, owner and timing; a separate verdict strip closes the argument.",
+      "mixing": "Borrow the four-field accountability structure, not the entire editorial frame or a fixed ending.",
+      "compatible_grammars": [
+        "editorial-spread",
+        "policy-public-docket",
+        "consulting-answer-pyramid",
+        "investor-thesis-stage"
+      ],
+      "path": "references/assets/visual_references/editorial_decision.jpg",
+      "source_grammar": "editorial-spread",
+      "snapshot": {
+        "bytes": 102781,
+        "sha256": "6467253fc068e71ee35388e7d372c8446a8e25024e7d11382c407cbd05b2bfb2",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "editorial",
+        "slide": 7,
+        "source_outline": "decks/sol-design-studies-20260923/editorial/outline.json",
+        "source_outline_sha256": "7663bfea44d75cb0bbca53f718fbff2b4d68542d46d4c66afd75502938a742a2",
+        "source_render": "decks/sol-design-studies-20260923/editorial/qa/renders/slide-07.jpg",
+        "source_render_sha256": "c4032e231d3e35f16c648a2321c65f01ff9a027732eb3c284fa7ae8e7b1a8246",
+        "source_role": "decision",
+        "source_variant": "standard",
+        "source_title": "Pilot the window; earn the extension",
+        "review": "decks/sol-design-studies-20260923/editorial/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "operations-queue",
+      "roles": [
+        "table",
+        "evidence",
+        "support"
+      ],
+      "content_shapes": [
+        "table"
+      ],
+      "purposes": [
+        "operations",
+        "dispatch",
+        "queue",
+        "risk",
+        "owner",
+        "triage",
+        "support"
+      ],
+      "keywords": [
+        "table",
+        "queue",
+        "owners"
+      ],
+      "density": "dense: six columns, five ranked rows",
+      "composition": "Auditable queue ledger with dark header, alternating rows, durations, start times and named crew owners.",
+      "mixing": "Borrow the operating register for dense support evidence; keep its clock and synthetic qualifier explicit.",
+      "compatible_grammars": [
+        "operations-grid",
+        "technical-telemetry-canvas",
+        "consulting-answer-pyramid",
+        "clinical-care-pathway"
+      ],
+      "path": "references/assets/visual_references/operations_queue.jpg",
+      "source_grammar": "operations-grid",
+      "snapshot": {
+        "bytes": 83736,
+        "sha256": "8c605889d86a49cb7d42ecee3966a5f4d66ff37ccf37ca9c173447c95e2ebcdf",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "operations",
+        "slide": 3,
+        "source_outline": "decks/sol-design-studies-20260923/operations/outline.json",
+        "source_outline_sha256": "b2416244fae8e40532cdb82582c0ac68207c22a79ab921d339bcf3beccd65939",
+        "source_render": "decks/sol-design-studies-20260923/operations/qa/renders/slide-03.jpg",
+        "source_render_sha256": "c2e1b8e599631a4d44a4d015cab8e4f647ab2558ae0e469c5b5109c6518036de",
+        "source_role": "table",
+        "source_variant": "table",
+        "source_title": "Exposure sets the first-wave queue",
+        "review": "decks/sol-design-studies-20260923/operations/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "operations-handoffs",
+      "roles": [
+        "evidence",
+        "support"
+      ],
+      "content_shapes": [
+        "timeline",
+        "flow"
+      ],
+      "purposes": [
+        "operations",
+        "dispatch",
+        "handoff",
+        "sequence",
+        "trigger",
+        "support",
+        "process"
+      ],
+      "keywords": [
+        "timeline",
+        "handoffs",
+        "trigger"
+      ],
+      "density": "medium: four stages and one fallback trigger",
+      "composition": "Four open horizontal handoff rows, time labels, short actions and a separate trigger callout above the footer.",
+      "mixing": "Borrow the timed handoffs and reserved callout spacing; do not import a second command-center frame.",
+      "compatible_grammars": [
+        "operations-grid",
+        "technical-telemetry-canvas",
+        "clinical-care-pathway",
+        "consulting-answer-pyramid"
+      ],
+      "path": "references/assets/visual_references/operations_handoffs.jpg",
+      "source_grammar": "operations-grid",
+      "snapshot": {
+        "bytes": 89252,
+        "sha256": "c30b0a4f46d21ecf5a56cb53bcbb72e24fac2b17b899616f6430aba22ac9e6f5",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "operations",
+        "slide": 4,
+        "source_outline": "decks/sol-design-studies-20260923/operations/outline.json",
+        "source_outline_sha256": "b2416244fae8e40532cdb82582c0ac68207c22a79ab921d339bcf3beccd65939",
+        "source_render": "decks/sol-design-studies-20260923/operations/qa/renders/slide-04.jpg",
+        "source_render_sha256": "69b577dbc1659d609d400d218b7e36622620f6cfdc2f95ecb01ade28460f725c",
+        "source_role": "evidence",
+        "source_variant": "timeline",
+        "source_title": "Dispatch is a gated sequence, not a repair list",
+        "review": "decks/sol-design-studies-20260923/operations/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "operations-tradeoff",
+      "roles": [
+        "comparison",
+        "decision"
+      ],
+      "content_shapes": [
+        "comparison-2col"
+      ],
+      "purposes": [
+        "operations",
+        "risk",
+        "decision",
+        "tradeoff",
+        "cost",
+        "dispatch"
+      ],
+      "keywords": [
+        "comparison",
+        "tradeoff",
+        "verdict"
+      ],
+      "density": "medium: paired four-item options and one verdict",
+      "composition": "Aligned option columns make exposure and travel costs comparable; a separate verdict band has visible footer clearance.",
+      "mixing": "Borrow paired tradeoff and verdict allocation while retaining the selected base palette and header.",
+      "compatible_grammars": [
+        "operations-grid",
+        "technical-telemetry-canvas",
+        "consulting-answer-pyramid",
+        "investor-thesis-stage"
+      ],
+      "path": "references/assets/visual_references/operations_tradeoff.jpg",
+      "source_grammar": "operations-grid",
+      "snapshot": {
+        "bytes": 102251,
+        "sha256": "633cd44b170c96079ab485e17cd3b2bb12447ad33ddec708cc3050c369c2ba88",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "operations",
+        "slide": 6,
+        "source_outline": "decks/sol-design-studies-20260923/operations/outline.json",
+        "source_outline_sha256": "b2416244fae8e40532cdb82582c0ac68207c22a79ab921d339bcf3beccd65939",
+        "source_render": "decks/sol-design-studies-20260923/operations/qa/renders/slide-06.jpg",
+        "source_render_sha256": "e85d740b65f65d7fb8bba416eea2f543bc0bf38b1f4522d592e783acc4bd5cef",
+        "source_role": "comparison",
+        "source_variant": "comparison-2col",
+        "source_title": "Risk-first protects product; it costs more travel",
+        "review": "decks/sol-design-studies-20260923/operations/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    },
+    {
+      "id": "operations-owner-register",
+      "roles": [
+        "table",
+        "decision",
+        "support"
+      ],
+      "content_shapes": [
+        "table",
+        "standard"
+      ],
+      "purposes": [
+        "operations",
+        "owner",
+        "accountability",
+        "trigger",
+        "decision",
+        "support",
+        "appendix"
+      ],
+      "keywords": [
+        "table",
+        "owners",
+        "triggers"
+      ],
+      "density": "dense: four control rows with action, due and owner",
+      "composition": "Full-width authorization register identifies action, fallback trigger and accountable owner; caveat and source line stay separate.",
+      "mixing": "Use the register for an action or support slide wherever the argument needs it, not a mandatory last slide.",
+      "compatible_grammars": [
+        "operations-grid",
+        "technical-telemetry-canvas",
+        "consulting-answer-pyramid",
+        "clinical-care-pathway",
+        "policy-public-docket"
+      ],
+      "path": "references/assets/visual_references/operations_owner_register.jpg",
+      "source_grammar": "operations-grid",
+      "snapshot": {
+        "bytes": 89263,
+        "sha256": "e274c696159e71cce44c1894b182a76d5abb99e5fe480f409449f1068afaf02d",
+        "width": 1200,
+        "height": 675
+      },
+      "provenance": {
+        "study": "operations",
+        "slide": 7,
+        "source_outline": "decks/sol-design-studies-20260923/operations/outline.json",
+        "source_outline_sha256": "b2416244fae8e40532cdb82582c0ac68207c22a79ab921d339bcf3beccd65939",
+        "source_render": "decks/sol-design-studies-20260923/operations/qa/renders/slide-07.jpg",
+        "source_render_sha256": "ecec62df8f9b40b51abd3f95a0330689bbd8bdc857f0011ee362cb799fa01625",
+        "source_role": "table",
+        "source_variant": "table",
+        "source_title": "Authorize the queue, with a transfer trigger",
+        "review": "decks/sol-design-studies-20260923/operations/qa/visual_judgment.json",
+        "finalize_passed": true
+      }
+    }
+  ]
+}

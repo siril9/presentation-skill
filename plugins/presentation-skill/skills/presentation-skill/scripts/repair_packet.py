@@ -34,6 +34,20 @@ def _pointer_key(value: str) -> str:
     return value.replace("~", "~0").replace("/", "~1")
 
 
+def _source_field(source: dict, issue: dict, index: int | None) -> tuple[str | None, str]:
+    pointer = issue.get("source_pointer")
+    if index is None or not isinstance(pointer, str) or not pointer.startswith(f"/slides/{index}/"):
+        return None, ""
+    value: Any = source
+    try:
+        for token in pointer[1:].split("/"):
+            key = token.replace("~1", "/").replace("~0", "~")
+            value = value[int(key)] if isinstance(value, list) and key.isdecimal() else value[key]
+    except (KeyError, IndexError, TypeError, ValueError):
+        return None, ""
+    return pointer, _json(value)
+
+
 def _counts(payload: Any) -> dict[str, int]:
     if not isinstance(payload, dict):
         return {}
@@ -223,10 +237,12 @@ def build_repair_packet(
             continue
         diagnostic, truncated = _bounded(issue)
         instruction = _instruction(issue)
+        source_pointer, field_excerpt = _source_field(source, issue, index)
         group["issues"].append({
             "source": name, "detail_pointer": pointer, "diagnostic": diagnostic,
+            "source_pointer": source_pointer, "source_field_excerpt": field_excerpt[:240],
             "instruction": instruction[:300],
-            "details_truncated": truncated or len(instruction) > 300,
+            "details_truncated": truncated or len(instruction) > 300 or len(field_excerpt) > 240,
         })
 
     reported = {name: _counts(payload) for name, payload in payloads.items()}
@@ -235,7 +251,7 @@ def build_repair_packet(
     packet = {
         "schema_version": SCHEMA_VERSION,
         "outline_path": str(outline_path), "qa_dir": str(directory),
-        "mapping_note": "Source pointers identify slides only; shape IDs are diagnostic references, not source fields. Null pointers require locating the source. This packet is not a QA verdict.",
+        "mapping_note": "Group pointers identify slides. Issue field pointers are used only when reported and verified in that slide's source. Shape IDs are diagnostic references, not source fields. Null pointers require locating the source. This packet is not a QA verdict.",
         "counts": {
             "findings": len(records), "affected_slides": len(affected),
             "unmapped_findings": by_slide.get(None, 0),

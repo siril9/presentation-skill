@@ -1,0 +1,153 @@
+{
+  "case": "luna",
+  "attempt": 6,
+  "warm_requested": false,
+  "author_model": "gpt-6-luna (retained source)",
+  "command": [
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/present.py",
+    "finalize",
+    "--outline",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+    "--output",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+    "--qa-dir",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa"
+  ],
+  "returncode": 0,
+  "wall_seconds": 2.907,
+  "outline_sha256": "2080d3fa2d84f8c007f44301300c1801647f16d9dfbb80ae829a89114aece6e2",
+  "receipt": {
+    "contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/visual_review/contact_sheet.jpg",
+    "failed_stage": "",
+    "failure_category": "passed",
+    "generated_at": "2026-09-30T00:34:33.531911+00:00",
+    "next_action": "Inspect the rendered slides, repair any visual defects in source, and record the visual judgment before delivery.",
+    "outline": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+    "outline_sha256": "2080d3fa2d84f8c007f44301300c1801647f16d9dfbb80ae829a89114aece6e2",
+    "output": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+    "output_exists": true,
+    "output_sha256": "075e5c554285d85f723908a39cae78545f15729b670748d18a4e37ec04de627a",
+    "passed": true,
+    "qa_counts": {
+      "accessibility_error_count": 0,
+      "accessibility_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0,
+      "geometry_error_count": 0,
+      "geometry_warning_count": 0,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "source_fidelity_error_count": 0,
+      "source_fidelity_warning_count": 0,
+      "visual_review_warning_count": 0,
+      "visual_warning_count": 0,
+      "whitespace_warning_count": 0
+    },
+    "qa_dir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa",
+    "qa_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/qa_report.json",
+    "readability": {
+      "min_body_pt": 16.0,
+      "min_metadata_pt": 9.0,
+      "min_support_pt": 13.0
+    },
+    "render_cache": {
+      "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/.render-cache",
+      "key": "3d928bd7e3e2dab285e6a4dab8b8443f21d5c29e2a9c609352f812dfcaf23253",
+      "reason": "verified",
+      "status": "hit"
+    },
+    "render_status": "passed",
+    "repair_packet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/repair_packet.json",
+    "schema_version": "quick-deck-finalization/v1",
+    "stages": [
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0,
+          1
+        ],
+        "command": [
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/preflight.py",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json"
+        ],
+        "duration_seconds": 0.084,
+        "returncode": 1,
+        "stage": "preflight"
+      },
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0
+        ],
+        "command": [
+          "/opt/homebrew/bin/node",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+          "--output",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+          "--style-preset",
+          "lab-report"
+        ],
+        "duration_seconds": 0.207,
+        "output_sha256_after_restore": "075e5c554285d85f723908a39cae78545f15729b670748d18a4e37ec04de627a",
+        "previous_output_bytes_restored": true,
+        "returncode": 0,
+        "stage": "build"
+      },
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0
+        ],
+        "command": [
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/qa_gate.py",
+          "--input",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/deck.pptx",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/outline.json",
+          "--outdir",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa",
+          "--style-preset",
+          "lab-report",
+          "--strict-geometry",
+          "--fail-on-geometry-warnings",
+          "--fail-on-whitespace-warnings",
+          "--run-visual-review",
+          "--fail-on-visual-review-warnings",
+          "--fail-on-design-warnings",
+          "--accessibility",
+          "--strict-accessibility",
+          "--accessibility-min-body-pt",
+          "16.0",
+          "--accessibility-min-support-pt",
+          "13.0",
+          "--accessibility-min-metadata-pt",
+          "9.0",
+          "--skip-manual-review",
+          "--render-cache-dir",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/.render-cache"
+        ],
+        "duration_seconds": 2.441,
+        "returncode": 0,
+        "stage": "qa"
+      }
+    ],
+    "style_preset": "lab-report",
+    "style_resolution_basis": "outline_design_choice",
+    "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+    "total_duration_seconds": 2.732,
+    "visual_inspection_status": "not_recorded"
+  },
+  "render_cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/luna/qa/.render-cache",
+    "key": "3d928bd7e3e2dab285e6a4dab8b8443f21d5c29e2a9c609352f812dfcaf23253",
+    "reason": "verified",
+    "status": "hit"
+  },
+  "timing_scope": "pipeline only; excludes model authoring and visual review"
+}

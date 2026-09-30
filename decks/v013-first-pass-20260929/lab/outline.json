@@ -1,0 +1,184 @@
+{
+  "title": "Enzyme storage: a 14-day screen",
+  "subtitle": "Original synthetic laboratory case",
+  "deck_style": {
+    "style_preset": "lab-report",
+    "composition_grammar": "scientific-evidence-plate",
+    "style_seed": "v013-enzyme-storage",
+    "palette_key": "lab_monochrome_v1",
+    "font_pair": "system_clean_v1",
+    "header_mode": "lab-clean",
+    "header_variant": "plain",
+    "header_rule_color": "171717",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "footer_source_label": "Source",
+    "summary_callout_mode": "lab-box",
+    "visual_density": "medium",
+    "emoji_mode": "none",
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_footer_pt": 9,
+      "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true,
+    "requested_author_model": "gpt-6.1-sol",
+    "brief_profile_used": "sol",
+    "source_ledger": "synthetic_data.json",
+    "external_assets": false,
+    "finalization_hold": "Wait for explicit core-integrated notification."
+  },
+  "slides": [
+    {
+      "slide_id": "lab-01",
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "role_layout_variant": "alternate",
+      "slide_intent": "question",
+      "title": "Enzyme storage:\na 14-day screen",
+      "subtitle": "Which formulation merits confirmation at 4 C?\nSynthetic pilot; no validated shelf-life claim.",
+      "kicker": "SYNTHETIC LAB NOTE / 01",
+      "sources": ["SYN-L1 | invented assay case"],
+      "notes": "All observations, formulations, lots, and thresholds are invented for presentation testing. No empirical or clinical claim is made. The title page should remain a quiet report opener, not a product reveal."
+    },
+    {
+      "slide_id": "lab-02",
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "slide_intent": "method",
+      "title": "The lot, not the well, is the replicate",
+      "subtitle": "Synthetic paired design: three lots split across all conditions",
+      "table": {
+        "headers": ["Design element", "Specification", "Inference boundary"],
+        "rows": [
+          ["Storage", "4 C; day 0 and day 14", "No temperature excursion test"],
+          ["Formulations", "Buffer; +5% glycerol; +2% trehalose", "% v/v glycerol; % w/v trehalose"],
+          ["Replication", "3 lots x 3 conditions x 2 times", "18 lot-condition-time samples"],
+          ["Readout", "2 technical wells per sample", "36 wells; independent n = 3"],
+          ["Normalization", "Day 14 / matched day 0 x 100", "Residual activity, not enzyme mass"]
+        ],
+        "column_weights": [1.1, 1.7, 1.8],
+        "caption": "SYN-L1. Technical duplicates are averaged before each lot-level ratio. Assay uses initial rate in U/mL; 1 U converts 1 micromol/min under the assumed assay conditions."
+      },
+      "sources": ["SYN-L1 | synthetic design"],
+      "notes": "Each lot has its own day-0 denominator under each formulation. The duplicate wells do not increase the number of independent biological lots. All concentration definitions are nominal formulation concentrations."
+    },
+    {
+      "slide_id": "lab-03",
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "slide_intent": "result",
+      "title": "Glycerol clears the screening threshold",
+      "subtitle": "Mean day-14 residual activity at 4 C; synthetic n = 3 lots per condition",
+      "chart": {
+        "type": "bar",
+        "categories": ["Buffer", "5% glycerol", "2% trehalose"],
+        "series": [{"name": "Residual activity (%)", "labels": ["Buffer", "5% glycerol", "2% trehalose"], "values": [62, 91, 84]}],
+        "options": {
+          "catAxisTitle": "Storage formulation",
+          "valAxisTitle": "Residual activity (%)",
+          "valAxisMinVal": 0,
+          "valAxisMaxVal": 100,
+          "valAxisMajorUnit": 20,
+          "showValue": true,
+          "showLegend": false,
+          "chartColors": ["171717"]
+        }
+      },
+      "facts": [
+        {"value": "85%", "label": "Screening threshold", "detail": "Invented criterion, not release specification"},
+        {"value": "29 pp", "label": "Glycerol minus buffer", "detail": "91% - 62%; descriptive difference"}
+      ],
+      "caption": "SYN-L1. Equal-weight means of three lot ratios. Lot ranges: buffer 58-66%, glycerol 88-94%, trehalose 80-88%. No error bars, confidence interval, or significance claim; individual lots follow.",
+      "sources": ["SYN-L1 | synthetic activity ratios"],
+      "notes": "Bar axis begins at zero. The 85% cutoff is a screening convention chosen for this invented exercise. Higher residual activity does not establish formulation compatibility or a shelf-life specification."
+    },
+    {
+      "slide_id": "lab-04",
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "role_layout_variant": "alternate",
+      "slide_intent": "replicate-audit",
+      "title": "All three glycerol lots exceed 85%",
+      "subtitle": "Synthetic paired ratios expose the spread hidden by the means",
+      "table": {
+        "headers": ["Lot", "Buffer (%)", "Glycerol (%)", "Trehalose (%)"],
+        "rows": [
+          ["A", "58", "88", "80"],
+          ["B", "62", "91", "84"],
+          ["C", "66", "94", "88"],
+          ["Mean", "62", "91", "84"],
+          ["Lots >=85%", "0/3", "3/3", "1/3"]
+        ],
+        "column_weights": [1.1, 1, 1, 1.1],
+        "caption": "SYN-L1. Every value is day 14 divided by its matched formulation-specific day 0, multiplied by 100. Three lots cannot characterize manufacturing variability."
+      },
+      "sources": ["SYN-L1 | synthetic lot ledger"],
+      "notes": "The exact raw rates and duplicate wells are retained in synthetic_data.json. A 3/3 screening pass is not a statistical guarantee for future lots."
+    },
+    {
+      "slide_id": "lab-05",
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "slide_intent": "interpretation",
+      "title": "Retention is not assay compatibility",
+      "subtitle": "Synthetic screen separates a storage signal from a deployable formulation",
+      "left": {
+        "title": "What the screen supports",
+        "bullets": ["Glycerol: 91% mean retention at day 14.", "Three of three lots exceed the chosen 85% threshold.", "Advance one candidate to a confirmation study."]
+      },
+      "right": {
+        "title": "What remains unmeasured",
+        "bullets": ["Matrix effects after dilution into the final assay.", "Viscosity, recovery, contamination, and freeze-thaw tolerance.", "Potency beyond 14 days or at other temperatures."]
+      },
+      "verdict": "Synthetic candidate selection only; no formulation release or shelf-life assignment.",
+      "sources": ["SYN-L1 | synthetic scope limits"],
+      "notes": "These missing measurements are limitations, not invented adverse results. Preserve all three unmeasured categories in visible slide copy."
+    },
+    {
+      "slide_id": "lab-06",
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "slide_intent": "confirmation-design",
+      "title": "Confirmation must earn the next claim",
+      "subtitle": "Proposed synthetic study sequence; no work has been performed",
+      "milestones": [
+        {"label": "01 / matrix", "title": "Check compatibility", "body": "Compare fresh formulations at the final assay dilution; verify blanks and spike recovery."},
+        {"label": "02 / storage", "title": "Expand the window", "body": "Six new paired lots at days 0, 7, 14, and 28; keep the day-0 denominator per lot."},
+        {"label": "03 / decision", "title": "Set criteria first", "body": "Predeclare retention and precision limits before results; investigate any failed lot."}
+      ],
+      "caption": "SYN-L2. Proposed design only. Six lots are a planning choice, not a power calculation; no minimum validated shelf life follows from this proposal.",
+      "sources": ["SYN-L2 | invented confirmation plan"],
+      "notes": "This is a true sequential study plan, not decorative pacing. All three stages remain editable milestone objects."
+    },
+    {
+      "slide_id": "lab-07",
+      "type": "content",
+      "role": "decision",
+      "variant": "standard",
+      "slide_intent": "recommendation",
+      "title": "Advance glycerol; withhold shelf life",
+      "subtitle": "Synthetic conclusion for an assay-development meeting",
+      "bullets": [
+        "Advance 5% v/v glycerol to a compatibility-first confirmation study.",
+        "Keep the evidence unit at the lot; report all failures and raw rates.",
+        "Do not authorize production release, clinical use, or a shelf-life label."
+      ],
+      "summary_callout": "A promising 14-day screen is a reason to test, not a validated storage instruction.",
+      "sources": ["SYN-L1/L2 | all facts and plans invented"],
+      "notes": "SYN-L1 identifies the original invented assay dataset and design. SYN-L2 identifies the original proposed confirmation plan. Neither is an external citation. No external assets, logo, or proprietary slide language is used."
+    }
+  ]
+}

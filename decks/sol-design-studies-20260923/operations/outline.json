@@ -1,0 +1,149 @@
+{
+  "title": "Cold-chain repair queue",
+  "subtitle": "A 24-hour dispatch decision",
+  "deck_style": {
+    "style_preset": "charcoal-safety",
+    "composition_grammar": "operations-grid",
+    "style_seed": "cold-chain-dispatch-operations-20260923",
+    "title_layout": "command-center",
+    "header_variant": "auto",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "visual_density": "medium",
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_metadata_pt": 9,
+      "min_footer_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "slides": [
+    {
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "slide_intent": "Frame the next-shift repair decision and establish that every number is synthetic.",
+      "title": "Cold-chain repair queue",
+      "subtitle": "Synthetic 24-hour decision for four depots and seven loads",
+      "kicker": "OPERATIONS DECISION / SYNTHETIC SCENARIO",
+      "show_page_number": false
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "kpi-hero",
+      "slide_intent": "Anchor urgency in the earliest modeled temperature threshold.",
+      "title": "East depot is the first exposure",
+      "value": "18h",
+      "label": "to first projected threshold excursion",
+      "show_page_number": false
+    },
+    {
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "slide_intent": "Make the first-wave queue auditable by exposure, duration, and owner.",
+      "title": "Exposure sets the first-wave queue",
+      "subtitle": "Five jobs scheduled; sixth crew start held for contingencies",
+      "table_treatment": "standard",
+      "headers": ["Rank", "Depot / asset", "Limit in", "Repair", "Crew start", "Owner"],
+      "rows": [
+        ["1", "East / F-04", "18 h", "4 h", "02:00", "Crew A"],
+        ["2", "South / C-12", "21 h", "3 h", "02:00", "Crew B"],
+        ["3", "North / F-02", "24 h", "5 h", "04:00", "Crew C"],
+        ["4", "East / C-07", "27 h", "2 h", "07:00", "Crew B"],
+        ["5", "West / F-09", "31 h", "3 h", "08:00", "Crew A"]
+      ],
+      "column_weights": [0.08, 0.27, 0.13, 0.11, 0.17, 0.16],
+      "caption": "All times and durations are synthetic. Start times are hours on the simulated shift clock.",
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "slide_intent": "Show the control handoffs that protect the 18-hour buffer.",
+      "title": "Dispatch is a gated sequence, not a repair list",
+      "subtitle": "The handoff clock begins when the shift lead approves the queue",
+      "timeline_mode": "bands",
+      "milestones": [
+        {"label": "0-2 h", "title": "Confirm", "body": "Check logger and standby capacity."},
+        {"label": "2-6 h", "title": "Dispatch", "body": "Assign crews A-C; stage transfer kits."},
+        {"label": "6-18 h", "title": "Repair", "body": "Close jobs; escalate starts delayed 2 h."},
+        {"label": "18-24 h", "title": "Verify", "body": "Log stable temperature before release."}
+      ],
+      "takeaway": "If F-04 is not stable by hour 12, transfer its load before the 18-hour limit.",
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "slide_intent": "Quantify the modeled effect by depot and expose the denominator.",
+      "title": "Risk-first avoids 43 pallet-hours",
+      "subtitle": "Unprotected pallet-hours over the next 24 hours by depot",
+      "chart": {
+        "type": "bar",
+        "categories": ["North", "East", "South", "West"],
+        "series": [
+          {"name": "Ticket-age order", "values": [12, 26, 18, 9]},
+          {"name": "Risk-first order", "values": [4, 6, 9, 3]}
+        ],
+        "options": {"valAxisTitle": "Pallet-hours", "catAxisTitle": "Depot"}
+      },
+      "facts": [
+        {"value": "43", "label": "Pallet-hours avoided", "detail": "65 under ticket-age order versus 22 risk-first"}
+      ],
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "slide_intent": "Make the operational tradeoff explicit rather than presenting the modeled gain alone.",
+      "title": "Risk-first protects product; it costs more travel",
+      "left": {
+        "title": "Ticket-age order",
+        "body": [
+          "5 projected threshold excursions",
+          "65 unprotected pallet-hours",
+          "17 crew travel hours",
+          "4 of 7 critical loads restored"
+        ]
+      },
+      "right": {
+        "title": "Risk-first order",
+        "body": [
+          "1 projected threshold excursion",
+          "22 unprotected pallet-hours",
+          "21 crew travel hours",
+          "7 of 7 critical loads restored"
+        ]
+      },
+      "verdict": "Choose risk-first for this shift; accept four extra crew travel hours to reduce modeled exposure.",
+      "sources": ["S1"]
+    },
+    {
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "slide_intent": "Close with the authorization, fallback trigger, and named owners.",
+      "title": "Authorize the queue, with a transfer trigger",
+      "subtitle": "Shift-lead decision at the simulated 00:00 handoff",
+      "table_treatment": "standard",
+      "headers": ["Control", "Action", "Trigger / due", "Accountable"],
+      "rows": [
+        ["Dispatch", "Release ranks 1-5", "Now", "Shift lead"],
+        ["Capacity", "Hold one crew start", "Until hour 12", "Dispatcher"],
+        ["Fallback", "Transfer F-04 load", "Not stable by hour 12", "East lead"],
+        ["Closure", "Verify stable trend", "Before product release", "Quality lead"]
+      ],
+      "column_weights": [0.18, 0.30, 0.31, 0.21],
+      "caption": "Decision applies only to the synthetic 24-hour scenario. Re-run the queue when actual telemetry or crew availability changes.",
+      "sources": ["S1"]
+    }
+  ]
+}

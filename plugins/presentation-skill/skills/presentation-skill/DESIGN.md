@@ -20,7 +20,7 @@ typography:
     letterSpacing: "0px"
   body:
     fontFamily: "Calibri"
-    fontSize: "20px"
+    fontSize: "22px"
     fontWeight: 400
     lineHeight: 1.22
     letterSpacing: "0px"
@@ -79,19 +79,19 @@ components:
 
 ## Overview
 
-presentation-skill creates editable PowerPoint decks from structured outlines. The visual system should feel precise, editorial, and deliberate: strong title hierarchy, stable margins, clean content blocks, and no overlapping elements. Alignment and readability win over decoration.
+presentation-skill creates clean, editable, reproducible PowerPoint decks from structured outlines. Compose supported layouts around the content rather than following a fixed template sequence. Keep a coherent design system within each deck, with meaningful structural choices across decks. Alignment, readability, contrast, and balanced density win over decoration; palette or border changes alone are not diversity.
 
 ## Colors
 
-Use one preset per deck. A deck should have a dominant background family, one support color, and one accent. Avoid generic blue unless the topic genuinely calls for it. Dark title and section slides should contrast with light content slides, or the deck should commit to a dark theme throughout.
+Use one base preset per deck, with compatible treatments where the content benefits. Keep typography, spacing, and semantic color coherent. Avoid generic blue unless the topic calls for it. Dark title and section slides may contrast with light content slides, or the deck may use a consistent dark theme.
 
 ## Typography
 
-Titles must visibly dominate body copy. Use 36-44pt for main slide titles, 20-24pt for section/card headings, 14-16pt for body text, and 10-12pt for captions and source lines. Letter spacing is always zero; do not use negative tracking.
+Titles must visibly dominate body copy. For ordinary delivery, use at least 28pt for titles, 16pt for body text, 13pt for supporting subtitles, and 9pt for captions and source lines. Shorten or restructure content before shrinking type. Letter spacing is always zero; do not use negative tracking.
 
 ## Layout
 
-Use a 16:9 canvas with disciplined side margins and repeatable gutters. Content starts only after wrapped titles and subtitles have reserved enough height. Body text is left aligned except for KPIs. Every content slide needs a visual anchor: image, chart, icon system, table, oversized number, or a strong two-column composition.
+Use a 16:9 canvas with disciplined side margins and repeatable gutters. Content starts only after wrapped titles and subtitles have reserved enough height. Body text is left aligned except for KPIs. Choose a focal structure suited to the content; a clean bullet list, table, or rectangular highlight can be sufficient without an added visual.
 
 For reusable workspaces, capture the taste decision in `design_brief.json`
 before writing `outline.json`: audience posture, cover archetype, grid policy,
@@ -111,15 +111,15 @@ answers or assumptions in `design_brief.user_intake`, then translate them into
 the actual taste layer: `visual_system`, `design_modulation`,
 `title_page_concept`, `deck_style`, `asset_plan`, and `notes.md`.
 Before writing the outline, use `scripts/emit_design_contract_prompt.py` to
-lock a reproducible design contract: preset, palette, background system,
-header/footer treatment, slide sequence, asset posture, source policy,
+lock a reproducible design contract: base preset, palette, background system,
+header/footer treatment, content-led slide order, asset posture, source policy,
 continuity rules, analysis artifacts, readability thresholds, speed policy, and
 QA gates.
 
 ## Design DNA
 
 Before rendering, choose a deck DNA that controls motif, pacing, density, and
-which variants are allowed. Good decks vary by argument, not by randomizing
+which treatments are appropriate. Good decks vary by argument, not by randomizing
 slides:
 
 For non-trivial decks, resolve `style_execution_plan_v1` and its
@@ -157,6 +157,11 @@ v2 grammar contract, v1 role system, then legacy renderer. Flat treatment
 fields remain compatible fallbacks; they must not override the role system
 merely to create novelty.
 
+Alternate layouts may change emphasis, but should not mirror numbered steps
+out of their source reading order. Peer boxes in a row share aligned edges;
+unequal sizes should signal a deliberate hierarchy, not incidental text length.
+Keep labels, indices, and body copy clear of both panel edges and each other.
+
 New workspaces use v2. A workspace with only `renderer_role_systems_v1` stays
 on v1 until `scripts/upgrade_renderer_role_contracts_v2.py` is run; repeated
 upgrades are no-ops.
@@ -167,7 +172,7 @@ Cards may use a light shadow or fine border, but the deck should not become a st
 
 ## Shapes
 
-Cards may use modest radii only when they do not have edge-attached accents. If a top/side accent rail, header strip, or flush overlay touches the card edge, use a rectangular card body so the accent aligns cleanly. Do not place thin accent lines above or below titles; that is a common low-quality generated-slide pattern.
+Cards may use modest radii only when they do not have edge-attached accents. If a top/side accent rail, header strip, or flush overlay touches the card edge, use a rectangular card body so the accent aligns cleanly. Avoid gratuitous accent lines around titles; a restrained report rule is valid when it serves hierarchy.
 
 ## Components
 
@@ -199,16 +204,17 @@ or bottom takeaway box is usually better than a forced hero slide.
 ## Academic, Lab, And Data Decks
 
 Use the `lab-report` preset or another restrained light preset. Credibility
-comes from figure-first layouts and clean report slides, not decorative icons:
+comes from evidence-led layouts and clean report slides, not decorative icons:
 put plots, workflow screenshots, microscopy/gel/readout panels, tables, method
 diagrams, or concise bullets in the main region. For simple academic decks,
-prefer a white canvas with a measured heading, optional colored heading card,
-footer rule, sources, and page number. Use a bottom takeaway box only when it
+a restrained white canvas with a black heading, simple bullets or tables,
+rectangular highlights, footer rule, sources, and page number is fully valid.
+Use a bottom takeaway box only when it
 helps the presenter state the result without editing formatting manually. Use
-9-11pt captions for assay/run/source metadata, navy headers, and semantic
+9-11pt captions for assay/run/source metadata, optional navy headers, and semantic
 red/green/blue/orange accents for genotype, control, pass/fail, or risk states.
-For any `lab-clean` report slide, use `header_variant: "auto"` unless a
-specific slide needs a fixed treatment; the renderer rotates among restrained
+For `lab-clean` report slides, `header_variant: "auto"` is optional; a fixed
+plain heading can keep a report consistent. Auto rotates among restrained
 left-accent, split-rule, title-rule, side-rail, top-bottom-rule, and plain
 heading/rule combinations. Set a short deck-level `style_seed` in
 `deck_style` or `style_system` when two similar lab reports should keep
@@ -246,9 +252,9 @@ better design choice is often to avoid the diagram entirely.
 
 ## Do's and Don'ts
 
-Do choose a topic-specific palette, add visual structure to every content slide, keep source/provenance visible when useful, and run geometric plus visual QA before declaring a deck done.
+Do choose a topic-fit palette, give every content slide a clear reading path, keep source/provenance visible when useful, and run geometric plus visual QA before declaring a deck done.
 
-Do not repeat the same layout three times in a row, center body text, mix presets inside one deck, use qualitative text as a giant KPI, force a hero slide when no single metric deserves it, or bury generated imagery inside evidence slides without disclosure.
+Do not repeat a layout mechanically, center body text, mix incompatible presets inside one deck, use qualitative text as a giant KPI, force a hero slide when no single metric deserves it, or bury generated imagery inside evidence slides without disclosure. A consistent series of report pages may reuse the same structure when the evidence calls for it.
 
 For public-topic decks, use source-backed imagery when it strengthens the
 argument. A small number of Wikimedia/CC images with visible source metadata

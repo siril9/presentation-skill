@@ -105,6 +105,19 @@ class RepairPacketTests(unittest.TestCase):
         self.assertEqual(packet["counts"]["findings"], 0)
         self.assertEqual(packet["truncation"]["omitted_findings"], 0)
 
+    def test_content_issue_resolves_only_its_reported_source_field(self) -> None:
+        self.write(self.outline, {"slides": [{"title": "Evidence", "caption": "Maximum CV is not pooled CV."}]})
+        self.report("design_rules.json", {"issues": [
+            {"slide_index": 0, "type": "source_fidelity_text_missing", "severity": "error",
+             "source_pointer": "/slides/0/caption"},
+            {"slide_index": 0, "type": "source_fidelity_text_missing", "severity": "error",
+             "source_pointer": "/slides/1/caption"},
+        ]})
+        issues = self.build()["repairs"][0]["issues"]
+        self.assertEqual(issues[0]["source_pointer"], "/slides/0/caption")
+        self.assertEqual(issues[0]["source_field_excerpt"], '"Maximum CV is not pooled CV."')
+        self.assertIsNone(issues[1]["source_pointer"])
+
     def test_missing_details_preserve_counts_without_fabricated_warnings(self) -> None:
         self.report("qa_report.json", {"design_error_count": 4, "render_rc": 1})
         packet = self.build()

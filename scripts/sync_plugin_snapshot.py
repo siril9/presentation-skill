@@ -50,17 +50,10 @@ SCRIPT_DEVELOPMENT_ONLY = {
 }
 
 SCREENSHOTS = {
-    "v0.12_narrative_process.jpg": REPO / "examples/v0.12_narrative_process.jpg",
-    "v0.12_evidence_decisions.jpg": REPO / "examples/v0.12_evidence_decisions.jpg",
-    "v0.12_data_comparisons.jpg": REPO / "examples/v0.12_data_comparisons.jpg",
-    "v0.11_monochrome_lab_ab.jpg": REPO / "examples/v0.11_monochrome_lab_ab.jpg",
-    "v0.9_narrative_structures.jpg": REPO / "examples/v0.9_narrative_structures.jpg",
-    "v0.9_evidence_data_structures.jpg": REPO / "examples/v0.9_evidence_data_structures.jpg",
-    "v0.9_decisions_sources.jpg": REPO / "examples/v0.9_decisions_sources.jpg",
-    "presentation_skill_variant_proof.png": REPO
-    / "decks/native-vs-latest-random-topics-20260623/readme_images/presentation_skill_variant_proof.png",
-    "presentation_skill_style_family_proof.png": REPO
-    / "decks/native-vs-latest-random-topics-20260623/readme_images/presentation_skill_style_family_proof.png",
+    "v0.13_design_studies.jpg": REPO / "examples/v0.13_design_studies.jpg",
+    "v0.13_lab_contact_sheet.jpg": REPO / "examples/v0.13_lab_contact_sheet.jpg",
+    "v0.13_editorial_contact_sheet.jpg": REPO / "examples/v0.13_editorial_contact_sheet.jpg",
+    "v0.13_operations_contact_sheet.jpg": REPO / "examples/v0.13_operations_contact_sheet.jpg",
     "codex_native_vs_updated_clean_three_topics.png": REPO
     / "decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png",
 }

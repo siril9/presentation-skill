@@ -1,0 +1,104 @@
+{
+  "case": "operations",
+  "attempt": 3,
+  "warm_requested": false,
+  "author_model": "gpt-6.1-sol",
+  "command": [
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/present.py",
+    "finalize",
+    "--outline",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+    "--output",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/deck.pptx",
+    "--qa-dir",
+    "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa"
+  ],
+  "returncode": 1,
+  "wall_seconds": 0.569,
+  "outline_sha256": "e853831944e2ce7a63df6b17caea7c7146e13452256faaf528923f8f12691fc2",
+  "receipt": {
+    "contact_sheet": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/visual_review/contact_sheet.jpg",
+    "failed_stage": "build",
+    "failure_category": "build_failure",
+    "generated_at": "2026-09-29T23:41:20.424875+00:00",
+    "next_action": "Fix the reported source or asset error; do not patch the generated PPTX.",
+    "outline": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+    "outline_sha256": "e853831944e2ce7a63df6b17caea7c7146e13452256faaf528923f8f12691fc2",
+    "output": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/deck.pptx",
+    "output_exists": false,
+    "output_sha256": "",
+    "passed": false,
+    "qa_counts": {
+      "accessibility_error_count": 0,
+      "accessibility_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0,
+      "geometry_error_count": 0,
+      "geometry_warning_count": 0,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "source_fidelity_error_count": 0,
+      "source_fidelity_warning_count": 0,
+      "visual_review_warning_count": 0,
+      "visual_warning_count": 0,
+      "whitespace_warning_count": 0
+    },
+    "qa_dir": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa",
+    "qa_report": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/qa/qa_report.json",
+    "readability": {
+      "min_body_pt": 16.0,
+      "min_metadata_pt": 9.0,
+      "min_support_pt": 13.0
+    },
+    "render_cache": {
+      "status": "not_completed"
+    },
+    "render_status": "not_completed",
+    "schema_version": "quick-deck-finalization/v1",
+    "stages": [
+      {
+        "accepted": true,
+        "accepted_returncodes": [
+          0,
+          1
+        ],
+        "command": [
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/.venv/bin/python",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/preflight.py",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json"
+        ],
+        "duration_seconds": 0.097,
+        "returncode": 1,
+        "stage": "preflight"
+      },
+      {
+        "accepted": false,
+        "accepted_returncodes": [
+          0
+        ],
+        "command": [
+          "/opt/homebrew/bin/node",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/scripts/build_deck_pptxgenjs.js",
+          "--outline",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/outline.json",
+          "--output",
+          "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/operations/deck.pptx",
+          "--style-preset",
+          "lavender-ops"
+        ],
+        "duration_seconds": 0.309,
+        "returncode": 1,
+        "stage": "build"
+      }
+    ],
+    "style_preset": "lavender-ops",
+    "style_resolution_basis": "outline_design_choice",
+    "timing_scope": "Pipeline only; excludes model authoring and visual judgment.",
+    "total_duration_seconds": 0.406,
+    "visual_inspection_status": "not_recorded"
+  },
+  "render_cache": {},
+  "timing_scope": "pipeline only; excludes model authoring and visual review"
+}

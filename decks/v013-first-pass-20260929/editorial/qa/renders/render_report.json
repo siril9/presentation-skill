@@ -1,0 +1,48 @@
+{
+  "cache": {
+    "directory": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/.render-cache",
+    "key": "04cc8b19c1982bf83ffac95a81e06bc57c1dbc7f6416db304efc30768d63542a",
+    "reason": "verified",
+    "status": "hit"
+  },
+  "dpi": 180,
+  "elapsed_seconds": 0.752596,
+  "format": "jpeg",
+  "images": [
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-01.jpg",
+      "sha256": "e9ebb78559fc9e49686fb4b816a1a66a3824967bc8bece4259803112d1856a92",
+      "size": 80840
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-02.jpg",
+      "sha256": "2e5a424f1d04f192ccaa272bcb6842ad4c360e59e9f988532e6d477401921aa4",
+      "size": 142670
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-03.jpg",
+      "sha256": "92d50a133a2e5a5b0228897f686fdeaac2cee1a8b2953061a08823c5f3d63025",
+      "size": 147317
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-04.jpg",
+      "sha256": "97cf5d8ba6895d882cd426219034ed39db13ba0ce8e228d7b820fe5bcd61defb",
+      "size": 149268
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-05.jpg",
+      "sha256": "7473ef7bdaa060099e732c47587063f9178124a4e099c583f5e0945ce840a947",
+      "size": 118381
+    },
+    {
+      "path": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/qa/renders/slide-06.jpg",
+      "sha256": "a7dae8dfe5ddfe5e20eaa653c56608cd8fc95f36b38a441bdf3c28228277376f",
+      "size": 152659
+    }
+  ],
+  "input": "/Users/sirilarockiam/CascadeProjects/presentation-skill/decks/v013-first-pass-20260929/editorial/deck.pptx",
+  "page_count": 6,
+  "pptx_sha256": "3936167ba434b038c278bdac8eb48b49184f4e06077c753496edc4443a93aeda",
+  "schema_version": "slide_render_report_v1",
+  "status": "complete"
+}

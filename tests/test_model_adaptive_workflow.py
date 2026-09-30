@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,11 +23,13 @@ from composition_grammar_catalog import (
 )
 from model_adaptive_workflow import (
     PROFILE_ALIASES,
+    VISUAL_REFERENCE_CATALOG,
     build_agent_brief,
     minimal_payload_examples,
     normalize_profile,
     render_agent_brief_markdown,
     resolve_profile,
+    select_visual_reference_hints,
 )
 from preflight import _check_role_variant_alignment, _check_variant_required
 import present
@@ -80,8 +84,13 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
         self.assertEqual(resolve_profile("auto", "Quick clinical trial draft")[0], "quality-first")
         self.assertEqual(resolve_profile("auto", "Quick working draft")[0], "fast")
         self.assertEqual(normalize_profile(" GPT-6-ASTRA "), "quality-first")
-        for alias, profile in {"astra": "quality-first", "gpt-6-astra": "quality-first", "gpt-6-sol": "quality-first", "gpt-6-luna": "fast", "gpt-5.6-sol": "quality-first", "gpt-5.6-terra": "balanced", "gpt-5.6-luna": "fast"}.items():
+        for alias, profile in {"astra": "quality-first", "gpt-6-astra": "quality-first", "gpt-6.1-sol": "quality-first", "gpt-6-sol": "quality-first", "gpt-6-luna": "fast", "gpt-5.6-sol": "quality-first", "gpt-5.6-terra": "balanced", "gpt-5.6-luna": "fast"}.items():
             self.assertEqual(normalize_profile(alias), profile)
+        self.assertEqual(normalize_profile(" GPT-6.1-SOL "), "quality-first")
+        self.assertEqual(
+            quick_deck_agent_brief(self.route(), slide_count=7, agent_profile="gpt-6.1-sol"),
+            quick_deck_agent_brief(self.route(), slide_count=7, agent_profile="gpt-6-sol"),
+        )
 
     def test_unknown_model_requires_explicit_policy(self):
         for unknown in ("gpt-future", "gpt-5.6-luna-unknown", "typo"):
@@ -160,6 +169,7 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
             ("astra", "City review", "", "quality-first"),
             ("gpt-6-astra", "City review", "", "quality-first"),
             ("gpt-6-sol", "City review", "", "quality-first"),
+            ("gpt-6.1-sol", "City review", "", "quality-first"),
             ("gpt-6-luna", "City review", "", "fast"),
             ("gpt-5.6-sol", "City review", "", "quality-first"),
             ("gpt-5.6-terra", "City review", "", "balanced"),
@@ -182,6 +192,139 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
             self.assertEqual(failed.returncode, 2)
             self.assertFalse(invalid.exists())
             self.assertNotIn("Traceback", failed.stderr)
+
+    def test_original_visual_catalog_is_small_inspectable_and_provenance_bound(self):
+        from PIL import Image
+
+        catalog = json.loads(VISUAL_REFERENCE_CATALOG.read_text())
+        records = catalog["exemplars"]
+        self.assertEqual(catalog["license"], "MIT")
+        self.assertTrue((ROOT / catalog["license_file"]).is_file())
+        self.assertEqual(len(records), 12)
+        self.assertEqual(len({r["id"] for r in records}), len(records))
+        self.assertEqual({r["provenance"]["study"] for r in records}, {"clean-lab", "editorial", "operations"})
+        total = 0
+        for record in records:
+            asset = ROOT / record["path"]
+            self.assertTrue(asset.is_relative_to(ROOT / "references/assets/visual_references"))
+            data = asset.read_bytes()
+            total += len(data)
+            self.assertEqual(len(data), record["snapshot"]["bytes"])
+            self.assertEqual(hashlib.sha256(data).hexdigest(), record["snapshot"]["sha256"])
+            with Image.open(asset) as img:
+                self.assertEqual(img.format, "JPEG")
+                self.assertEqual(img.size, (1200, 675))
+                self.assertEqual(img.size, (record["snapshot"]["width"], record["snapshot"]["height"]))
+                img.verify()
+            for key in ("density", "composition", "mixing", "roles", "content_shapes", "purposes", "keywords"):
+                self.assertTrue(record[key], (record["id"], key))
+            provenance = record["provenance"]
+            self.assertTrue(provenance["finalize_passed"])
+            self.assertTrue(provenance["source_render"].startswith("decks/sol-design-studies-20260923/"))
+            self.assertRegex(provenance["source_render_sha256"], r"^[a-f0-9]{64}$")
+            self.assertRegex(provenance["source_outline_sha256"], r"^[a-f0-9]{64}$")
+        self.assertEqual(total, catalog["asset_bytes"])
+        self.assertLess(total, 1_000_000)
+        self.assertEqual(set((ROOT / "references/assets/visual_references").iterdir()), {ROOT / r["path"] for r in records})
+
+    def test_visual_retrieval_matches_shape_role_and_purpose_without_loading_images(self):
+        cases = [
+            ("scientific-evidence-plate", "Assay chart of drift", None, None, "lab-trend"),
+            ("scientific-evidence-plate", "Assay limits", ["table"], ["support"], "lab-endpoints"),
+            ("scientific-evidence-plate", "Validation gate", None, ["decision"], "lab-evidence-gate"),
+            ("editorial-spread", "Library survey chart", None, None, "editorial-chart"),
+            ("editorial-spread", "Single metric synthesis", ["stats"], None, "editorial-focal-metric"),
+            ("editorial-spread", "Pilot timeline", None, None, "editorial-pilot"),
+            ("editorial-spread", "Recommendation accountability", None, ["decision"], "editorial-decision"),
+            ("operations-grid", "Ranked dispatch queue", ["table"], ["support"], "operations-queue"),
+            ("operations-grid", "Timed handoff process", ["flow"], ["support"], "operations-handoffs"),
+            ("operations-grid", "Risk versus cost tradeoff", None, ["comparison"], "operations-tradeoff"),
+            ("operations-grid", "Authorization owner trigger", None, ["table"], "operations-owner-register"),
+        ]
+        with patch.object(Path, "read_bytes", side_effect=AssertionError("Retrieval must not load images or decks")):
+            for grammar, prompt, shapes, roles, expected in cases:
+                with self.subTest(grammar=grammar, prompt=prompt):
+                    selected = select_visual_reference_hints(
+                        [{"grammar_id": grammar}], user_prompt=prompt,
+                        content_shapes=shapes, roles=roles, limit=1,
+                    )
+                    self.assertEqual(selected[grammar][0]["id"], expected)
+                    self.assertEqual(set(selected[grammar][0]), {"id", "path", "keywords"})
+        self.assertEqual(select_visual_reference_hints([{"grammar_id": "unknown"}]), {})
+        self.assertEqual(select_visual_reference_hints([{"grammar_id": "operations-grid"}], content_shapes=["image-sidebar"]), {})
+        chart_only = select_visual_reference_hints([{"grammar_id": "scientific-evidence-plate"}], user_prompt="Assay chart")
+        self.assertEqual([r["id"] for r in chart_only["scientific-evidence-plate"]], ["lab-trend"])
+
+    def test_visual_retrieval_caps_deduplicates_and_works_without_source_decks(self):
+        candidates = [{"grammar_id": grammar} for grammar in (
+            "scientific-evidence-plate", "editorial-spread", "operations-grid", "operations-grid",
+        )]
+        first = select_visual_reference_hints(candidates, limit=99)
+        self.assertEqual(first, select_visual_reference_hints(candidates, limit=99))
+        ids = [r["id"] for refs in first.values() for r in refs]
+        self.assertEqual(len(ids), 3)
+        self.assertEqual(len(set(ids)), 3)
+        self.assertEqual(set(first), {c["grammar_id"] for c in candidates})
+        self.assertEqual(select_visual_reference_hints(candidates, limit=0), {})
+        with tempfile.TemporaryDirectory(prefix="presentation-local-references-") as tmp:
+            root = Path(tmp)
+            catalog = root / "references/visual_reference_catalog.json"
+            catalog.parent.mkdir()
+            shutil.copyfile(VISUAL_REFERENCE_CATALOG, catalog)
+            with patch("model_adaptive_workflow.VISUAL_REFERENCE_CATALOG", catalog):
+                self.assertEqual(select_visual_reference_hints(candidates), {})
+                asset = root / "references/assets/visual_references/lab_trend.jpg"
+                asset.parent.mkdir(parents=True)
+                shutil.copyfile(ROOT / "references/assets/visual_references/lab_trend.jpg", asset)
+                self.assertFalse((root / "decks").exists())
+                selected = select_visual_reference_hints(candidates, user_prompt="chart")
+                self.assertEqual([r["id"] for refs in selected.values() for r in refs], ["lab-trend"])
+                self.assertEqual(selected["scientific-evidence-plate"][0]["path"], str(asset.resolve()))
+                unsafe = json.loads(catalog.read_text())
+                for record in unsafe["exemplars"]:
+                    record["path"] = "references/../outside.jpg"
+                (root / "outside.jpg").touch()
+                catalog.write_text(json.dumps(unsafe))
+                self.assertEqual(select_visual_reference_hints(candidates), {})
+            with patch("model_adaptive_workflow.VISUAL_REFERENCE_CATALOG", root / "missing.json"):
+                self.assertEqual(select_visual_reference_hints(candidates), {})
+
+    def test_visual_links_in_quick_and_workspace_briefs_stay_optional_and_bounded(self):
+        for profile in ("luna", "terra", "gpt-6-sol", "gpt-6.1-sol"):
+            for preset, prompt in (
+                ("lab-report", "Assay chart, table and comparison for a validation decision"),
+                ("editorial-minimal", "Library survey chart, single metric and pilot timeline"),
+                ("charcoal-safety", "Operations support: queue table, handoff timeline and tradeoff comparison"),
+                ("", "Public evidence, options and sources"),
+            ):
+                with self.subTest(profile=profile, preset=preset):
+                    route = self.route(prompt, style_preset=preset)
+                    quick = quick_deck_agent_brief(route, slide_count=7, agent_profile=profile)
+                    refs = [r for c in quick["route_candidates"] for r in c["visual_references"]]
+                    self.assertTrue(refs)
+                    self.assertLessEqual(len(refs), 3)
+                    self.assertEqual(len({r["id"] for r in refs}), len(refs))
+                    self.assertTrue(all(Path(r["path"]).is_file() for r in refs))
+                    self.assertLess(len(json.dumps(quick, separators=(",", ":"))), 9000)
+                    packet = {"agent_kickoff_brief": {"atom_workflow_context": {
+                        "composition_grammar_route": route,
+                        "style_execution_plan": {"explicit_style_lock": bool(preset)},
+                    }}}
+                    workspace = build_agent_brief(packet=packet, workspace=ROOT, user_prompt=prompt, requested_profile=profile)
+                    grammar = workspace["routing"]["composition_grammar"]
+                    hints = [r for c in [grammar, *grammar["alternatives"]] for r in c["visual_references"]]
+                    self.assertTrue(hints)
+                    self.assertLessEqual(len(hints), 3)
+                    if preset:
+                        self.assertFalse(grammar["alternatives"])
+                    markdown = render_agent_brief_markdown(workspace)
+                    for hint in hints:
+                        self.assertIn(f"[{hint['id']}]({hint['path']})", markdown)
+                    self.assertTrue(workspace["prompt_budget"]["within_budget"])
+                    self.assertLess(len(json.dumps(workspace, separators=(",", ":"))), 20000)
+                    self.assertNotIn("base64", json.dumps(quick))
+                    self.assertEqual(set(quick["commands"]), {"finalize", "repair_loop"})
+                    self.assertEqual(quick["visual_reference_policy"], workspace["routing"]["visual_reference_policy"])
 
 
 if __name__ == "__main__":

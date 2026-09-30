@@ -1,0 +1,171 @@
+{
+  "title": "Repair the fault, then prove the uptime",
+  "subtitle": "Original synthetic community microgrid case",
+  "deck_style": {
+    "style_preset": "lavender-ops",
+    "composition_grammar": "operations-grid",
+    "style_seed": "v013-microgrid-repair",
+    "palette_key": "energy_sunset_v1",
+    "font_pair": "clean_modern_v1",
+    "visual_density": "medium",
+    "emoji_mode": "none",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "footer_source_label": "Source",
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_footer_pt": 9,
+      "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true,
+    "requested_author_model": "gpt-6.1-sol",
+    "brief_profile_used": "sol",
+    "source_ledger": "synthetic_data.json",
+    "external_assets": false,
+    "finalization_hold": "Main owns build; wait for main-ready notification."
+  },
+  "slides": [
+    {
+      "slide_id": "ops-01",
+      "type": "title",
+      "role": "title",
+      "variant": "title",
+      "slide_intent": "operating-state",
+      "title": "Repair the fault,\nthen prove the uptime",
+      "subtitle": "Synthetic community microgrid / one critical-load bus\n30-day availability: 98.96%; planning target: 99.50%.",
+      "kicker": "SYNTHETIC OPERATIONS / REPAIR REVIEW",
+      "sources": ["SYN-O1 | invented 720-hour event log"],
+      "notes": "Dark command-style opener contrasts with light evidence pages and dark decision strips. Availability means bus output within the assumed operating specification, not energy adequacy, household uptime, or electrical safety certification. All events, costs, targets, and proposed roles are invented."
+    },
+    {
+      "slide_id": "ops-02",
+      "type": "content",
+      "role": "decision",
+      "variant": "standard",
+      "slide_intent": "conditional-repair-decision",
+      "title": "Reserve USD 2,400; release no work yet",
+      "subtitle": "Synthetic decision: connector replacement is conditional, not authorized",
+      "bullets": [
+        "Prefer connector replacement only if qualified diagnosis confirms the suspected fault.",
+        "Facilities lead must verify backup continuity, the approved work permit, and the replacement part.",
+        "Use qualified electrical personnel and site procedures; this deck is not a repair instruction or safety certification."
+      ],
+      "summary_callout": "Budget reservation is not permission to isolate, repair, or re-energize the microgrid.",
+      "sources": ["SYN-O2 | invented repair proposal"],
+      "notes": "Decision precedes exhibits because the team needs a clear conditional request before examining the event evidence. USD 2,400 is a planning estimate, not a vendor quote. This is not guidance for an actual energized system."
+    },
+    {
+      "slide_id": "ops-03",
+      "type": "content",
+      "role": "chart",
+      "variant": "chart",
+      "slide_intent": "downtime-variance",
+      "title": "One suspected fault tags 60% of downtime",
+      "subtitle": "Synthetic, non-overlapping events on the same 720-hour bus window",
+      "chart": {
+        "type": "bar",
+        "categories": ["Connector suspected", "Controller restart", "Transfer delay", "Planned inspection"],
+        "series": [{"name": "Bus downtime (h)", "labels": ["Connector suspected", "Controller restart", "Transfer delay", "Planned inspection"], "values": [4.5, 1.5, 1, 0.5]}],
+        "options": {
+          "catAxisTitle": "Event tag; suspected cause is not confirmed",
+          "valAxisTitle": "Downtime (hours)",
+          "valAxisMinVal": 0,
+          "valAxisMaxVal": 5,
+          "valAxisMajorUnit": 1,
+          "showLegend": false,
+          "showValue": true
+        }
+      },
+      "facts": [
+        {"value": "7.5 h", "label": "Total downtime", "detail": "Includes 0.5 h planned inspection"},
+        {"value": "3.9 h", "label": "Above target allowance", "detail": "7.5 h minus 3.6 h at 99.50%"}
+      ],
+      "caption": "SYN-O1. Availability = (720 - 7.5) / 720 = 98.9583%, rounded to 98.96%. The connector tag accounts for 4.5/7.5 = 60%; attribution is a hypothesis, not proven causality.",
+      "sources": ["SYN-O1 | original synthetic event ledger"],
+      "notes": "Four events are mutually exclusive and counted once. Planned downtime is included in both the actual metric and the target definition. No exclusions for maintenance or customer count weighting."
+    },
+    {
+      "slide_id": "ops-04",
+      "type": "content",
+      "role": "table",
+      "variant": "table",
+      "slide_intent": "repair-options",
+      "title": "Cost alone cannot select the repair",
+      "subtitle": "Synthetic planning estimates; no option has demonstrated reliability gain",
+      "table": {
+        "headers": ["Option", "Cost (USD)", "Bus outage (h)", "Decision boundary"],
+        "rows": [
+          ["Inspect / reseat", "650", "0.75", "May leave damaged hardware in service"],
+          ["Replace connector", "2,400", "1.5", "Preferred only after fault confirmation"],
+          ["Replace module", "8,900", "4.0", "Hold unless module damage is confirmed"]
+        ],
+        "column_weights": [1.2, 0.8, 0.9, 2],
+        "caption": "SYN-O2. Estimates include parts and labor, exclude taxes and contingency. Outage is the assumed bus interruption, not total crew time. No lead time, quote, failure probability, or safety approval is supplied."
+      },
+      "sources": ["SYN-O2 | invented option estimates"],
+      "notes": "These are alternative options, not additive project costs. The budget request matches the connector option. A lower cost is not evidence of adequate protection; all work requires qualified diagnosis and local procedures."
+    },
+    {
+      "slide_id": "ops-05",
+      "type": "content",
+      "role": "evidence",
+      "variant": "timeline",
+      "slide_intent": "repair-process",
+      "title": "Three gates stand between budget and service",
+      "subtitle": "Synthetic process register; owners are proposed roles, not named staff",
+      "milestones": [
+        {"label": "BEFORE / facilities", "title": "Confirm readiness", "body": "Qualified diagnosis, approved permit, correct part, and verified critical-load backup. Stop if any is missing."},
+        {"label": "WORK / qualified crew", "title": "Execute site procedure", "body": "Only authorized personnel perform isolation and repair under approved local procedures. No live-work method is given here."},
+        {"label": "AFTER / commissioning", "title": "Verify before release", "body": "Document site-required tests and authorized sign-off before service release; preserve event logs for follow-up."}
+      ],
+      "caption": "SYN-O2. Readiness and commissioning are gates, not a how-to guide. A passed functional check does not certify long-term uptime or eliminate electrical risk.",
+      "sources": ["SYN-O2 | invented owner/gate register"],
+      "notes": "Editable sequential process uses supported timeline objects rather than raster Mermaid. No calendar dates or unsupported work completion claims. Qualified personnel own technical procedures and safety approval."
+    },
+    {
+      "slide_id": "ops-06",
+      "type": "content",
+      "role": "comparison",
+      "variant": "comparison-2col",
+      "slide_intent": "challenge-the-repair-claim",
+      "title": "Even a perfect repair misses this target",
+      "subtitle": "Synthetic same-window counterfactual, not a prediction of the next month",
+      "left": {
+        "title": "Logged 30-day window",
+        "bullets": ["720 monitored hours; 7.5 hours unavailable.", "Availability = 98.96%.", "99.50% target allows only 3.6 hours down."]
+      },
+      "right": {
+        "title": "Optimistic substitution",
+        "bullets": ["Remove all 4.5 connector-tagged hours; add 1.5 repair hours.", "Downtime = 4.5 hours; availability = 99.375%.", "Still 0.9 hours over allowance; other faults remain."]
+      },
+      "verdict": "Do not promise 99.50% uptime from the connector replacement alone.",
+      "sources": ["SYN-O1/O2 | synthetic counterfactual"],
+      "notes": "The hypothetical applies to the same 720-hour denominator, holds the other 3.0 hours unchanged, assumes perfect prevention of the suspected event, and inserts the proposed 1.5-hour bus outage. It is deliberately optimistic and cannot predict recurrence or the next window."
+    },
+    {
+      "slide_id": "ops-07",
+      "type": "content",
+      "role": "decision",
+      "variant": "matrix",
+      "role_layout_variant": "alternate",
+      "slide_intent": "release-and-follow-up",
+      "title": "Close the work order, keep the uptime gate",
+      "subtitle": "Synthetic acceptance register: functional release and reliability are separate",
+      "quadrants": [
+        {"title": "Commissioning", "body": "Document site tests; require authorized sign-off. Without sign-off, no service release."},
+        {"title": "Operations", "body": "Log all events and missing-data intervals in the next full 720 h, including planned downtime."},
+        {"title": "Maintenance", "body": "Require qualified reassessment for any connector-tagged recurrence; keep it in aggregate uptime."},
+        {"title": "Facilities", "body": "Full 720 h coverage: target downtime <=3.6 h. Incomplete coverage: uptime unverified."}
+      ],
+      "summary_callout": "Conditional repair readiness only; no actual repair, safety approval, or uptime achievement is asserted.",
+      "sources": ["SYN-O1/O2 | all facts, estimates, and gates invented"],
+      "notes": "SYN-O1 denotes the invented availability ledger and target. SYN-O2 denotes invented planning estimates, roles, and gates. Neither is an external citation. No external assets or source licensing issues. A future target check is an acceptance criterion, not an achieved result."
+    }
+  ]
+}

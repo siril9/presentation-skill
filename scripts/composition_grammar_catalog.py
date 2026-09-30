@@ -16,9 +16,11 @@ from deck_intake import build_deck_intake, intake_authoring_prompt, normalize_in
 from model_adaptive_workflow import (
     PROFILE_ALIASES,
     PROFILE_HELP,
+    VISUAL_REFERENCE_POLICY,
     compact_authoring_diagnostics,
     minimal_payload_examples,
     resolve_profile,
+    select_visual_reference_hints,
 )
 from style_treatment_profiles import preset_treatment_profile
 from taste_grammar_catalog import (
@@ -502,6 +504,12 @@ def quick_deck_agent_brief(
             route_candidates[-1]["starter_sequence"] = _starter_sequence_for_candidate(candidate, slide_count)
         if len(route_candidates) == candidate_limit:
             break
+    visual_hints = select_visual_reference_hints(
+        route_candidates, user_prompt=" ".join([str(route.get("topic") or ""), prompt]),
+        content_shapes=_as_list(route.get("requested_variants")),
+    )
+    for candidate in route_candidates:
+        candidate["visual_references"] = visual_hints.get(str(candidate.get("grammar_id") or ""), [])
     brief = {
         "schema_version": "quick_deck_agent_brief/v3",
         "topic": route.get("topic"),
@@ -513,6 +521,7 @@ def quick_deck_agent_brief(
         "agent_mode": "single-agent" if profile == "fast" else "single-agent-unless-independent-work-helps",
         "route_mode": "deterministic" if profile == "fast" else "model-select-from-bounded-candidates",
         "route_candidates": route_candidates,
+        "visual_reference_policy": VISUAL_REFERENCE_POLICY,
         "fallback_route": {
             "style_preset": primary.get("style_preset"),
             "grammar_id": primary.get("grammar_id"),

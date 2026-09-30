@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from pptx import Presentation
 from pptx.enum.text import MSO_AUTO_SIZE
@@ -14,7 +15,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from visual_review import _analyze_text_shapes  # noqa: E402
+from visual_review import _analyze_text_shapes, _measurement_font, _shape_record  # noqa: E402
 
 
 def _text(
@@ -35,6 +36,81 @@ def _text(
 
 
 class VisualReviewTests(unittest.TestCase):
+    def _measured_shape(self, text: str, h: float, *, w: float = 4.2):
+        face = next((face for face in ("Helvetica Neue", "Arial", "DejaVu Sans", "Liberation Sans")
+                     if _measurement_font(face, False, False, 128) is not None
+                     and _measurement_font(face, True, False, 128) is not None), None)
+        if face is None:
+            self.skipTest("No declared test font is installed for Pillow measurement")
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        shape = _text(slide, text, 2.0, h, 16, w=w)
+        shape.text_frame.margin_left = shape.text_frame.margin_right = 0
+        shape.text_frame.margin_top = shape.text_frame.margin_bottom = 0
+        for paragraph in shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.name = face
+        return presentation, shape, face
+
+    def test_declared_font_preserves_fitting_explicit_lines_and_bold_prefix(self) -> None:
+        presentation, shape, face = self._measured_shape("", 1.29)
+        paragraph = shape.text_frame.paragraphs[0]
+        prefix = paragraph.add_run()
+        prefix.text = "Release / commissioning:"
+        prefix.font.name, prefix.font.size, prefix.font.bold = face, Pt(16), True
+        body = paragraph.add_run()
+        body.text = " Require\ndocumented site tests and authorized\nsign-off. No sign-off means no service\nrelease."
+        body.font.name, body.font.size = face, Pt(16)
+        # The original empty run has no visible text and should not require a font.
+        record = _shape_record(1, 1, shape)
+        self.assertEqual(len(record["estimated_lines"]), 4)
+        self.assertAlmostEqual(record["estimated_height"], 4 * 16 / 72 * 1.28)
+        self.assertNotIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+        shape.height = Inches(0.65)
+        self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
+    def test_wide_unbroken_text_still_warns_with_real_font(self) -> None:
+        presentation, _, _ = self._measured_shape("W" * 50, 0.5, w=2.0)
+        self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
+    def test_mixed_run_sizes_use_large_body_height_not_first_metadata_size(self) -> None:
+        presentation, shape, face = self._measured_shape("Metadata\n", 0.65)
+        paragraph = shape.text_frame.paragraphs[0]
+        paragraph.runs[0].font.size = Pt(9)
+        body = paragraph.add_run()
+        body.text = "Full-size body\nSecond body line\nThird body line"
+        body.font.name, body.font.size = face, Pt(16)
+        self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
+    def test_native_margins_and_paragraph_spacing_count_toward_clip_height(self) -> None:
+        presentation, shape, _ = self._measured_shape("Single line", 0.4)
+        shape.text_frame.margin_top = shape.text_frame.margin_bottom = Inches(0.1)
+        shape.text_frame.paragraphs[0].space_after = Pt(12)
+        self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
+    def test_unavailable_font_keeps_conservative_clip_check(self) -> None:
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        shape = _text(slide, "First line\nSecond line\nThird line\nFourth line", 2.0, 0.5, 16)
+        shape.text_frame.paragraphs[0].runs[0].font.name = "Not installed QA font"
+        with patch("visual_review._measurement_font", return_value=None):
+            self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
+    def test_unproblematic_body_box_does_not_load_font_metrics(self) -> None:
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        _text(slide, "Short ordinary text", 2.0, 1.0, 16)
+        with patch("visual_review._measured_text_layout") as measure:
+            _analyze_text_shapes(presentation)
+            measure.assert_not_called()
+
+    def test_unreadable_metrics_fall_back_without_losing_clip_warning(self) -> None:
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        _text(slide, "First line\nSecond line\nThird line", 2.0, 0.3, 16)
+        with patch("visual_review._measured_text_layout", side_effect=OSError("unreadable font")):
+            self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
+
     def test_footer_clearance_does_not_compare_a_low_register_to_itself(self) -> None:
         presentation = Presentation()
         presentation.slide_width = Inches(10.0)

@@ -1,6 +1,6 @@
 {
   "name": "presentation-skill",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Source-first PowerPoint/PPTX generation for Codex and ChatGPT agents.",
   "author": {
     "name": "Sirilsengolraj",
@@ -44,9 +44,10 @@
     ],
     "brandColor": "#2563EB",
     "screenshots": [
-      "./assets/v0.12_narrative_process.jpg",
-      "./assets/v0.12_evidence_decisions.jpg",
-      "./assets/v0.12_data_comparisons.jpg",
+      "./assets/v0.13_design_studies.jpg",
+      "./assets/v0.13_lab_contact_sheet.jpg",
+      "./assets/v0.13_editorial_contact_sheet.jpg",
+      "./assets/v0.13_operations_contact_sheet.jpg",
       "./assets/codex_native_vs_updated_clean_three_topics.png"
     ]
   }

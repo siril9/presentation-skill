@@ -1,0 +1,22 @@
+{
+  "source_id": "SYN-L1",
+  "synthetic": true,
+  "definition": "Entirely invented rates and design, not experimental evidence.",
+  "storage_temperature_C": 4,
+  "storage_days": 14,
+  "independent_lots": ["A", "B", "C"],
+  "technical_wells_per_sample": 2,
+  "day0_rate_U_per_mL_by_lot": [10, 12, 8],
+  "technical_well_generation": "For each condition-specific sample mean m, duplicate wells are [0.99*m, 1.01*m]. Their mean is m. Each formulation has its own measured day-0 pair, with the means deliberately equal across formulations within a lot in this invented case.",
+  "conditions": [
+    {"name": "Buffer", "concentration": "base buffer", "day14_rate_U_per_mL": [5.8, 7.44, 5.28], "residual_activity_percent": [58, 62, 66]},
+    {"name": "5% glycerol", "concentration": "5% v/v", "day14_rate_U_per_mL": [8.8, 10.92, 7.52], "residual_activity_percent": [88, 91, 94]},
+    {"name": "2% trehalose", "concentration": "2% w/v", "day14_rate_U_per_mL": [8, 10.08, 7.04], "residual_activity_percent": [80, 84, 88]}
+  ],
+  "formula": "100 * mean(day14 technical wells) / mean(matched day0 technical wells)",
+  "rate_unit": "U/mL; assumed 1 U = 1 micromol substrate converted per minute under the assay conditions",
+  "screening_threshold_percent": 85,
+  "sample_count": 18,
+  "well_count": 36,
+  "source_SYN_L2": "Original invented follow-up design, not completed work or a power analysis."
+}

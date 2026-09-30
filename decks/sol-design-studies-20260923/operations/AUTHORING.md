@@ -1,0 +1,18 @@
+# Cold-chain repair queue
+
+- Author: GPT-6 Sol. Seven slides. Original synthetic scenario, not an operational record.
+- Design: `operations-grid` grammar with `charcoal-safety` tokens. Dark cover and 18-hour KPI contrast with light queue, process, chart, comparison, and action-register pages. The story runs from exposure clock to authorized control, not the stock eight-role sequence.
+- Source: `outline.json`. Rebuild with `python3 scripts/python_runtime.py scripts/present.py finalize --outline /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/sol-design-studies-20260923/operations/outline.json --output /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/sol-design-studies-20260923/operations/deck.pptx --qa-dir /Users/sirilarockiam/CascadeProjects/presentation-skill/decks/sol-design-studies-20260923/operations/qa` from the repository root.
+- Readability: explicit 28 pt title, 16 pt body, 13 pt support, and 9 pt caption/metadata/footer contract; `operations-grid` is the explicit supported v2 grammar.
+
+## Factual checklist
+
+`S1` denotes invented planning inputs throughout. Four depots, seven exposed loads, five scheduled first-wave jobs, and one held crew-start slot. F-04 is the first modeled limit at 18 hours without repair or transfer; its fallback transfer trigger is hour 12. Ticket-age pallet-hours by depot are 12 + 26 + 18 + 9 = 65; risk-first values are 4 + 6 + 9 + 3 = 22; modeled difference is 43. Option comparison: projected excursions 5 versus 1, travel 17 versus 21 crew-hours, and critical loads restored 4/7 versus 7/7. These are synthetic forecasts, not observed performance or food-safety validation.
+
+## QA and renderer notes
+
+`npm run doctor` passed. The original outline was rendered before the fix at `qa/before/`, confirming slide 4's takeaway crossed the footer band and slide 6's verdict crossed both option containers. The timeline used a fixed 0.40-inch bottom reserve although the operations footer band starts 0.56 inch above the slide bottom; the comparison renderer used its contract verdict slot without reserving space below the full option cards. The shared renderer now sizes and reserves the callout/verdict band above that footer and shortens the preceding timeline rows or option containers to leave a visible gap. It retains every source word and at least 16 pt body text. No deck-source workaround was made.
+
+`node --test tests/test_readable_timeline.js tests/test_chart_table_role_rendering.js` passed 21/21, including missing, short, original, and longer callout/verdict cases that check full container clearance. `present.py finalize` passed on the unchanged original outline: 7/7 rendered, 0 overflow, 0 overlap, 0 placeholder hits, 0 design errors, 0 accessibility findings, and 0 automated visual warnings. All seven final JPGs were reviewed at full size; slides 4 and 6 were compared with `qa/before/`. `qa/visual_judgment.json` and `qa/visual_receipt.json` bind that review to the output and renders. The PPTX contains an editable PowerPoint chart, two native tables, and editable text.
+
+Nonblocking core limitations encountered: preflight warns that `kpi-hero` has no matching v2 role contract even though it renders and passes QA. In this operations grammar, a three-fact chart strip displayed only its first fact, and scorecard headline scores were not visible in the comparison render; the source was simplified to one fact and explicit editable comparison rows. `charcoal-safety` did not select readable footer ink on dark slides, so footer chrome was omitted there and the synthetic label moved into the cover subtitle. Fixed-height timeline bands required concise one-line descriptions. No further blocker remains for this deck.

@@ -1,12 +1,15 @@
 ---
 name: presentation-skill
-description: Build, edit, redesign, render, and verify polished editable PowerPoint `.pptx` decks from a prompt, structured JSON, local data, or a saved workspace. Use for scientific, lab, clinical, consulting, board, investor, editorial, policy, and operational presentations where narrative, visual hierarchy, readability, and reproducibility matter.
+description: Build, edit, redesign, render, and verify content-led, structurally diverse, clean, editable, reproducible PowerPoint `.pptx` decks. Use for scientific, lab, clinical, consulting, board, investor, editorial, policy, and operational presentations where alignment, readability, contrast, and balanced density matter.
 ---
 
 # Presentation Skill
 
 Create editable PowerPoint decks from source. The model owns the argument,
 evidence, and design judgment; the skill owns deterministic rendering and QA.
+Compose supported layouts around the content, not a fixed template sequence.
+Keep each deck coherent while making meaningful structural choices across decks;
+palette, borders, and random variant changes alone are not diversity.
 
 ## Core Contract
 
@@ -64,9 +67,15 @@ python3 scripts/present.py brief \
   --output quick_deck_agent_brief.json
 ```
 
-2. Read the brief and author `outline.json`. Select one bounded route candidate,
-   then adapt its starter sequence to the actual evidence. `role` names the
-   editable structure; `slide_intent` names the story job.
+2. Read the brief and author `outline.json`. Carry the selected candidate's
+   `style_preset` and `grammar_id` into `deck_style.style_preset` and
+   `deck_style.composition_grammar`, and copy the brief's
+   `outline_contract.deck_style.readability_contract`. This activates the
+   intended v2 role layouts and readable defaults. Choose slide order from the
+   evidence, not the starter sequence. `role` names the editable structure;
+   `slide_intent` names the story job.
+   Inspect a useful local visual reference when offered; borrow composition,
+   not its synthetic facts or a fixed sequence.
 
 3. Build, render, and hard-gate it:
 
@@ -77,7 +86,9 @@ python3 scripts/present.py finalize \
   --qa-dir /absolute/path/qa
 ```
 
-Read `finalize_receipt.json` and inspect the rendered slides. If checks fail,
+Read `finalize_receipt.json` and inspect the rendered slides. Quick finalization
+uses a local verified render cache automatically; `--no-render-cache` forces a
+cold render. Source checks and visual approval remain fresh. If checks fail,
 start from `repair_packet.json`: it contains affected source pointers, measured
 issues, and image paths. Repair source and rerun until the artifact passes;
 do not stop after an arbitrary number of attempts. Automated checks do not
@@ -177,13 +188,15 @@ type, and treatment vocabulary; they are not static templates.
 Maintain these invariants:
 
 - One dominant idea and a clear reading path per slide.
-- Every content slide has a visual or evidence anchor: chart, table, figure,
-  image, KPI, timeline, matrix, or structured comparison.
-- No centered body copy and no sequence dominated by bullet-only slides.
+- Give each content slide a clear focal point suited to its evidence. A simple
+  bullet list, table, or rectangular highlight is valid when it communicates
+  the material best; decorative visuals are not required.
+- Left-align body copy by default. Avoid repetitive bullet-only sequences when
+  the material calls for a different structure.
 - Vary composition with the argument; avoid repeating one card grid, border,
   title treatment, or two-column shell.
-- Use `header_variant: auto` with a stable seed for reproducible heading,
-  top-line, bottom-line, no-line, and compact report treatments.
+- Use `header_variant: auto` with a stable seed when bounded heading variation
+  serves the deck; a fixed plain heading is valid for restrained reports.
 - Keep source text and page numbers in the reserved footer region; do not let
   footer chrome compete with the evidence.
 - Use `role_layout_variant: primary | alternate | dense` for bounded structural
@@ -192,6 +205,10 @@ Maintain these invariants:
   treatments when the content benefits; the suggested sequence is not mandatory.
 - For a visual A/B, freeze one outline and vary only `deck_style`; this exposes
   real grammar differences without letting content changes bias the comparison.
+  This tests one axis; it is not a capability showcase. For a showcase, let the
+  content drive slide order and mix supported layouts where they serve the
+  argument, with consistent base typography and spacing rather than a fixed
+  role sequence or decorative chrome on every slide.
 - Treat auxiliary title-stage anchors as content slots, not decoration. Leave
   them absent unless the outline supplies a value or asset.
 
@@ -255,13 +272,22 @@ A deliverable deck must pass:
 
 Visual review should search for defects: clipped text, weak contrast, awkward
 empty regions, crowded edges, tiny labels, inconsistent alignment, repeated
-grammar, and unreadable sources. Fix source and rebuild.
+grammar, and unreadable sources. Check separation between content containers,
+bottom callouts, and footers, not only whether their text remains visible.
+Repair layout allocation before shortening evidence or reducing type; do not
+label an accidental box collision intentional merely because text is legible.
+Fix source and rebuild.
+
+Normal QA also checks mapped visible source fields and native chart data.
+Missing captions, caveats, units, or values have exact source locations in the
+repair packet; repair them before the deferred render. Retention is not factual
+verification and cannot replace evidence review.
 
 For public proof or audited delivery, bind the actual review to the deck and
 render hashes with `scripts/visual_review_receipt.py`. Never invent a review
-receipt from automated counts. An optional `--render-cache-dir /absolute/path/cache`
-on `present.py finalize` reuses verified identical renders; content and rendering
-environment changes invalidate the cache. It never reuses a visual judgment.
+receipt from automated counts. `--render-cache-dir /absolute/path/cache` overrides
+the quick finalizer's local cache; content and rendering environment changes
+invalidate it. The cache never reuses a visual judgment.
 
 If rendering is unavailable in the execution environment, preserve the built
 deck and static QA report, record the deferred render stage in the receipt, and
