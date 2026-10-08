@@ -1,0 +1,36 @@
+{
+  "type": "bar",
+  "categories": [
+    "Offset",
+    "Affine",
+    "Quadratic"
+  ],
+  "series": [
+    {
+      "name": "Holdout RMSE (AU)",
+      "values": [
+        5.342,
+        0.975,
+        0.428
+      ]
+    }
+  ],
+  "options": {
+    "catAxisLabelFontSize": 16,
+    "valAxisLabelFontSize": 16,
+    "legendFontSize": 16,
+    "dataLabelFormatCode": "0.00",
+    "valAxisMinVal": 0,
+    "valAxisTitle": "Holdout RMSE (AU)",
+    "showValue": true,
+    "showLegend": false,
+    "chartColors": [
+      "171717"
+    ]
+  },
+  "synthetic": true,
+  "disclosure": "Invented synthetic nonclinical illustration; no measured empirical findings.",
+  "sources": [
+    "SYN-C | computed synthetic data"
+  ]
+}

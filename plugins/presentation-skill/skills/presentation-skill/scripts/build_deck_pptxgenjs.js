@@ -1156,6 +1156,8 @@ const STYLE_ENUM_VALUES = {
   footer_mode: new Set(['standard', 'source-line', 'none']),
   summary_callout_mode: new Set(['default', 'lab-box']),
   figure_table_treatment: new Set(['figure-first', 'table-first', 'stats-strip', 'image-sidebar']),
+  figure_frame: new Set(['open', 'ruled', 'panel']),
+  flow_layout: new Set(['auto', 'strip', 'bands']),
   image_sidebar_mode: new Set(['analysis-rail', 'evidence-mosaic', 'editorial-atlas']),
   comparison_mode: new Set(['open-columns', 'scorecard']),
   composition_grammar: new Set(Object.keys(ROLE_SYSTEMS_BY_GRAMMAR)),
@@ -1178,6 +1180,8 @@ const SLIDE_STYLE_ENUM_KEYS = [
   'footer_mode',
   'summary_callout_mode',
   'figure_table_treatment',
+  'figure_frame',
+  'flow_layout',
   'image_sidebar_mode',
   'comparison_mode',
   'composition_grammar',
@@ -1350,6 +1354,8 @@ function applyDeckStyle(basePreset, data, presetName) {
     'footer_mode',
     'summary_callout_mode',
     'figure_table_treatment',
+    'figure_frame',
+    'flow_layout',
     'image_sidebar_mode',
     'comparison_mode',
     'composition_grammar',
@@ -1472,6 +1478,9 @@ function normalizeSlide(spec, outlineDir) {
     out.__generatedImagePath = resolveAssetPath(assets.generated_image, outlineDir);
   }
   const mermaidSrc = assets.mermaid_source || assets.mermaid;
+  if (out.flow_steps && (mermaidSrc || assets.diagram)) {
+    throw new Error('Choose flow_steps or a diagram asset, not both.');
+  }
   if (mermaidSrc) {
     const sourcePath = resolveAssetPath(mermaidSrc, outlineDir);
     if (sourcePath && fs.existsSync(sourcePath)) out.__mermaidSourcePath = sourcePath;
@@ -1533,7 +1542,7 @@ function normalizeSlide(spec, outlineDir) {
   // diagram), promote it to a synthesized 'flow' variant so renderSlide
   // can dispatch to a diagram-aware renderer. Preserve original variant
   // for downstream metadata in case callers want it.
-  const hasFlow = out.__mermaidPath || out.__diagramPath || out.__mermaidSourcePath;
+  const hasFlow = out.flow_steps || out.__mermaidPath || out.__diagramPath || out.__mermaidSourcePath;
   if (hasFlow && (out.variant === 'standard' || out.variant === 'content' || out.variant === 'flow')) {
     out.variant = 'flow';
   }

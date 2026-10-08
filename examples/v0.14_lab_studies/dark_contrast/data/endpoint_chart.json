@@ -1,0 +1,43 @@
+{
+  "type": "bar",
+  "categories": [
+    "Dark",
+    "Light"
+  ],
+  "series": [
+    {
+      "name": "Raw",
+      "values": [
+        0.2481,
+        0.1171
+      ]
+    },
+    {
+      "name": "Oracle",
+      "values": [
+        0.0102,
+        0.0153
+      ]
+    }
+  ],
+  "options": {
+    "catAxisLabelFontSize": 16,
+    "valAxisLabelFontSize": 16,
+    "legendFontSize": 16,
+    "dataLabelFormatCode": "0.00",
+    "valAxisMinVal": 0,
+    "valAxisTitle": "Absolute endpoint change",
+    "showValue": true,
+    "showLegend": true,
+    "chartColors": [
+      "67D8E5",
+      "E0B877"
+    ],
+    "valAxisMaxVal": 0.3
+  },
+  "synthetic": true,
+  "disclosure": "Invented synthetic nonclinical illustration; no measured empirical findings.",
+  "sources": [
+    "SYN-D | computed synthetic paired changes"
+  ]
+}

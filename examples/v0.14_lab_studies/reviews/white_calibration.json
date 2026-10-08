@@ -1,0 +1,602 @@
+{
+  "schema_version": "visual_review_receipt_v1",
+  "review_schema_version": "visual_judgment_v1",
+  "deck": {
+    "filename": "deck.pptx",
+    "sha256": "b6cde67d072836bb6bebfae8b9f661ea688ff02bfdfb76e3218a5caae13e784c",
+    "normalized_office_sha256": "733e72841308c76b42e0d72975cab7dad93102c73ed20a5df272c7386e3f0ba1"
+  },
+  "renders": [
+    {
+      "name": "slide-01.jpg",
+      "sha256": "5b3ff962f54426ab421d8aa1bf9ce1c6e7f4084eec4295ebc7ca738a1407de90",
+      "size_bytes": 86111
+    },
+    {
+      "name": "slide-02.jpg",
+      "sha256": "2a7ea4028fa39b0e242fe84f3c59473a7557c8ff8c9ef8ede61da4729e7e8428",
+      "size_bytes": 102702
+    },
+    {
+      "name": "slide-03.jpg",
+      "sha256": "147ba8ac35d002ea6b162d21a140a8c41dd2d7d4bc726ee5b8668fc205e6d6b0",
+      "size_bytes": 115216
+    },
+    {
+      "name": "slide-04.jpg",
+      "sha256": "d34257a47330e3578f7734f861163d65b32d26034958ea6d1c43645b464ab4e1",
+      "size_bytes": 131674
+    },
+    {
+      "name": "slide-05.jpg",
+      "sha256": "73d128187483009751b895412548a31c679feb28c3c5bc1bbdc418116ee102ef",
+      "size_bytes": 100890
+    },
+    {
+      "name": "slide-06.jpg",
+      "sha256": "4f77f5fc7a4b6f0931d6df751539f78805fbee8adceaf75371c144274ce357c6",
+      "size_bytes": 150816
+    },
+    {
+      "name": "slide-07.jpg",
+      "sha256": "5cf67cd5b368a5395b2b13d0e7bfa88a2b684d952f4af58238f46a95c26fd347",
+      "size_bytes": 112918
+    },
+    {
+      "name": "slide-08.jpg",
+      "sha256": "bf767e86f179e6a7eb41ba3da7467f62211eb7f45137afe3eed5122e967609b4",
+      "size_bytes": 146286
+    }
+  ],
+  "render_count": 8,
+  "reviewer": {
+    "type": "model",
+    "name": "GPT-6.1 Sol independent reviewer",
+    "model": "GPT-6.1 Sol",
+    "role": "independent reviewer"
+  },
+  "verdict": "pass",
+  "findings": [],
+  "reviewed_at": "2026-10-08T08:15:04Z",
+  "review_context": {
+    "study": "white_calibration",
+    "scope": "Bounded final white slide 2 review after reserved outside-top-row legend fix; current source PNG/full slide and physical font floors inspected. Other 23 images carried forward only by exact SHA-256.",
+    "inspection_method": "Compared all 24 current JPG hashes to previous judgments: only white slide 2 changed; other 23 images byte-identical. Viewed current response PNG and full-slide white 2 JPG individually at original resolution. Verified current embedded/source PNG byte equality, source PNG edge clearance, picture transform, actual source fonts and effective axes/ticks/legend. Measured reserved-row horizontal ylabel/legend and vertical legend/data clearances from current PNG ink extents and mapped them through the insertion transform. Confirmed current native slide 2 title at 28 pt. Two independent snapshots confirmed all 27 current PPTX/JPG hashes stable; source outline/data unchanged. No unrelated slide reinspection or audit.",
+    "reviewed_slide_count": 8,
+    "total_exact_images_reviewed": 24,
+    "re_viewed_after_latest_refresh": [
+      2
+    ],
+    "carried_forward_by_exact_hash": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "viewed_image_hash_list": [
+      {
+        "name": "slide-01.jpg",
+        "sha256": "5b3ff962f54426ab421d8aa1bf9ce1c6e7f4084eec4295ebc7ca738a1407de90",
+        "size_bytes": 86111,
+        "artifact_reference": "qa/renders/slide-01.jpg"
+      },
+      {
+        "name": "slide-02.jpg",
+        "sha256": "2a7ea4028fa39b0e242fe84f3c59473a7557c8ff8c9ef8ede61da4729e7e8428",
+        "size_bytes": 102702,
+        "artifact_reference": "qa/renders/slide-02.jpg"
+      },
+      {
+        "name": "slide-03.jpg",
+        "sha256": "147ba8ac35d002ea6b162d21a140a8c41dd2d7d4bc726ee5b8668fc205e6d6b0",
+        "size_bytes": 115216,
+        "artifact_reference": "qa/renders/slide-03.jpg"
+      },
+      {
+        "name": "slide-04.jpg",
+        "sha256": "d34257a47330e3578f7734f861163d65b32d26034958ea6d1c43645b464ab4e1",
+        "size_bytes": 131674,
+        "artifact_reference": "qa/renders/slide-04.jpg"
+      },
+      {
+        "name": "slide-05.jpg",
+        "sha256": "73d128187483009751b895412548a31c679feb28c3c5bc1bbdc418116ee102ef",
+        "size_bytes": 100890,
+        "artifact_reference": "qa/renders/slide-05.jpg"
+      },
+      {
+        "name": "slide-06.jpg",
+        "sha256": "4f77f5fc7a4b6f0931d6df751539f78805fbee8adceaf75371c144274ce357c6",
+        "size_bytes": 150816,
+        "artifact_reference": "qa/renders/slide-06.jpg"
+      },
+      {
+        "name": "slide-07.jpg",
+        "sha256": "5cf67cd5b368a5395b2b13d0e7bfa88a2b684d952f4af58238f46a95c26fd347",
+        "size_bytes": 112918,
+        "artifact_reference": "qa/renders/slide-07.jpg"
+      },
+      {
+        "name": "slide-08.jpg",
+        "sha256": "bf767e86f179e6a7eb41ba3da7467f62211eb7f45137afe3eed5122e967609b4",
+        "size_bytes": 146286,
+        "artifact_reference": "qa/renders/slide-08.jpg"
+      }
+    ],
+    "reviewed_pptx": {
+      "artifact_reference": "deck.pptx",
+      "sha256": "b6cde67d072836bb6bebfae8b9f661ea688ff02bfdfb76e3218a5caae13e784c"
+    },
+    "reviewed_outline_sha256": "acc39c239a89484b5b5188b98a474fd4e047d30aced81eb8979ec3b1d32164c9",
+    "automated_qa_counts": {
+      "accessibility_error_count": 0,
+      "accessibility_warning_count": 0,
+      "design_error_count": 0,
+      "design_warning_count": 0,
+      "geometry_error_count": 0,
+      "geometry_warning_count": 0,
+      "overflow_count": 0,
+      "overlap_count": 0,
+      "source_fidelity_error_count": 0,
+      "source_fidelity_warning_count": 0,
+      "visual_review_warning_count": 0,
+      "visual_warning_count": 0,
+      "whitespace_warning_count": 0
+    },
+    "automated_qa_boundary": "Current strict finalization reports pass with all counts zero. Independent source PNG/full-slide inspection confirms complete labels, clean source edges, visible legend/data clearance and physical label floors; zero QA counts were not substituted for visual judgment.",
+    "current_visual_warning_count": 0,
+    "current_visual_error_count": 0,
+    "effective_scientific_plot_labels": {
+      "calculation": "source_font_pt * 180_dpi * current_PPTX_inserted_height_in / current_embedded_PNG_height_px; embedded/source PNG hashes match.",
+      "measurement_boundary": "Current slide 2 scientific font sizes recomputed from actual source fonts, PNG height and inserted picture height. Other white estimates retained on exact unchanged image hashes. Complete text and legend/data clearance pass independently of the numeric floor. Native chart value annotations remain metadata above the 9 pt metadata floor.",
+      "estimates": [
+        {
+          "slide": 2,
+          "asset_reference": "assets/response.png",
+          "source_sha256": "6a45f465ce6fee015b8993055f99fec7cb1766defa3d85754e009761723737e2",
+          "embedded_matches_source": true,
+          "png_width_px": 1836,
+          "png_height_px": 706,
+          "picture_bounds_inches": {
+            "x": 2.806132983377078,
+            "y": 1.988888888888889,
+            "cx": 4.387734033245844,
+            "cy": 1.6872222222222222
+          },
+          "inserted_width_in": 4.387734033245844,
+          "inserted_height_in": 1.6872222222222222,
+          "source_axis_pt": 34,
+          "source_ticks_pt": 32,
+          "source_legend_pt": 31,
+          "effective_axis_pt": 14.625779036827195,
+          "effective_ticks_pt": 13.765439093484419,
+          "effective_legend_pt": 13.335269121813031,
+          "dark_ink_on_png_outer_edges": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          },
+          "clearance": {
+            "legend_last_ink_row_px": 111,
+            "data_first_ink_row_px": 156,
+            "legend_data_vertical_clearance_source_px": 45,
+            "ylabel_last_ink_column_px": 794,
+            "legend_first_ink_column_px": 1032,
+            "ylabel_legend_horizontal_clearance_source_px": 238,
+            "legend_data_vertical_clearance_slide_px": 19.357648725212464,
+            "ylabel_legend_horizontal_clearance_slide_px": 102.38045325779036
+          },
+          "title_font_sizes_pt": [
+            28
+          ]
+        },
+        {
+          "slide": 4,
+          "asset_reference": "assets/affine_residuals.png",
+          "source_sha256": "3768850c1ad3e5744864440c20cbc5c48b92d2d11c407158ca2569a756e2d7a6",
+          "embedded_matches_source": true,
+          "inserted_width_in": 2.220029527559055,
+          "inserted_height_in": 1.6872222222222222,
+          "picture_bounds_inches": {
+            "x": 1.5649857830271217,
+            "y": 1.988888888888889,
+            "cx": 2.220029527559055,
+            "cy": 1.6872222222222222
+          },
+          "png_width_px": 825,
+          "png_height_px": 627,
+          "source_axis_pt": 29,
+          "source_ticks_pt": 27,
+          "effective_axis_pt": 14.046730462519935,
+          "effective_ticks_pt": 13.077990430622009
+        },
+        {
+          "slide": 4,
+          "asset_reference": "assets/quadratic_residuals.png",
+          "source_sha256": "56054a4f951f27ff80f5cc87350a38594572fe8e6c7ae71685e10d4f0cf8fc3f",
+          "embedded_matches_source": true,
+          "inserted_width_in": 2.220029527559055,
+          "inserted_height_in": 1.6872222222222222,
+          "picture_bounds_inches": {
+            "x": 6.214985783027122,
+            "y": 1.988888888888889,
+            "cx": 2.220029527559055,
+            "cy": 1.6872222222222222
+          },
+          "png_width_px": 825,
+          "png_height_px": 627,
+          "source_axis_pt": 29,
+          "source_ticks_pt": 27,
+          "effective_axis_pt": 14.046730462519935,
+          "effective_ticks_pt": 13.077990430622009
+        },
+        {
+          "slide": 7,
+          "asset_reference": "assets/noise_sensitivity.png",
+          "source_sha256": "ea3f25f84b8522d00467c239fba6199be4144b328b6750d84f406828372e947f",
+          "embedded_matches_source": true,
+          "inserted_width_in": 4.199097769028872,
+          "inserted_height_in": 1.6872222222222222,
+          "picture_bounds_inches": {
+            "x": 2.9004505686789153,
+            "y": 1.988888888888889,
+            "cx": 4.199097769028872,
+            "cy": 1.6872222222222222
+          },
+          "png_width_px": 1329,
+          "png_height_px": 534,
+          "source_axis_pt": 28,
+          "source_ticks_pt": 26,
+          "effective_axis_pt": 15.924344569288388,
+          "effective_ticks_pt": 14.78689138576779,
+          "dark_ink_on_png_outer_edges": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ],
+      "numeric_floor_required_pt": 13,
+      "all_numeric_floors_pass": true,
+      "minimum_effective_scientific_label_pt": 13.077990430622009
+    },
+    "slide_observations": [
+      {
+        "slide": 1,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Cover carried forward by exact SHA-256: inset 38 pt title block, complete 16 pt disclosure and clear footer."
+      },
+      {
+        "slide": 2,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "spacing_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "New original-resolution response source-PNG and full-slide views",
+        "message": "Complete horizontal Response (AU), Input (AU), all ticks and Data/Identity legend in reserved outside-top row. Legend is clear of the horizontal y-label, nearest data and actual dashed identity trace; source edges have zero dark ink. Effective axes/ticks/legend 14.625779/13.765439/13.335269 pt. Current native title 28 pt; full 24-value/six-level caption, AU and synthetic disclosures, interpretation and footer retained. No clipping, unintended overlap or lost evidence."
+      },
+      {
+        "slide": 3,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Original-resolution view: four native stages retain Generate/Fit/Hold out/Score and all details; clean arrows/gutters, all 30 holdout values explicitly shared; no title/body/footer collision."
+      },
+      {
+        "slide": 4,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Original-resolution view: matched residual panels retain equal limits, all 30-value denominators and invented +/-3 AU references. Effective ticks 13.077990 pt; no clipping or collision."
+      },
+      {
+        "slide": 5,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Original-resolution view: native zero-based RMSE chart retains 5.342/0.975/0.428 caches; complete fraction-free RMSE definition and no-significance caption; chart frame clear of footer."
+      },
+      {
+        "slide": 6,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Original-resolution view: exact source headers and all four native 16 pt table rows; more separated criterion/non-establishment columns, complete AU limits and invented-policy caption; no footer collision."
+      },
+      {
+        "slide": 7,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Residual (AU) is complete horizontally above axes; effective axes/ticks 15.924345/14.786891 pt. All three noise settings and seeded/single-split caveat retained; no source-edge clipping, title/caption/plot collision or footer intrusion.",
+        "spacing_assessment": "pass"
+      },
+      {
+        "slide": 8,
+        "assessment": "pass",
+        "visual_content_assessment": "pass",
+        "title_font_assessment": "pass",
+        "inspection_basis": "Previous full-slide inspection carried forward by exact SHA-256",
+        "message": "Original-resolution view: complete Next Test/Challenge/Boundary statements and synthetic-only disclaimer; aligned rules, no overlap and clear footer."
+      }
+    ],
+    "evidence": {
+      "source_id": "SYN-C",
+      "units": "AU: arbitrary simulation units",
+      "training_n": 24,
+      "training_levels": 6,
+      "holdout_n": 30,
+      "holdout_levels": 10,
+      "comparison": "Same 30 holdout values for each correction; single seeded split; noise sweep reuses draws.",
+      "recomputed_rmse": [
+        5.342236539,
+        0.975029761,
+        0.428223439
+      ],
+      "boundary": "Invented nonclinical values and screen limits; no physical calibration or deployment evidence.",
+      "current_source_recomputation": {
+        "boundary": "Recomputed from current public synthetic data; no scientific, clinical or deployment validity implied.",
+        "rmse": {
+          "Offset": 5.342236538946036,
+          "Affine": 0.9750297614376185,
+          "Quadratic": 0.42822343899544846
+        }
+      }
+    },
+    "native_editability": {
+      "chart_slides": [
+        5
+      ],
+      "table_slides": [
+        6
+      ],
+      "native_flow_slides": [
+        3
+      ],
+      "native_decision_slide": 8,
+      "raster_figure_slides": [
+        2,
+        4,
+        7
+      ],
+      "chart_values": [
+        5.342,
+        0.975,
+        0.428
+      ],
+      "embedded_workbook_present": true
+    },
+    "structure_and_taste": "Distinct content-led arguments and selected structures are visible: white uses a four-step method and matched residuals; dark now has two horizontal competing-interpretation bands and three method bands; river uses a sampling ledger, reversed paired-ratio sidebar and two-stage reporting flow. Covers remain meaningfully different. Shared scientific panels and header/footer systems still create family resemblance; these three examples do not prove eight catalog-wide structures, general impressiveness, universal diversity or model/renderer benchmark superiority.",
+    "acceptance_boundaries": [
+      "GO for this exact current eight-slide white artifact; zero current blocking warnings/errors. Previously identified source-axis clipping, scientific-font floors and response legend/trace collision are resolved.",
+      "All 24 exact slide images have been viewed across review history; only current byte-identical images were carried forward. Current delta is one freshly inspected image plus twenty-three exact carry-forwards.",
+      "Only white judgment updated; dark and river retain their existing unmodified, hash-matching GO judgments.",
+      "Synthetic/nonclinical illustration only; no measured scientific/clinical/field validation, deployment or general user-proof release authorization.",
+      "No catalog-wide structural-variety certification, general impressiveness, model comparison or performance benchmark claim.",
+      "Only judgment JSON written. No source, core, QA or receipt changes; main owns final reproducibility and hash-bound receipts."
+    ],
+    "new_images_viewed_this_refresh": 1,
+    "total_new_images_viewed_this_refresh": 1,
+    "total_byte_identical_images_carried_forward": 23,
+    "hash_delta_from_prior_judgment": {
+      "changed": [
+        "slide-02.jpg"
+      ],
+      "unchanged": [
+        "slide-01.jpg",
+        "slide-03.jpg",
+        "slide-04.jpg",
+        "slide-05.jpg",
+        "slide-06.jpg",
+        "slide-07.jpg",
+        "slide-08.jpg"
+      ],
+      "carried_forward_basis": "Exact SHA-256 equality only: seven other white slides and sixteen dark/river slides. Dark/river PPTX bytes also match their existing GO judgments."
+    },
+    "native_title_font_audit": {
+      "declared_min_title_pt": 28,
+      "slides": [
+        {
+          "slide": 1,
+          "font_sizes_pt": [
+            38
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:title"
+          ]
+        },
+        {
+          "slide": 2,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 3,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 4,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 5,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 6,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 7,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        },
+        {
+          "slide": 8,
+          "font_sizes_pt": [
+            28
+          ],
+          "matched": true,
+          "names": [
+            "slide-title:content"
+          ]
+        }
+      ],
+      "blocking_slide_numbers": [],
+      "prior_26pt_title_failure_resolved": true,
+      "measurement": "All 21 native content titles are 28 pt with semantic slide-title:content; cover titles remain above the 28 pt floor."
+    },
+    "changed_slide_content_audit": [
+      {
+        "slide": 2,
+        "missing_native_text": [],
+        "native_table": null
+      },
+      {
+        "slide": 3,
+        "missing_native_text": [],
+        "native_table": null
+      },
+      {
+        "slide": 4,
+        "missing_native_text": [],
+        "native_table": null
+      },
+      {
+        "slide": 5,
+        "missing_native_text": [],
+        "native_table": null
+      },
+      {
+        "slide": 6,
+        "missing_native_text": [],
+        "native_table": {
+          "exact_source": true,
+          "font_sizes_pt": [
+            16
+          ]
+        }
+      },
+      {
+        "slide": 7,
+        "missing_native_text": [],
+        "native_table": null
+      },
+      {
+        "slide": 8,
+        "missing_native_text": [],
+        "native_table": null
+      }
+    ],
+    "current_picture_placement_inches": [
+      {
+        "slide": 2,
+        "width_inches": 4.387734033245844,
+        "height_inches": 1.6872222222222222
+      },
+      {
+        "slide": 4,
+        "width_inches": 2.220029527559055,
+        "height_inches": 1.6872222222222222
+      },
+      {
+        "slide": 4,
+        "width_inches": 2.220029527559055,
+        "height_inches": 1.6872222222222222
+      },
+      {
+        "slide": 7,
+        "width_inches": 4.199097769028872,
+        "height_inches": 1.6872222222222222
+      }
+    ],
+    "hash_stability": {
+      "independent_snapshots_identical": true,
+      "scope": "All 27 current PPTX/JPG files stable between two independent review snapshots. Only white slide 2 image changed relative to prior judgments; source outlines/data unchanged. Dark/river artifacts retain exact prior GO bytes.",
+      "receipt_generated_at": "2026-10-08T08:13:21.349930+00:00",
+      "receipt_pptx_sha_matches": true
+    },
+    "reviewed_data_sha256": "60ddc164f2acec72f0f4c8acdac1e12b5cc5e7bb9965cf51dc086df480a5cdfe",
+    "source_pngs_viewed_this_refresh": [
+      "assets/response.png"
+    ],
+    "resolved_prior_findings": [
+      {
+        "slide": 2,
+        "category": "source_figure_axis_label_clipping",
+        "resolved": true,
+        "evidence": "Response (AU) fully visible horizontally above axes; all four source PNG outer edges have zero dark ink pixels."
+      },
+      {
+        "slide": 7,
+        "category": "source_figure_axis_label_clipping",
+        "resolved": true,
+        "evidence": "Residual (AU) fully visible horizontally above axes; all four source PNG outer edges have zero dark ink pixels."
+      },
+      {
+        "slide": 2,
+        "category": "source_figure_legend_trace_collision",
+        "resolved": true,
+        "evidence": "Data/Identity legend occupies one reserved outside-top row. Complete Response (AU) is separate at left. Measured source legend/data vertical gap 45 px (19.36 slide px), ylabel/legend horizontal gap 238 px (102.38 slide px). Full source and slide show no trace contact."
+      }
+    ],
+    "current_slide2_clearance": {
+      "legend_last_ink_row_px": 111,
+      "data_first_ink_row_px": 156,
+      "legend_data_vertical_clearance_source_px": 45,
+      "ylabel_last_ink_column_px": 794,
+      "legend_first_ink_column_px": 1032,
+      "ylabel_legend_horizontal_clearance_source_px": 238,
+      "legend_data_vertical_clearance_slide_px": 19.357648725212464,
+      "ylabel_legend_horizontal_clearance_slide_px": 102.38045325779036
+    }
+  }
+}

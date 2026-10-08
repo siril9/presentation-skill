@@ -1003,6 +1003,22 @@ def _elements_from_outline_slide(
                 evidence_refs=evidence_refs,
             )
 
+    if isinstance(slide.get("flow_steps"), list):
+        items = []
+        for index, step in enumerate(slide["flow_steps"]):
+            if not isinstance(step, Mapping):
+                continue
+            for field in ("title", "detail"):
+                value = _nonempty_text(step.get(field))
+                if value:
+                    items.append({"text": value, "source_outline_ref": f"{slide_ref}/flow_steps/{index}/{field}"})
+        if items:
+            _append_element(
+                elements, slide_id=slide_id, source_ref=_json_pointer(slide_ref, "flow_steps"),
+                semantic_role="diagram", purpose="process", editable_object_kind="diagram",
+                content={"items": items}, evidence_refs=evidence_refs,
+            )
+
     for field in ("left", "right"):
         value = slide.get(field)
         if not isinstance(value, Mapping):

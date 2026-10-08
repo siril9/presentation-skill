@@ -1,0 +1,12 @@
+{
+  "name": "presentation-preview-local",
+  "interface": { "displayName": "Slide Review Pilot" },
+  "plugins": [
+    {
+      "name": "presentation-preview",
+      "source": { "source": "local", "path": "./plugin" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}

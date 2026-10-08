@@ -1,0 +1,3 @@
+dist/
+plugin/.mcp.json
+*.log

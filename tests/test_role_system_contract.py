@@ -77,12 +77,11 @@ class TasteGrammarCatalogTests(unittest.TestCase):
                 3,
             )
         )
-        unsupported = _check_role_variant_alignment(
+        fallback = _check_role_variant_alignment(
             {"role": "decision", "variant": "kpi-hero"},
             4,
         )
-        self.assertEqual(len(unsupported), 1)
-        self.assertIn("matrix", unsupported[0]["suggested_fix"])
+        self.assertFalse(fallback)
 
     def test_policy_table_does_not_invent_a_readout(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

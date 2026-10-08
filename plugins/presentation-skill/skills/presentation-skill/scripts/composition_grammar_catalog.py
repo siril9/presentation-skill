@@ -366,7 +366,9 @@ def compact_grammar_route(route: dict[str, Any]) -> dict[str, Any]:
 
 
 _CAPABILITY_PATH = Path(__file__).resolve().parent.parent / "schemas" / "renderer_capabilities_v2.json"
-V2_ROLE_VARIANT_CANDIDATES = json.loads(_CAPABILITY_PATH.read_text(encoding="utf-8"))["role_variants"]
+_RENDERER_CAPABILITIES = json.loads(_CAPABILITY_PATH.read_text(encoding="utf-8"))
+V2_ROLE_VARIANT_CANDIDATES = _RENDERER_CAPABILITIES["role_variants"]
+FALLBACK_ROLE_VARIANT_CANDIDATES = _RENDERER_CAPABILITIES["fallback_role_variants"]
 
 
 def _starter_sequence_for_candidate(candidate: dict[str, Any], slide_count: int) -> list[dict[str, Any]]:
@@ -530,8 +532,9 @@ def quick_deck_agent_brief(
         "requested_variants": route.get("requested_variants"),
         "renderer": {
             "role_variants": V2_ROLE_VARIANT_CANDIDATES,
+            "fallback_role_variants": FALLBACK_ROLE_VARIANT_CANDIDATES,
             "layout_variants": ["primary", "alternate", "dense"],
-            "suggestion_policy": "Grammar role_variants are style hints, not capabilities. renderer.role_variants is authoritative; choose any supported pair and optional layout variant that fits the content.",
+            "suggestion_policy": "v2 geometry: role_variants. Supported fallback geometry: fallback_role_variants. Choose by evidence; fallback receipts do not claim v2 slot execution.",
         },
         "outline_contract": {
             "root_required": ["title", "deck_style", "slides"],
@@ -546,8 +549,8 @@ def quick_deck_agent_brief(
             },
             "slide_common": {
                 "type": "title | content",
-                "role": "editable structure from renderer.role_variants",
-                "variant": "supported variant for that role",
+                "role": "editable structure from renderer.role_variants or fallback_role_variants",
+                "variant": "supported variant for that role; prefer the actual evidence shape",
                 "slide_intent": "topic-specific story job",
                 "title": "assertion or governing question",
                 "sources": ["stable source IDs such as S1"],
@@ -562,6 +565,10 @@ def quick_deck_agent_brief(
                 "matrix": ["quadrants: exactly 4 {title, body} objects", "summary_callout?"],
                 "standard": ["bullets: [text]"],
                 "timeline": ["milestones: [{label, title, body}]"],
+                "flow": ["flow_steps: 2-4 {title, detail?} stages for native editable methods; do not invent missing stages"],
+                "image-sidebar": ["assets.hero_image: local slide-ready figure", "sidebar_sections: [{title, body}]", "caption?", "image_sidebar_mode: analysis-rail | evidence-mosaic | editorial-atlas"],
+                "scientific-figure": ["figures: 1-4 {path, label?, title?, caption?} local panels", "figure_layout: panel-grid | primary-rail | ledger-rail | strip-readout", "figure_frame: open | ruled | panel", "interpretation?"],
+                "lab-run-results": ["tables: [{title?, headers, rows, cell_styles?}]", "interpretation?"],
             },
             "content_limits": {
                 "slides": slide_count,
@@ -571,26 +578,33 @@ def quick_deck_agent_brief(
             },
         },
         "authoring_rules": [
-            "Choose one route candidate from the evidence and audience; keep its preset and grammar together. Use the fallback when uncertain and honor explicit style locks.",
-            "Story hints and any starter_sequence are optional suggestions; adapt to the evidence without copying another candidate's story.",
-            "Use only role/variant pairs in renderer.role_variants so v2 owns the geometry. Requested shapes outside that map need a supported representation or an explicit capability limitation.",
-            "Avoid more than two consecutive slides with the same concrete variant.",
-            "Shorten or split content before shrinking below the readability contract.",
-            "Do not invent evidence or citations; label synthetic illustrations. All profiles must pass the same finalizer QA and rendered review.",
-            "Before approval, compare critical values, units, denominators, caveats, and source IDs against the supplied evidence in both outline and rendered slides. Layout QA is not a factual audit.",
+            "Choose a preset/grammar for audience and evidence. Honor style locks; fallback if uncertain.",
+            "Story hints and starter_sequence are optional; let evidence determine the argument.",
+            "Use supported role/variant pairs; prefer real figures, tables and native methods to generic cards.",
+            "Lab: size evidence first, then interpretation/limits. Plot labels >=13pt at inserted size. Retain units, denominators and captions; no private data in public examples.",
+            "At most two consecutive slides use the same concrete variant.",
+            "Shorten or split before shrinking below readability floors.",
+            "No invented evidence/citations; label synthetic data. Every profile needs QA and rendered review.",
+            "Check values, units, denominators, caveats and sources against evidence. Layout QA is not fact checking.",
         ],
         "commands": {
             "finalize": (
                 f"python3 {runtime} {entrypoint} finalize "
                 "--outline <outline.json> --output <output.pptx> --qa-dir <qa-dir>"
             ),
-            "repair_loop": "Read <qa-dir>/qa_report.json and contact sheet, edit outline.json, rerun affected checks until clean or report a blocker.",
+            "repair_loop": "Read QA and renders, fix outline.json, rerun affected checks until clean or report a blocker.",
         },
     }
     if route.get("intake_answers"):
         brief["authoring_prompt"] = prompt
     if profile == "fast":
         brief["outline_contract"]["minimal_payload_examples"] = minimal_payload_examples()
+        # Concrete examples already describe the v2 payloads; do not repeat them.
+        examples = brief["outline_contract"]["minimal_payload_examples"]
+        brief["outline_contract"]["payload_by_variant"] = {
+            key: value for key, value in brief["outline_contract"]["payload_by_variant"].items()
+            if not all(variant in examples for variant in key.split("/"))
+        }
         brief["diagnostics"] = compact_authoring_diagnostics()
     return brief
 

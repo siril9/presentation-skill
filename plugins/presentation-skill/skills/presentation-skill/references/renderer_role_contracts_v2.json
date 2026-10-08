@@ -14,7 +14,7 @@
         "density": {"level": "medium", "max_items": 3},
         "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-answer-ledger"},
-        "slots": {"headline": [0.18, 0.17, 0.52, 0.31], "support": [0.18, 0.55, 0.42, 0.14], "anchor": [0.76, 0.12, 0.20, 0.76]}
+        "slots": {"headline": [0.08, 0.18, 0.78, 0.23], "support": [0.08, 0.49, 0.50, 0.18], "anchor": [0.68, 0.50, 0.26, 0.32]}
       },
       "section": {
         "system_id": "section-claim-chapters",
@@ -25,7 +25,7 @@
         "density": {"level": "low", "max_items": 3},
         "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-claim-chapters"},
-        "slots": {"index": [0.04, 0.18, 0.12, 0.18], "headline": [0.20, 0.20, 0.56, 0.32], "support": [0.20, 0.58, 0.48, 0.18]}
+        "slots": {"index": [0.05, 0.18, 0.10, 0.14], "headline": [0.20, 0.18, 0.74, 0.26], "support": [0.20, 0.54, 0.58, 0.18]}
       },
       "evidence": {
         "system_id": "evidence-proof-stack",
@@ -100,14 +100,14 @@
         "reading_order": ["study_id", "headline", "support", "method"], "anchor_slot": "headline",
         "density": {"level": "high", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-study-plate"},
-        "slots": {"study_id": [0.04, 0.08, 0.18, 0.12], "headline": [0.08, 0.24, 0.58, 0.28], "support": [0.08, 0.58, 0.52, 0.12], "method": [0.72, 0.18, 0.24, 0.64]}
+        "slots": {"study_id": [0.18, 0.09, 0.64, 0.10], "headline": [0.18, 0.31, 0.64, 0.30], "support": [0.18, 0.69, 0.64, 0.12], "method": [0.87, 0.31, 0.09, 0.50]}
       },
       "section": {
         "system_id": "section-method-result", "layout_family": "method-result-turn", "coordinate_space": "slide",
         "reading_order": ["stage", "headline", "support"], "anchor_slot": "stage",
         "density": {"level": "medium", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-method-result"},
-        "slots": {"stage": [0.05, 0.12, 0.90, 0.12], "headline": [0.08, 0.34, 0.72, 0.26], "support": [0.08, 0.68, 0.62, 0.14]}
+        "slots": {"stage": [0.08, 0.10, 0.84, 0.10], "headline": [0.08, 0.32, 0.84, 0.22], "support": [0.08, 0.68, 0.84, 0.12]}
       },
       "evidence": {
         "system_id": "evidence-multipanel-plate", "layout_family": "multipanel-plate", "coordinate_space": "body",
@@ -158,14 +158,14 @@
         "reading_order": ["status", "headline", "support", "pathway"], "anchor_slot": "status",
         "density": {"level": "medium", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-clinical-status"},
-        "slots": {"status": [0.04, 0.08, 0.12, 0.78], "headline": [0.22, 0.18, 0.55, 0.28], "support": [0.22, 0.54, 0.50, 0.14], "pathway": [0.82, 0.16, 0.14, 0.66]}
+        "slots": {"status": [0.08, 0.09, 0.45, 0.10], "headline": [0.08, 0.29, 0.45, 0.34], "support": [0.62, 0.33, 0.31, 0.30], "pathway": [0.62, 0.72, 0.31, 0.12]}
       },
       "section": {
         "system_id": "section-care-stage", "layout_family": "care-stage", "coordinate_space": "slide",
         "reading_order": ["stage", "headline", "support"], "anchor_slot": "stage",
         "density": {"level": "medium", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-care-stage"},
-        "slots": {"stage": [0.05, 0.18, 0.14, 0.58], "headline": [0.25, 0.24, 0.60, 0.24], "support": [0.25, 0.58, 0.54, 0.16]}
+        "slots": {"stage": [0.06, 0.20, 0.14, 0.54], "headline": [0.25, 0.23, 0.34, 0.30], "support": [0.66, 0.25, 0.28, 0.28]}
       },
       "evidence": {
         "system_id": "evidence-clinical-cohort", "layout_family": "clinical-cohort", "coordinate_space": "body",
@@ -216,14 +216,14 @@
         "reading_order": ["masthead", "headline", "support", "folio"], "anchor_slot": "headline",
         "density": {"level": "medium", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-editorial-masthead"},
-        "slots": {"masthead": [0.05, 0.06, 0.90, 0.10], "headline": [0.08, 0.24, 0.62, 0.34], "support": [0.08, 0.66, 0.48, 0.14], "folio": [0.82, 0.24, 0.12, 0.56]}
+        "slots": {"masthead": [0.08, 0.09, 0.84, 0.12], "headline": [0.08, 0.47, 0.60, 0.30], "support": [0.73, 0.50, 0.21, 0.30], "folio": [0.73, 0.27, 0.21, 0.10]}
       },
       "section": {
         "system_id": "section-editorial-folio", "layout_family": "editorial-folio", "coordinate_space": "slide",
         "reading_order": ["folio", "headline", "support"], "anchor_slot": "headline",
         "density": {"level": "low", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-editorial-folio"},
-        "slots": {"folio": [0.05, 0.12, 0.14, 0.72], "headline": [0.27, 0.26, 0.62, 0.26], "support": [0.27, 0.62, 0.48, 0.15]}
+        "slots": {"folio": [0.06, 0.13, 0.20, 0.12], "headline": [0.06, 0.46, 0.56, 0.30], "support": [0.70, 0.47, 0.24, 0.30]}
       },
       "evidence": {
         "system_id": "evidence-captioned-feature", "layout_family": "captioned-feature", "coordinate_space": "body",
@@ -274,14 +274,14 @@
         "reading_order": ["thesis", "headline", "support", "signal"], "anchor_slot": "thesis",
         "density": {"level": "medium", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-investor-thesis"},
-        "slots": {"thesis": [0.04, 0.08, 0.92, 0.12], "headline": [0.08, 0.24, 0.70, 0.34], "support": [0.08, 0.66, 0.54, 0.14], "signal": [0.82, 0.28, 0.14, 0.52]}
+        "slots": {"thesis": [0.14, 0.10, 0.54, 0.12], "headline": [0.14, 0.46, 0.76, 0.24], "support": [0.14, 0.78, 0.70, 0.12], "signal": [0.75, 0.10, 0.15, 0.18]}
       },
       "section": {
         "system_id": "section-thesis-stage", "layout_family": "thesis-stage", "coordinate_space": "slide",
-        "reading_order": ["stage", "headline", "signal"], "anchor_slot": "headline",
+        "reading_order": ["stage", "headline", "support", "signal"], "anchor_slot": "headline",
         "density": {"level": "low", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-thesis-stage"},
-        "slots": {"stage": [0.05, 0.10, 0.90, 0.12], "headline": [0.12, 0.30, 0.64, 0.28], "signal": [0.78, 0.30, 0.18, 0.52]}
+        "slots": {"stage": [0.14, 0.10, 0.56, 0.10], "headline": [0.14, 0.38, 0.76, 0.24], "support": [0.14, 0.73, 0.68, 0.13], "signal": [0.77, 0.10, 0.13, 0.15]}
       },
       "evidence": {
         "system_id": "evidence-market-proof", "layout_family": "market-proof-stage", "coordinate_space": "body",
@@ -332,14 +332,14 @@
         "reading_order": ["status", "headline", "support", "controls"], "anchor_slot": "status",
         "density": {"level": "high", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-operations-state"},
-        "slots": {"status": [0.04, 0.08, 0.18, 0.80], "headline": [0.26, 0.18, 0.52, 0.28], "support": [0.26, 0.54, 0.46, 0.14], "controls": [0.82, 0.16, 0.14, 0.66]}
+        "slots": {"status": [0.06, 0.23, 0.27, 0.23], "headline": [0.40, 0.23, 0.54, 0.31], "support": [0.40, 0.62, 0.50, 0.19], "controls": [0.06, 0.55, 0.27, 0.25]}
       },
       "section": {
         "system_id": "section-operating-cycle", "layout_family": "operating-cycle", "coordinate_space": "slide",
-        "reading_order": ["cycle", "headline", "control"], "anchor_slot": "cycle",
+        "reading_order": ["cycle", "headline", "support", "control"], "anchor_slot": "cycle",
         "density": {"level": "medium", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-operating-cycle"},
-        "slots": {"cycle": [0.04, 0.12, 0.18, 0.76], "headline": [0.28, 0.26, 0.52, 0.28], "control": [0.84, 0.20, 0.12, 0.60]}
+        "slots": {"cycle": [0.05, 0.16, 0.27, 0.23], "headline": [0.39, 0.18, 0.56, 0.29], "support": [0.39, 0.60, 0.56, 0.16], "control": [0.05, 0.55, 0.27, 0.26]}
       },
       "evidence": {
         "system_id": "evidence-operations-signal", "layout_family": "operations-signal-board", "coordinate_space": "body",
@@ -390,14 +390,14 @@
         "reading_order": ["docket", "headline", "support", "stakeholders"], "anchor_slot": "headline",
         "density": {"level": "medium-high", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-public-question"},
-        "slots": {"docket": [0.04, 0.08, 0.14, 0.80], "headline": [0.24, 0.18, 0.52, 0.30], "support": [0.24, 0.56, 0.48, 0.15], "stakeholders": [0.82, 0.16, 0.14, 0.68]}
+        "slots": {"docket": [0.068, 0.078, 0.38, 0.05], "headline": [0.068, 0.206, 0.855, 0.302], "support": [0.068, 0.597, 0.73, 0.181], "stakeholders": [0.82, 0.82, 0.14, 0.06]}
       },
       "section": {
         "system_id": "section-policy-docket", "layout_family": "policy-docket", "coordinate_space": "slide",
-        "reading_order": ["docket", "headline", "accountability"], "anchor_slot": "docket",
+        "reading_order": ["docket", "headline", "support", "accountability"], "anchor_slot": "docket",
         "density": {"level": "medium", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-policy-docket"},
-        "slots": {"docket": [0.05, 0.10, 0.90, 0.12], "headline": [0.08, 0.31, 0.56, 0.30], "accountability": [0.70, 0.28, 0.24, 0.54]}
+        "slots": {"docket": [0.068, 0.078, 0.38, 0.05], "headline": [0.068, 0.306, 0.62, 0.270], "support": [0.742, 0.316, 0.202, 0.313], "accountability": [0.742, 0.73, 0.202, 0.12]}
       },
       "evidence": {
         "system_id": "evidence-public-record", "layout_family": "public-record", "coordinate_space": "body",
@@ -445,17 +445,17 @@
     "technical-telemetry-canvas": {
       "title": {
         "system_id": "title-telemetry-state", "layout_family": "telemetry-state", "coordinate_space": "slide",
-        "reading_order": ["layer", "headline", "support", "signals"], "anchor_slot": "signals",
+        "reading_order": ["layer", "support", "headline", "signals"], "anchor_slot": "signals",
         "density": {"level": "high", "max_items": 4}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "title-telemetry-state"},
-        "slots": {"layer": [0.04, 0.08, 0.16, 0.82], "headline": [0.24, 0.18, 0.50, 0.30], "support": [0.24, 0.56, 0.44, 0.15], "signals": [0.80, 0.12, 0.16, 0.76]}
+        "slots": {"layer": [0.05, 0.05, 0.90, 0.09], "headline": [0.05, 0.48, 0.90, 0.24], "support": [0.05, 0.25, 0.90, 0.14], "signals": [0.05, 0.79, 0.90, 0.08]}
       },
       "section": {
         "system_id": "section-system-layer", "layout_family": "system-layer", "coordinate_space": "slide",
-        "reading_order": ["layer", "headline", "verification"], "anchor_slot": "layer",
+        "reading_order": ["layer", "headline", "support", "verification"], "anchor_slot": "layer",
         "density": {"level": "medium", "max_items": 3}, "supported_variants": ["primary", "alternate", "dense"],
         "fallback": {"version": "renderer_role_systems_v1", "system_id": "section-system-layer"},
-        "slots": {"layer": [0.04, 0.10, 0.44, 0.12], "headline": [0.06, 0.33, 0.58, 0.30], "verification": [0.72, 0.52, 0.24, 0.30]}
+        "slots": {"layer": [0.05, 0.10, 0.42, 0.08], "headline": [0.05, 0.43, 0.90, 0.24], "support": [0.05, 0.74, 0.64, 0.12], "verification": [0.74, 0.74, 0.21, 0.12]}
       },
       "evidence": {
         "system_id": "evidence-signal-trace", "layout_family": "signal-trace", "coordinate_space": "body",

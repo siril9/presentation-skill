@@ -53,10 +53,15 @@ SCRIPT_DEVELOPMENT_ONLY = {
 }
 
 SCREENSHOTS = {
-    "v0.13_showcase.jpg": REPO / "examples/v0.13_showcase.jpg",
-    "v0.13_lab_contact_sheet.jpg": REPO / "examples/v0.13_lab_contact_sheet.jpg",
-    "v0.13_editorial_contact_sheet.jpg": REPO / "examples/v0.13_editorial_contact_sheet.jpg",
-    "v0.13_operations_contact_sheet.jpg": REPO / "examples/v0.13_operations_contact_sheet.jpg",
+    "v0.14_lab_showcase.jpg": REPO / "examples/v0.14_lab_showcase.jpg",
+    **{f"{study}_contact_sheet.jpg": REPO / f"examples/v0.14_lab_studies/{study}_contact_sheet.jpg"
+       for study in ("white_calibration", "dark_contrast", "light_river_report")},
+}
+
+RETIRED_SCREENSHOTS = {
+    **{f"v0.13_{name}.jpg": REPO / f"examples/v0.13_{name}.jpg"
+       for name in ("showcase", "design_studies", "lab_contact_sheet",
+                    "editorial_contact_sheet", "operations_contact_sheet")},
     "codex_native_vs_updated_clean_three_topics.png": REPO
     / "decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png",
 }
@@ -178,6 +183,10 @@ def main() -> int:
     _sync_skill(PLUGIN_SKILL_ROOT)
 
     PLUGIN_ASSETS.mkdir(parents=True, exist_ok=True)
+    for name, source in RETIRED_SCREENSHOTS.items():
+        asset = PLUGIN_ASSETS / name
+        if asset.is_file() and source.is_file() and asset.read_bytes() == source.read_bytes():
+            asset.unlink()
     for name, src in SCREENSHOTS.items():
         if not src.is_file():
             raise FileNotFoundError(src)

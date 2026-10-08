@@ -1,0 +1,130 @@
+{
+  "title": "Contrast drift: signal or correction?",
+  "subtitle": "Invented synthetic nonclinical seminar",
+  "deck_style": {
+    "style_preset": "midnight-neon",
+    "composition_grammar": "technical-telemetry-canvas",
+    "style_seed": "v014-dark-contrast",
+    "font_pair": "clean_modern_v1",
+    "header_mode": "lab-clean", "header_variant": "plain",
+    "title_layout": "poster", "title_motif": "none",
+    "footer_mode": "source-line", "footer_page_numbers": true,
+    "figure_frame": "open", "chart_treatment": "minimal",
+    "comparison_mode": "open-columns", "emoji_mode": "none",
+    "readability_contract": {
+      "min_title_pt": 28, "min_body_pt": 16, "min_support_pt": 13,
+      "min_caption_pt": 9, "min_footer_pt": 9, "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true, "source_ledger": "data/synthetic_data.json",
+    "external_assets": false,
+    "route_claim": "Large scientific plots and native flows use legacy fallbacks, not full v2 evidence contracts.",
+    "palette_note": "Current supported dark base is midnight-neon: near-black canvas, black plot ground. No unsupported custom palette tokens.",
+    "verification": "Source validation is separate from rendered approval; see release_manifest.json for the reviewed release artifacts."
+  },
+  "slides": [
+    {
+      "slide_id": "con-01", "type": "title", "role": "title", "variant": "title",
+      "slide_intent": "challenge", "title": "Contrast drift:\nsignal or correction?",
+      "subtitle": "A stability story built from invented traces.\nSynthetic, dimensionless and nonclinical.",
+      "kicker": "ILLUSTRATIVE SCIENTIFIC SEMINAR / 02",
+      "sources": ["SYN-D | invented nonclinical traces"],
+      "notes": "This seminar examines identifiability using invented normalized contrast signals. Dark and light are labels of toy conditions, not validated display modes or human-perception results. Every trace and tolerance is synthetic."
+    },
+    {
+      "slide_id": "con-02", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "phenomenon", "title": "Two toy conditions drift in opposite directions",
+      "subtitle": "12 synthetic traces per condition; 11 ordered time steps each",
+      "figure_layout": "panel-grid", "figure_frame": "open",
+      "figures": [
+        {"path": "assets/dark_raw.png", "label": "A", "title": "Dark condition", "caption": "Injected drift: +0.004 per step unit."},
+        {"path": "assets/light_raw.png", "label": "B", "title": "Light condition", "caption": "Injected drift: -0.002 per step unit."}
+      ],
+      "caption": "SYN-D. Shared 0-1 axis; thin lines = traces; thick line = mean.",
+      "interpretation": "The drift is known because the generator put it there.",
+      "sources": ["SYN-D | synthetic raw trajectories"],
+      "notes": "Time is a dimensionless simulation step, not minutes. The baseline is 0.32 for dark and 0.72 for light with trace-specific offsets and independent Gaussian noise. Twelve traces are not 132 independent experiments: each trace contains 11 repeated values."
+    },
+    {
+      "slide_id": "con-03", "type": "content", "role": "comparison", "variant": "comparison-2col",
+      "slide_intent": "competing-interpretations", "title": "A flat curve can mean two different things",
+      "subtitle": "Native comparison separates a toy transformation from an earned explanation",
+      "left": {
+        "title": "Oracle correction",
+        "bullets": ["Subtract the exact drift used by the generator.", "A transparent demonstration of recoverability.", "Not an estimator learned from unknown signals."]
+      },
+      "right": {
+        "title": "Independent estimation",
+        "bullets": ["Would need a separate reference channel.", "Must preserve signal changes, not just flatten curves.", "Not implemented or evaluated in this example."]
+      },
+      "verdict": "Known injected drift is privileged information, not measured reference evidence.",
+      "sources": ["SYN-D | invented interpretation exercise"],
+      "notes": "No claim of an operational drift-correction algorithm is made. An independent reference is a proposed evidence need, not an existing dataset. Keep the explicit oracle disclosure visible rather than hiding it in a caption."
+    },
+    {
+      "slide_id": "con-04", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "transformation", "title": "Subtracting injected drift restores the toy baseline",
+      "subtitle": "Same 12 dark-condition traces before and after oracle correction",
+      "figure_layout": "primary-rail", "figure_frame": "ruled",
+      "figures": [{"path": "assets/oracle_overlay.png", "label": "A", "title": "Mean contrast trajectories", "caption": "Raw and oracle-corrected means; n = 12 paired traces."}],
+      "caption": "SYN-D. Horizontal line = invented baseline 0.32.",
+      "interpretation": "Recoverability under known drift is not identifiability under unknown drift.",
+      "sources": ["SYN-D | synthetic oracle transform"],
+      "notes": "Correction removes only drift*time, not the per-trace offset or measurement noise. The figure plots raw and corrected means on the full 0-1 scale. The result is expected by construction."
+    },
+    {
+      "slide_id": "con-05", "type": "content", "role": "chart", "variant": "chart",
+      "slide_intent": "paired-summary", "title": "Endpoint error shrinks by construction",
+      "subtitle": "Synthetic mean absolute endpoint change from time zero; n = 12 per condition",
+      "chart": "data/endpoint_chart.json",
+      "caption": "SYN-D. Paired absolute changes; dimensionless. Bars start at zero; no statistical test.",
+      "sources": ["SYN-D | computed synthetic endpoint errors"],
+      "notes": "Compute each trace's absolute endpoint-minus-start difference first, then average the 12 values. This differs from taking the absolute difference between group means. The JSON ledger retains both raw and corrected arrays. No confidence interval, performance validation or perception claim is implied."
+    },
+    {
+      "slide_id": "con-06", "type": "content", "role": "evidence", "variant": "image-sidebar",
+      "slide_intent": "failure-mode", "title": "Endpoint agreement hides the path",
+      "subtitle": "Synthetic corrected trajectories still contain trace-level variation",
+      "image_sidebar_mode": "analysis-rail", "sidebar_body_font_size": 16,
+      "assets": {"hero_image": "assets/corrected_deviations.png"},
+      "caption": "SYN-D. Dark condition; deviations from each trace's time-zero value; n = 12.",
+      "sidebar_sections": [
+        {"title": "Readout", "body": "Noise remains after the known drift is removed."},
+        {"title": "Boundary", "body": "The +/-0.08 band is invented, not a display tolerance."},
+        {"title": "Missing", "body": "No reference channel or perceptual outcome is modeled."}
+      ],
+      "sources": ["SYN-D | synthetic within-trace deviations"],
+      "notes": "The thin traces are not uncertainty intervals. A compact endpoint summary cannot establish stability throughout the complete sequence. The sidebar has three short sections at a 16-point requested floor."
+    },
+    {
+      "slide_id": "con-07", "type": "content", "role": "evidence", "variant": "flow",
+      "slide_intent": "next-test", "title": "A useful next test withholds the drift law",
+      "subtitle": "Proposed synthetic extension, not completed work",
+      "flow_layout": "bands",
+      "flow_steps": [
+        {"title": "Hide the law", "detail": "Keep injected drift unavailable to the estimator."},
+        {"title": "Add a reference", "detail": "Generate a separate noisy channel; freeze the estimator."},
+        {"title": "Challenge it", "detail": "Add a true signal change and check whether it survives correction."}
+      ],
+      "caption": "SYN-D. Three native editable method bands.",
+      "sources": ["SYN-D | invented follow-up plan"],
+      "notes": "This plan is intentionally not implemented in the generator. It marks the boundary of the example rather than silently extending the proof to a correction algorithm."
+    },
+    {
+      "slide_id": "con-08", "type": "content", "role": "decision", "variant": "standard",
+      "slide_intent": "claim-boundary", "title": "Keep the demonstration; reject the stability claim",
+      "content_recipe": {"required_slots": ["Demonstration", "Boundary", "Next test"]},
+      "subtitle": "Synthetic seminar conclusion: the inference matters more than the flat line",
+      "bullets": [
+        "Use the oracle case to explain the algebra of drift removal.",
+        "Do not claim an estimator, a stable device or improved perception.",
+        "Require a blinded reference-channel test before advancing the claim."
+      ],
+      "summary_callout": "The data are invented. The proposed reference-channel experiment has not been run.",
+      "sources": ["SYN-D | synthetic limitations"],
+      "notes": "This is a limitations-led seminar rather than a calibrated product recommendation. All 12 trace identities remain paired throughout the native chart and figure pipeline. The supported base preset currently uses a near-black page background; literal black figures are generated locally. Final color and geometry approval remain deferred."
+    }
+  ]
+}

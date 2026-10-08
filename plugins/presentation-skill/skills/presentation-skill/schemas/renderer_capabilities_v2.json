@@ -1,5 +1,10 @@
 {
   "schema_version": "renderer_capabilities_v2",
+  "fallback_role_variants": {
+    "evidence": ["standard", "split", "flow", "image-sidebar", "scientific-figure", "generated-image"],
+    "table": ["lab-run-results"],
+    "decision": ["kpi-hero"]
+  },
   "role_variants": {
     "title": [
       "title"

@@ -46,7 +46,7 @@ QA_BLOCKING_KEYS = (
 QA_FILES = (
     "qa_report.json", "issues.json", "outline.md", "layout_lint.json",
     "visual_qa.json", "design_rules.json", "accessibility.json",
-    "repair_packet.json", "finalize_receipt.json",
+    "repair_packet.json", "finalize_receipt.json", "visual_review_receipt.json",
 )
 RENDER_FILES = ("render_report.json",)
 VISUAL_REVIEW_FILES = (

@@ -16,6 +16,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from visual_review import _analyze_text_shapes, _measurement_font, _shape_record  # noqa: E402
+from inventory import _overflow_amount  # noqa: E402
 
 
 def _text(
@@ -65,8 +66,10 @@ class VisualReviewTests(unittest.TestCase):
         record = _shape_record(1, 1, shape)
         self.assertEqual(len(record["estimated_lines"]), 4)
         self.assertAlmostEqual(record["estimated_height"], 4 * 16 / 72 * 1.28)
+        self.assertEqual(_overflow_amount(shape, shape.text), 0)
         self.assertNotIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
         shape.height = Inches(0.65)
+        self.assertGreater(_overflow_amount(shape, shape.text), 0)
         self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
 
     def test_wide_unbroken_text_still_warns_with_real_font(self) -> None:
@@ -94,6 +97,7 @@ class VisualReviewTests(unittest.TestCase):
         shape = _text(slide, "First line\nSecond line\nThird line\nFourth line", 2.0, 0.5, 16)
         shape.text_frame.paragraphs[0].runs[0].font.name = "Not installed QA font"
         with patch("visual_review._measurement_font", return_value=None):
+            self.assertGreater(_overflow_amount(shape, shape.text), 0)
             self.assertIn("text_box_clip_risk", {item["type"] for item in _analyze_text_shapes(presentation)})
 
     def test_unproblematic_body_box_does_not_load_font_metrics(self) -> None:
@@ -102,6 +106,8 @@ class VisualReviewTests(unittest.TestCase):
         _text(slide, "Short ordinary text", 2.0, 1.0, 16)
         with patch("visual_review._measured_text_layout") as measure:
             _analyze_text_shapes(presentation)
+            shape = presentation.slides[0].shapes[0]
+            self.assertEqual(_overflow_amount(shape, shape.text), 0)
             measure.assert_not_called()
 
     def test_unreadable_metrics_fall_back_without_losing_clip_warning(self) -> None:

@@ -1,0 +1,15 @@
+{
+  "name": "presentation-preview",
+  "version": "0.1.0",
+  "description": "Optional local slide preview and source-first revision panel for presentation-skill.",
+  "license": "MIT",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Slide Review",
+    "shortDescription": "Preview and revise local decks",
+    "longDescription": "An optional local MCP extension for presentation-skill. Inspect rendered slides, share a selected slide and source revision with the model, request bounded source edits, and rebuild with the existing QA pipeline. Requires a configured local checkout and deck folder. Not a hosted service or a full PowerPoint editor.",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/siril9/presentation-skill",
+    "supportURL": "https://github.com/siril9/presentation-skill/issues"
+  }
+}

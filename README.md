@@ -7,9 +7,9 @@ A skill for coding agents that produces editable PowerPoint decks from structure
 [![Built with pptxgenjs](https://img.shields.io/badge/renderer-pptxgenjs-2563eb.svg)](templates/pptxgenjs/README.md)
 [![skills.sh](https://skills.sh/b/siril9/presentation-skill)](https://www.skills.sh/siril9/presentation-skill/presentation-skill)
 
-![Six editable slides: lab evidence, editorial analysis, and operations decisions](examples/v0.13_showcase.jpg)
+![v0.14 scientific and report study preview](examples/v0.14_lab_showcase.jpg)
 
-*Real rendered slides, not mockups. Lab evidence, editorial stories, and operations decisions, from quiet tables to a full-slide metric. Synthetic data; editable charts, tables, and text.*
+*Three eight-slide studies: calibration, contrast drift, and sampling. 24 actual slides with invented synthetic nonclinical data, editable charts/tables, and explicit limitations.*
 
 Ask an agent for a lab report, board memo, investor update, clinical dashboard, policy brief, or scientific figure deck. The skill writes source JSON, routes style and content structure, builds an editable `.pptx`, and runs QA instead of shipping a screenshot or a stack of centered bullets.
 
@@ -38,11 +38,11 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 ## What's actually in the box
 
-- **A pptxgenjs renderer with 16 content variants plus title and section slides.** `standard`, `split`, `cards-2`, `cards-3`, `timeline`, `stats`, `kpi-hero`, `comparison-2col`, `matrix`, `chart`, `table`, `lab-run-results`, `image-sidebar`, `scientific-figure`, `flow` (Mermaid), and `generated-image`. Each variant has its own layout discipline so a deck doesn't collapse into bullet-list-after-bullet-list.
+- **A pptxgenjs renderer with 16 content variants plus title and section slides.** `standard`, `split`, `cards-2`, `cards-3`, `timeline`, `stats`, `kpi-hero`, `comparison-2col`, `matrix`, `chart`, `table`, `lab-run-results`, `image-sidebar`, `scientific-figure`, `flow`, and `generated-image`. Native ordered methods carry 2-4 editable stages with titles and details; Mermaid remains optional. Scientific figures offer four layouts and `open`, `ruled`, or `panel` frames, with measured interpretation sidebars rather than shrinking text to fit.
 - **A preset system across 13 style families.** Lab report, executive clinical, board risk memo, investor reveal, editorial report, civic science policy, and so on. Each owns a palette, font pair, density profile, and bounded visual interpretation.
 - **Eight full-deck composition grammars above the presets.** Answer Pyramid, Evidence Plate, Care Pathway, Editorial Spread, Thesis Stage, Operating Grid, Public Docket, and Telemetry Canvas own role contracts for title, section, evidence, comparison, chart, table, decision, and references. A semantic render plan keeps role and visual variant separate, uses v2 geometry only for supported pairs, and records explicit v1/legacy fallbacks instead of silently substituting layouts. Slide overrides stay bounded to `primary`, `alternate`, or `dense`.
 - **A descriptor-only style corpus (~2,200 records) atomized into a composable token atlas.** The corpus carries described palettes, layouts, density patterns, and structural motifs from public deck-like sources (no copied assets). It's processed into 311 atoms across 12 types. New workspaces route the topic to a preset and independently select a composition grammar, so an advanced model can mix bounded design signals instead of receiving one static template.
-- **A lightweight model-adaptive entrypoint.** `present.py` offers compact briefs, optional intake questions, and up to three original visual references matched to the content. Luna, Terra, Sol, Astra, or a future model can use the same contracts; no multi-agent setup is required. Field-level repair packets and automatic verified render reuse keep iteration small without skipping QA.
+- **A lightweight model-adaptive entrypoint.** `present.py` offers compact briefs, optional intake questions, and up to three original visual references matched to the content. Even the fast brief exposes supported figure, sidebar, and methods fallbacks without claiming v2 slot execution. One capable model, including GPT-6.1, can use the same contracts; no model-specific or multi-agent setup is required. Field-level repair packets and automatic verified render reuse keep iteration small without skipping QA.
 - **A layered QA loop with exact-review receipts.** Geometry, rendered-image inspection, placeholder detection, design rules, and optional accessibility checks catch deterministic failures. For high-stakes delivery, a human/model verdict can be bound to the exact PPTX and rendered-slide hashes, so a rebuilt deck cannot reuse stale approval.
 - **Workspace mode with a versioned Deck IR.** Planning sources live beside `outline.json`; each build derives a deterministic coordinate-free `deck_ir.json` with stable object IDs, semantic intent, evidence links, and editability metadata. Readiness diagnostics tell the agent what to fix next instead of re-running blind.
 - **Preserve-by-default reference editing.** A standalone `.pptx` can be inspected into stable slide/shape IDs, patched through registered text/alt-text actions with preconditions, and checked to prove untouched geometry, style, and text stayed unchanged.
@@ -50,19 +50,17 @@ Skill name: `presentation-skill`. Aliases for fuzzy skill matching and search: `
 
 ## See it
 
-![Clean lab report with native charts, tables and explicit limitations](examples/v0.13_lab_contact_sheet.jpg)
+![Eight-slide white calibration study](examples/v0.14_lab_studies/white_calibration_contact_sheet.jpg)
 
-*Simple report typography, visible denominators and limitations, native charts and tables. Captions and callouts reserve space instead of covering the evidence.*
+*A quantitative calibration decision with dominant figures, an ordered native method, editable chart/table evidence, and explicit limitations. Invented nonclinical data only.*
 
-Full contact sheets: [editorial](examples/v0.13_editorial_contact_sheet.jpg), [operations](examples/v0.13_operations_contact_sheet.jpg), and [lab](examples/v0.13_lab_contact_sheet.jpg).
+Other full studies: [dark contrast seminar](examples/v0.14_lab_studies/dark_contrast_contact_sheet.jpg) and [light sampling report](examples/v0.14_lab_studies/light_river_report_contact_sheet.jpg).
 
-[Download the four editable decks and their source](https://github.com/siril9/presentation-skill/releases/download/v0.13.0/presentation-skill-v0.13-design-studies.zip). The [showcase manifest](examples/v0.13_showcase_manifest.json) identifies each displayed slide and its source; the images above preview directly in GitHub without a download.
+Download [three decks and reproducible source](https://github.com/siril9/presentation-skill/releases/download/v0.14.0/presentation-skill-v0.14-lab-studies.zip), or individual [calibration](https://github.com/siril9/presentation-skill/releases/download/v0.14.0/white_calibration.pptx), [contrast](https://github.com/siril9/presentation-skill/releases/download/v0.14.0/dark_contrast.pptx), and [sampling](https://github.com/siril9/presentation-skill/releases/download/v0.14.0/light_river_report.pptx) decks. The [release manifest](examples/v0.14_lab_studies/release_manifest.json) maps all 24 actual slides to their source and review evidence.
 
-The [v0.13.1 release](https://github.com/siril9/presentation-skill/releases/tag/v0.13.1) also includes [After six, the library changes](https://github.com/siril9/presentation-skill/releases/download/v0.13.1/presentation-skill-v0.13.1-library-study.zip): an earlier seven-slide editorial source rebuilt unchanged with the current renderer. Its dark metric slide appears in the showcase above.
+These are synthetic design studies, not empirical findings or a model/generator benchmark.
 
-The [v0.13 release](https://github.com/siril9/presentation-skill/releases/tag/v0.13.0) includes these three GPT-6.1 Sol-authored decks, their source, and one retained Luna-authored example rebuilt with the new runtime. These are design studies, not a model-quality benchmark. The earlier [eight-style controlled example](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) and [64-slide grammar gallery](examples/v0.9_full_deck_taste_grammar_gallery.pptx) remain available.
-
-Earlier evidence: [Codex-native vs v0.7 comparison](decks/native-vs-latest-random-topics-20260623/readme_images/codex_native_vs_updated_clean_three_topics.png). This is a historical comparison, not a benchmark of the current release.
+History: [previous proof and downloads](https://github.com/siril9/presentation-skill/releases/tag/v0.13.1).
 
 ## Install
 
@@ -80,7 +78,7 @@ npx skills add https://github.com/siril9/presentation-skill \
 Add this repo as a Codex plugin marketplace, then open `/plugins` in Codex and install `presentation-skill` from the **Presentation Skill** marketplace:
 
 ```bash
-codex plugin marketplace add siril9/presentation-skill --ref v0.13.1
+codex plugin marketplace add siril9/presentation-skill --ref v0.14.0
 ```
 
 For local development against a checkout:
@@ -90,6 +88,8 @@ codex plugin marketplace add /absolute/path/to/presentation-skill
 ```
 
 The marketplace entry lives at `.agents/plugins/marketplace.json` and points to `plugins/presentation-skill`, which bundles a synced snapshot of the root skill.
+
+An optional [Slide Review pilot](extensions/preview/README.md) adds a local MCP preview panel, selected-slide context, and source-first revisions. It uses the same renderer and QA; core use requires none of the extension's extra dependencies. The pilot is local, not a globally hosted service or a curated marketplace listing.
 
 ### Install as a local skill
 
@@ -122,7 +122,7 @@ Emit a compact route for a quick deck:
 python3 scripts/present.py brief \
   --topic "Q3 retention review" \
   --prompt "Board decision with a variance chart and owner table" \
-  --profile terra \
+  --profile auto \
   --output quick_deck_agent_brief.json
 ```
 
@@ -186,7 +186,7 @@ Full workspace docs in [`references/deck_workspace_mode.md`](references/deck_wor
 
 1. **Geometric** — text overflow, element overlap, low-contrast text, narrow text boxes that force excessive wrapping, decorative lines positioned for single-line titles that wrapped to two, footer collisions, insufficient slide margins.
 2. **Visual** (optional, requires render) — slides are exported to JPGs and inspected with a prompt biased toward finding problems. Catches things geometric checks miss (white-band issues on dark backgrounds, mermaid pile-ups, decorative elements bleeding into content).
-3. **Content** — placeholder detection plus mapped source-retention checks on native PowerPoint text, table cells, and chart values. Catches leftover stubs and lost captions, caveats, units, or data. This is not factual verification.
+3. **Content** — placeholder detection plus mapped semantic source-retention checks on native PowerPoint text, table cells, and chart values, including declared method titles/details and figure/sidebar interpretation. Catches leftover stubs and lost captions, caveats, units, or data. This is not factual verification or exhaustive coverage of every source field.
 
 A deck isn't declared ready until the deterministic gate passes and the rendered slides have been reviewed. Fix actual findings and rerun the affected checks; a rebuild cannot reuse stale visual approval.
 
@@ -216,10 +216,11 @@ Codex and other OpenAI-style agents trigger this skill for PowerPoint, `.pptx`, 
 - Run QA before delivery. If QA fails, rebuild from source.
 
 Discovery metadata for agents and shareable summaries for humans live in [`DISCOVERY.md`](DISCOVERY.md) and [`agents/discovery.json`](agents/discovery.json).
-Copy-ready community posts and curation-request text live in [`docs/PROMOTION.md`](docs/PROMOTION.md).
+Sharing copy and publication boundaries live in [`docs/PROMOTION.md`](docs/PROMOTION.md).
 
 ## Releases
 
+- [`v0.14.0`](docs/releases/v0.14.0.md) - native ordered methods, readable scientific figures and sidebars, measured comparison fits, honest evidence fallbacks, and three eight-slide synthetic studies.
 - [`v0.13.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.13.0) - content-preserving builds, aligned action panels, clearer editorial spacing, optional original visual references, and verified render reuse.
 - [`v0.12.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.12.0) - readable variety, source-led design studies, and smaller iterations.
 - [`v0.11.0`](https://github.com/siril9/presentation-skill/releases/tag/v0.11.0) — monochrome lab and journal systems, candidate-coherent v2 routing, semantic subtitle sizing, non-inventive table readouts, cleaner title stages, plugin parity checks, and a two-deck scientific proof.

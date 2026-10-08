@@ -33,6 +33,21 @@ from deck_ir import (  # noqa: E402
 
 
 class DeckIRTests(unittest.TestCase):
+    def test_native_method_keeps_order_detail_and_stable_semantic_identity(self) -> None:
+        outline = {"slides": [{"title": "Prepare the data", "variant": "flow", "flow_steps": [
+            {"title": "Collect", "detail": "Retain raw observations."},
+            {"title": "Review", "detail": "Log every exclusion."},
+        ]}]}
+        ir = deck_ir_from_outline(outline)
+        method = next(element for element in ir["slides"][0]["elements"] if element["editable_object_kind"] == "diagram")
+        self.assertEqual([item["text"] for item in method["content"]["items"]],
+                         ["Collect", "Retain raw observations.", "Review", "Log every exclusion."])
+        outline["slides"][0]["flow_steps"][1]["detail"] = "Log missingness."
+        edited = deck_ir_from_outline(outline)
+        new_method = next(element for element in edited["slides"][0]["elements"] if element["editable_object_kind"] == "diagram")
+        self.assertEqual(method["id"], new_method["id"])
+        validate_deck_ir(ir)
+
     def _outline(self) -> dict[str, object]:
         return {
             "title": "Quarterly Reliability Review",

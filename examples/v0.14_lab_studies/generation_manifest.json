@@ -1,0 +1,107 @@
+{
+  "schema_version": "synthetic_figure_manifest/v1",
+  "synthetic": true,
+  "disclosure": "Invented synthetic nonclinical illustration; no measured empirical findings.",
+  "source_sha256": {
+    "generate_studies.py": "b7b250446fe54b44375e8b90e3dab4c82745dbe6c7be1d027992fd54d8d95028",
+    "study_config.json": "213cd5a42a6f670081020227a6d3ea278eedc2dedbd3132bd58760443a0aee69",
+    "requirements.txt": "ec24800c8a73c029bc33b1a2315e721df10aa56b3af6b7e4194b500703c8beb2"
+  },
+  "runtime": {
+    "numpy": "2.5.1",
+    "matplotlib": "3.11.0",
+    "backend": "Agg",
+    "font": "DejaVu Sans"
+  },
+  "seed_policy": "Independent PCG64 generators, seeds 1401/1402/1403; no global RNG.",
+  "reproduction": "python3 scripts/python_runtime.py examples/v0.14_lab_studies/generate_studies.py --check",
+  "artifacts": [
+    {
+      "path": "dark_contrast/assets/corrected_deviations.png",
+      "sha256": "9f28b4f98c27bf408ba1dd6fef0e6c216b39632ed6b5dc93ad07f478b3f523df",
+      "bytes": 109871
+    },
+    {
+      "path": "dark_contrast/assets/dark_raw.png",
+      "sha256": "08477f1b71cc885e863989f1e74c96466cc2f7256ac59900b66d4c3021e81a6e",
+      "bytes": 47588
+    },
+    {
+      "path": "dark_contrast/assets/light_raw.png",
+      "sha256": "8b64e72dbea9e29590e936c59341fdc993ebaf92184fb747179ce51cdf2ab42c",
+      "bytes": 44181
+    },
+    {
+      "path": "dark_contrast/assets/oracle_overlay.png",
+      "sha256": "dc4ad02ba7f6cd5b5ff87420e07436a9d93cf23b8b704ee54962ccabc47a1be3",
+      "bytes": 60410
+    },
+    {
+      "path": "dark_contrast/data/endpoint_chart.json",
+      "sha256": "6ea3ba81e5dc9476458fcf4ac08f5afe16683b7f60f5895776fe749a92b951a4",
+      "bytes": 803
+    },
+    {
+      "path": "dark_contrast/data/synthetic_data.json",
+      "sha256": "937346a5cecdedcc3afd9c513823c50aa60056b48e0df4e2f76875d837f61b68",
+      "bytes": 14892
+    },
+    {
+      "path": "light_river_report/assets/paired_retention.png",
+      "sha256": "3941defdf6f306691e8d8b1904b4c6d254627a8c9585d04087356d9afe63d16e",
+      "bytes": 151632
+    },
+    {
+      "path": "light_river_report/assets/pulse_trace.png",
+      "sha256": "fa2ceb09cf25d025bcf74f9f9422aeabd0612ec745415d0cbb094657f4f8f012",
+      "bytes": 51951
+    },
+    {
+      "path": "light_river_report/assets/sampling_overlay.png",
+      "sha256": "87f530c6f5d0a2021917fb06228bbd3f8ac59328e5d96c55be02faac2a0dd773",
+      "bytes": 70678
+    },
+    {
+      "path": "light_river_report/data/retention_chart.json",
+      "sha256": "ef115617c46ff8e2def94dc3967eedfc3a3ae8689352b9441869ed8b34a2012b",
+      "bytes": 710
+    },
+    {
+      "path": "light_river_report/data/synthetic_data.json",
+      "sha256": "d2b0b5a99201f3e1cef8a0bbad207dcc5c82f3d9ccf53cf3d4258453c044b7e7",
+      "bytes": 138634
+    },
+    {
+      "path": "white_calibration/assets/affine_residuals.png",
+      "sha256": "3768850c1ad3e5744864440c20cbc5c48b92d2d11c407158ca2569a756e2d7a6",
+      "bytes": 35602
+    },
+    {
+      "path": "white_calibration/assets/noise_sensitivity.png",
+      "sha256": "ea3f25f84b8522d00467c239fba6199be4144b328b6750d84f406828372e947f",
+      "bytes": 48882
+    },
+    {
+      "path": "white_calibration/assets/quadratic_residuals.png",
+      "sha256": "56054a4f951f27ff80f5cc87350a38594572fe8e6c7ae71685e10d4f0cf8fc3f",
+      "bytes": 34851
+    },
+    {
+      "path": "white_calibration/assets/response.png",
+      "sha256": "6a45f465ce6fee015b8993055f99fec7cb1766defa3d85754e009761723737e2",
+      "bytes": 67131
+    },
+    {
+      "path": "white_calibration/data/rmse_chart.json",
+      "sha256": "a7212eee77d3e4be0fa7d912f837b49d5cc975a047c3fda836f5a3b8da1e911b",
+      "bytes": 698
+    },
+    {
+      "path": "white_calibration/data/synthetic_data.json",
+      "sha256": "60ddc164f2acec72f0f4c8acdac1e12b5cc5e7bb9965cf51dc086df480a5cdfe",
+      "bytes": 22424
+    }
+  ],
+  "artifact_scope": "synthetic figures and data only",
+  "figure_generation_status": "generated; deck build, render and review are outside this manifest"
+}

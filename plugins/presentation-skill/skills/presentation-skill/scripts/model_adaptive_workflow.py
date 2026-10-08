@@ -173,21 +173,31 @@ def minimal_payload_examples() -> dict[str, Any]:
             {"title": "Gate", "body": "Review readiness."},
             {"title": "Stop", "body": "Pause on missing evidence."},
         ]},
-        "standard": {"bullets": ["Approve the bounded pilot.", "Review before expansion."]},
+        "standard": {"bullets": [
+            "Scope: approve a two-site pilot.",
+            "Owner: operations lead.",
+            "Next action: confirm readiness.",
+            "Gate: review before expansion.",
+        ]},
         "timeline": {"milestones": [
             {"label": "Week 1", "title": "Scope", "body": "Select sites."},
             {"label": "Week 2", "title": "Pilot", "body": "Collect observations."},
             {"label": "Week 3", "title": "Review", "body": "Decide next steps."},
+        ]},
+        "flow": {"flow_steps": [
+            {"title": "Collect", "detail": "Keep raw observations."},
+            {"title": "Review", "detail": "Apply declared checks."},
+            {"title": "Release", "detail": "Retain the decision record."},
         ]},
     }
 
 
 def compact_authoring_diagnostics() -> list[str]:
     return [
-        "Examples are payloads, not slides: add type, role, variant, title, and real sources; sample values are synthetic.",
-        "A role describes renderer structure, not story intent. Use a supported role/variant pair; layout variants remain optional suggestions.",
-        "stats values must be numeric; chart values must match categories; table rows must match headers; matrix needs exactly four quadrants.",
-        "Read the reported slide, rule, and suggested_fix; repair source and rerun. Unresolved QA means not ready, regardless of profile.",
+        "Synthetic payloads: add type, role, variant, title and real sources.",
+        "role is structure; slide_intent is story. Layout hints are optional.",
+        "Numeric stats; chart/category lengths match; table/header widths match; four matrix quadrants.",
+        "Repair slide/rule/suggested_fix in source. Unresolved QA means not ready.",
     ]
 
 
@@ -206,7 +216,7 @@ def _requested_variants(user_prompt: str) -> list[str]:
 VISUAL_REFERENCE_CATALOG = Path(__file__).resolve().parents[1] / "references" / "visual_reference_catalog.json"
 VISUAL_REFERENCE_POLICY = {
     "catalog": str(VISUAL_REFERENCE_CATALOG.with_suffix(".md")),
-    "use": "Optional local exemplars, at most three total. Inspect only useful links; no extra model call. Borrow composition, not synthetic facts or a fixed sequence; retain one coherent base.",
+    "use": "Optional: inspect up to three useful local exemplars, no extra model call. Borrow composition, not synthetic facts or a sequence; keep one coherent base.",
 }
 
 
@@ -415,6 +425,7 @@ def build_agent_brief(
                 "topic-specific slide sequence and composition rhythm",
                 "which claims need charts, tables, figures, or citations",
                 "which generated artifacts must stay editable and reproducible",
+                "evidence shape first: scientific-figure, image-sidebar, native chart/table or flow_steps; supported fallback layouts need not claim v2 slot execution",
             ],
             "evidence_guardrails": [
                 "Do not invent factual values or citations when source data is missing.",

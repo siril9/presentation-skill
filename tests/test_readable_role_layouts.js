@@ -128,9 +128,9 @@ for (const grammar of Object.keys(RECIPES)) {
           test(`${grammar} ${role} ${font} ${floor}pt ${variant}`, () => {
             const preset = presetFor(grammar, font, floor);
             const data = slideData(role, variant);
-            if (grammar === 'operations-grid' && role === 'decision' && floor === 16) {
-              // Equal peer widths and safe insets make this long-copy fixture
-              // infeasible. The exact authored runtime case below must fit.
+            if (grammar === 'operations-grid' && role === 'decision' && floor === 16 && font === 'Georgia') {
+              // Georgia's wider copy remains infeasible here. Measured modern
+              // headers let the Helvetica fixture fit with the same 16pt floor.
               assert.throws(() => capture(data, preset), /Shorten or split this slide; no content was dropped/);
               return;
             }
@@ -435,6 +435,535 @@ for (const variant of ['primary', 'alternate', 'dense']) {
     assert.deepEqual(planReadableRole(input), planReadableRole(input));
   });
 }
+
+const LAB_FIGURE = path.resolve(__dirname, '../references/assets/visual_references/lab_trend.jpg');
+
+function captureChartRole(data, preset) {
+  const ops = [];
+  renderers.renderChart({}, {
+    addText: (text, options) => ops.push({ text, options }),
+    addShape: (shape, options) => ops.push({ shape, options }),
+    addChart: (chart, series, options) => ops.push({ chart, series, options }),
+    addNotes: (notes) => ops.push({ notes }),
+  }, data, preset);
+  return ops;
+}
+
+function boundedChartData(variant = 'dense') {
+  return builder.normalizeSlide({
+    type: 'content', role: 'chart', variant: 'chart', role_layout_variant: variant,
+    title: 'Modeled heat reduction',
+    subtitle: 'Modeled peak surface-temperature reduction', notes: 'Keep the speaker caveat.',
+    chart: { type: 'bar', labels: ['Shade', 'Cool roof', 'Combined', 'Target'], values: [1.8, 2.4, 4.1, 4.5],
+      options: { valAxisMinVal: -1, valAxisMaxVal: 6, valAxisMajorUnit: 1 },
+      facts: [{ value: '4.1 C', label: 'Combined', detail: 'modeled reduction' },
+        { value: '91%', label: 'Of target', detail: 'before field correction' }],
+      notes: 'Synthetic planning model for release demonstration; editable native chart.' },
+  }, path.resolve(__dirname, '..'));
+}
+
+test('bounded chart fallbacks retain complete native evidence and distinct family reading systems', () => {
+  const layouts = {};
+  for (const grammar of Object.keys(RECIPES)) {
+    const data = boundedChartData();
+    const before = structuredClone(data);
+    const ops = captureChartRole(data, presetFor(grammar, 'Arial', 16));
+    const chart = ops.find((op) => op.chart);
+    assert.deepEqual(chart.series.map((series) => series.values), [[1.8, 2.4, 4.1, 4.5]]);
+    assert.deepEqual(chart.series[0].labels.map(normalized), ['Shade', 'Cool roof', 'Combined', 'Target']);
+    for (const key of ['valAxisMinVal', 'valAxisMaxVal', 'valAxisMajorUnit'])
+      assert.equal(chart.options[key], before.chart.options[key]);
+    assert.ok(chart.options.h + 0.20 >= 1.40 - 1e-6, 'reserved plot region stays at least 1.4 inches');
+    const texts = ops.filter((op) => /^content:chart-|^support:chart-register$/.test(op.options?.objectName || ''));
+    for (const field of [...before.chart.facts.flatMap((fact) => [fact.value, fact.label, fact.detail]), before.chart.notes]) {
+      assert.equal(texts.filter((op) => normalized(op.text) === field).length, 1, `${grammar}: ${field}`);
+    }
+    for (const { text, options } of texts) {
+      assert.ok(options.fontSize >= 16);
+      assert.notEqual(options.fit, 'shrink');
+      assert.ok(wrapText(text, options.w, options.fontSize, options.fontFace, options.bold).h <= options.h + 1e-6);
+      assert.ok(options.x >= 0.50 - 1e-6 && options.x + options.w <= 9.50 + 1e-6);
+      assert.ok(options.y + options.h <= 5.07 + 1e-6);
+    }
+    const boxes = [chart, ...texts].map((op) => op.options);
+    for (let i = 0; i < boxes.length; i += 1) for (let j = i + 1; j < boxes.length; j += 1) {
+      const a = boxes[i]; const b = boxes[j];
+      assert.ok(!(Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 1e-6
+        && Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 1e-6), `${grammar}: overlapping chart readout`);
+    }
+    assert.ok(ops.some((op) => op.notes?.includes(before.notes)));
+    assert.deepEqual(data.chart, before.chart);
+    layouts[grammar] = { chart: chart.options, texts, adaptation: data.__roleContractExecution.adaptation };
+  }
+  const clinical = layouts['clinical-care-pathway'];
+  assert.equal(clinical.adaptation, 'readable-chart-clinical-outcomes');
+  assert.ok(clinical.texts.find((op) => normalized(op.text) === 'Combined').options.y < clinical.chart.y,
+    'clinical lead outcome precedes the plot');
+  assert.ok(clinical.texts.find((op) => normalized(op.text) === 'Of target').options.x > clinical.chart.x + clinical.chart.w,
+    'clinical secondary outcome remains beside the plot');
+  const investor = layouts['investor-thesis-stage'];
+  assert.equal(investor.adaptation, 'readable-chart-unit-economics');
+  assert.ok(investor.texts.find((op) => normalized(op.text) === 'Combined').options.x < investor.chart.x,
+    'investor lead remains a full-height rail');
+  assert.ok(investor.texts.find((op) => normalized(op.text) === 'Of target').options.y > investor.chart.y + investor.chart.h,
+    'investor secondary readout remains below the plot');
+  assert.notDeepEqual(clinical.chart, layouts['consulting-answer-pyramid'].chart);
+  assert.notDeepEqual(investor.chart, layouts['technical-telemetry-canvas'].chart);
+});
+
+test('fitting chart facts retain original family geometry in primary alternate and dense variants', () => {
+  for (const grammar of ['consulting-answer-pyramid', 'clinical-care-pathway', 'investor-thesis-stage', 'technical-telemetry-canvas']) {
+    for (const variant of ['primary', 'alternate', 'dense']) {
+      const preset = presetFor(grammar, 'Arial', 16);
+      const easy = boundedChartData(variant);
+      easy.chart.facts = [{ value: '1' }, { value: '2' }];
+      easy.facts = easy.chart.facts;
+      delete easy.chart.notes;
+      delete easy.message;
+      easy.__chartPayload = builder.normalizeSlide(easy, path.resolve(__dirname, '..')).__chartPayload;
+      const empty = structuredClone(easy);
+      empty.chart.facts = [];
+      empty.facts = [];
+      empty.__chartPayload = builder.normalizeSlide(empty, path.resolve(__dirname, '..')).__chartPayload;
+      const baseline = captureChartRole(empty, preset).find((op) => op.chart).options;
+      const ops = captureChartRole(easy, preset);
+      assert.equal(easy.__roleContractExecution.adaptation, undefined, `${grammar} ${variant}`);
+      assert.deepEqual(ops.find((op) => op.chart).options, baseline, `${grammar} ${variant}: original plot geometry`);
+    }
+  }
+});
+
+test('clinical and investor chart fallback mirror semantic columns and reject unreadable source', () => {
+  for (const grammar of ['clinical-care-pathway', 'investor-thesis-stage']) {
+    const preset = presetFor(grammar, 'Arial', 16);
+    for (const variant of ['primary', 'alternate', 'dense']) {
+      const data = boundedChartData(variant);
+      const ops = captureChartRole(data, preset);
+      const chart = ops.find((op) => op.chart).options;
+      const rail = ops.find((op) => normalized(op.text) === (grammar === 'clinical-care-pathway' ? 'Of target' : 'Combined')).options;
+      const railOnLeft = grammar === 'clinical-care-pathway' ? variant === 'alternate' : variant !== 'alternate';
+      assert.ok(railOnLeft ? rail.x < chart.x : rail.x > chart.x + chart.w);
+      assert.equal(data.__roleContractExecution.adaptation,
+        grammar === 'clinical-care-pathway' ? 'readable-chart-clinical-outcomes' : 'readable-chart-unit-economics');
+    }
+    const impossible = boundedChartData();
+    impossible.chart.facts.forEach((fact) => { fact.detail = 'Keep every measurement and limitation. '.repeat(80); });
+    impossible.__chartPayload = builder.normalizeSlide(impossible, path.resolve(__dirname, '..')).__chartPayload;
+    assert.throws(() => captureChartRole(impossible, preset), /split the source slide/i);
+  }
+});
+
+function captureFigureRole(renderer, data, preset) {
+  const ops = [];
+  const slide = {
+    addText: (text, options) => ops.push({ text, options }),
+    addShape: (shape, options) => ops.push({ shape, options }),
+    addImage: (options) => ops.push({ image: true, options }),
+    addNotes() {},
+  };
+  (renderer === 'renderSlide' ? builder.renderSlide : renderers[renderer])({}, slide, data, preset);
+  return ops;
+}
+
+function checkMeasuredFigureRole(ops) {
+  const named = ops.filter((op) => /^(metadata:|support:)?(scientific:|sidebar:|flow:|caption:flow)/.test(op.options.objectName || ''));
+  const content = named.filter((op) => op.text || op.image);
+  for (const op of content) {
+    const box = op.options;
+    assert.notEqual(box.fit, 'shrink');
+    assert.ok(box.w > 0 && box.h > 0);
+    assert.ok(box.x >= 0.49 && box.x + box.w <= 9.51);
+    assert.ok(box.y >= 0 && box.y + box.h <= 5.45, JSON.stringify(box));
+    if (op.text) {
+      const wrapped = wrapText(plain(op.text), box.w, box.fontSize, box.fontFace, box.bold, true);
+      assert.ok(wrapped.h <= box.h + 1e-6, `${box.objectName}: measured text exceeds its box`);
+      for (const width of lineWidths(wrapped.text, box.fontSize, box.fontFace, box.bold)) {
+        assert.ok(width <= box.w - 0.04 + 1e-6);
+      }
+    }
+  }
+  for (let i = 0; i < content.length; i += 1) {
+    for (let j = i + 1; j < content.length; j += 1) {
+      const a = content[i].options; const b = content[j].options;
+      assert.ok(!(Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) > 0.001
+        && Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) > 0.001),
+      `${a.objectName} overlaps ${b.objectName}`);
+    }
+  }
+}
+
+test('modern header measures a long one-line title at its actual font and reserves folded headings before evidence', () => {
+  const outline = JSON.parse(fs.readFileSync(path.resolve(__dirname,
+    '../examples/v0.14_lab_studies/dark_contrast/outline.json')));
+  const name = outline.deck_style.style_preset;
+  const preset = builder.applyDeckStyle(getPreset(name), outline, name);
+  const source = outline.slides.find((slide) => slide.slide_id === 'con-02');
+  const data = { title: source.title, subtitle: source.subtitle, figure_layout: 'panel-grid',
+    figures: [{ label: 'A', title: 'Retained evidence', caption: 'Synthetic only.' }], __figurePaths: [LAB_FIGURE] };
+  const ops = captureFigureRole('renderScientificFigure', data, preset);
+  const title = ops.find((op) => op.text === data.title);
+  const subtitle = ops.find((op) => op.options.objectName === 'support:slide-subtitle');
+  const body = ops.find((op) => op.options.objectName === 'support:scientific:A:title');
+  const measured = wrapText(data.title, title.options.w, title.options.fontSize, title.options.fontFace, true, true);
+  assert.equal(measured.text.split('\n').length, 1);
+  assert.ok(data.title.length > 42);
+  assert.equal(title.options.h, Math.max(0.42, measured.h - 0.07));
+  assert.notEqual(title.options.fit, 'shrink');
+  assert.ok(subtitle.options.fontSize >= outline.deck_style.readability_contract.min_support_pt);
+  assert.ok(subtitle.options.y >= title.options.y + title.options.h + 0.04 - 1e-6);
+  assert.ok(body.options.y >= subtitle.options.y + subtitle.options.h + 0.20);
+  const legacy = captureFigureRole('renderScientificFigure', structuredClone(data),
+    { ...preset, renderer_role_contract_version: 'renderer_role_systems_v1' });
+  const oldTitle = legacy.find((op) => op.text === data.title);
+  assert.equal(title.options.fontSize, Math.max(oldTitle.options.fontSize, preset.readability_contract.min_title_pt),
+    'modern headers respect the declared floor while pinned v1 keeps its original size');
+  assert.ok(oldTitle.options.h - title.options.h >= 0.4, 'remove the phantom second line, not actual text');
+  const folded = { ...data, title: `${data.title}\nA synthetic extension retains paired denominators` };
+  const foldedOps = captureFigureRole('renderScientificFigure', folded, preset);
+  const foldedTitle = foldedOps.find((op) => normalized(op.text) === normalized(folded.title));
+  const foldedSubtitle = foldedOps.find((op) => op.options.objectName === 'support:slide-subtitle');
+  const foldedBody = foldedOps.find((op) => op.options.objectName === 'support:scientific:A:title');
+  const measuredFold = wrapText(folded.title, foldedTitle.options.w, foldedTitle.options.fontSize,
+    foldedTitle.options.fontFace, true, true);
+  assert.ok(measuredFold.text.split('\n').length >= 2);
+  assert.ok(foldedTitle.options.fontSize >= preset.readability_contract.min_title_pt);
+  assert.equal(foldedTitle.text, measuredFold.text, 'emit the same line breaks used to reserve header height');
+  assert.equal(foldedTitle.options.h, measuredFold.h - 0.07);
+  assert.ok(foldedBody.options.y > body.options.y);
+  assert.ok(foldedSubtitle.options.y >= foldedTitle.options.y + foldedTitle.options.h + 0.04 - 1e-6);
+  assert.ok(foldedBody.options.y >= foldedSubtitle.options.y + foldedSubtitle.options.h + 0.20);
+  assert.equal(normalized(foldedTitle.text), normalized(folded.title));
+  assert.notEqual(foldedTitle.options.fit, 'shrink');
+  const orphan = { ...data, title: 'Authorize one dock corridor before citywide scale' };
+  const orphanOps = captureFigureRole('renderScientificFigure', orphan, preset);
+  const orphanTitle = orphanOps.find((op) => normalized(op.text) === normalized(orphan.title));
+  const orphanPlan = wrapText(orphan.title, orphanTitle.options.w, orphanTitle.options.fontSize,
+    orphanTitle.options.fontFace, true, true);
+  assert.equal(orphanTitle.text, orphanPlan.text);
+  assert.equal(normalized(orphanTitle.text), orphan.title);
+});
+
+test('all four modern scientific layouts retain four plots, captions and the full readout at readable floors', () => {
+  const geometries = [];
+  for (const layout of ['panel-grid', 'primary-rail', 'ledger-rail', 'strip-readout']) {
+    const preset = presetFor('scientific-evidence-plate', 'Arial', 16, {
+      readability_contract: { min_title_pt: 28, min_body_pt: 16, min_support_pt: 14, min_metadata_pt: 10 },
+    });
+    const data = { title: 'Synthetic study views', figure_layout: layout, caption: 'Synthetic values only.',
+      interpretation: 'All denominators retained; prospective validation is required.',
+      figures: ['A', 'B', 'C', 'D'].map((label) => ({ label, title: `View ${label}`, caption: `Source ${label}.` })),
+      __figurePaths: Array(4).fill(LAB_FIGURE) };
+    const source = structuredClone(data);
+    const ops = captureFigureRole('renderScientificFigure', data, preset);
+    checkMeasuredFigureRole(ops);
+    const images = ops.filter((op) => op.image);
+    assert.equal(images.length, 4);
+    const ratio = images[0].options.w / images[0].options.h;
+    assert.ok(images.every((op) => Math.abs(op.options.w / op.options.h - ratio) < 1e-6), 'contain preserves plot aspect ratio');
+    for (const figure of data.figures) {
+      const title = ops.find((op) => op.options.objectName === `support:scientific:${figure.label}:title`);
+      const caption = ops.find((op) => op.options.objectName === `metadata:scientific:${figure.label}:caption`);
+      assert.equal(normalized(title.text), `${figure.label}. ${figure.title}`);
+      assert.equal(normalized(caption.text), figure.caption);
+      assert.ok(title.options.fontSize >= 14 && caption.options.fontSize >= 10);
+    }
+    const readout = ops.find((op) => op.options.objectName === 'scientific:complete-readout');
+    assert.equal(normalized(readout.text), `${data.caption} ${data.interpretation}`);
+    assert.ok(readout.options.fontSize >= 16);
+    assert.deepEqual(data, source);
+    assert.deepEqual(ops, captureFigureRole('renderScientificFigure', structuredClone(source), preset));
+    geometries.push(JSON.stringify(images.map(({ options: { x, y, w, h } }) => ({ x, y, w, h }))));
+  }
+  assert.equal(new Set(geometries).size, 4, 'layout diversity changes geometry, not palette');
+});
+
+test('default scientific rendering measures multiline captions and honors slide or preset figure_frame', () => {
+  const preset = getPreset('lab-report');
+  preset.figure_frame = 'panel';
+  const data = { title: 'Synthetic trend', figure_layout: 'primary-rail',
+    figures: [{ label: 'A', title: 'Observed response over the entire collection period',
+      caption: 'All observations are synthetic. Every collection interval, exclusion and denominator remains visible in this deliberately multiline caption.' }],
+    __figurePaths: [LAB_FIGURE], interpretation: 'No clinical claim is established. All collection intervals and exclusions remain visible; this synthetic trend is exploratory and does not establish clinical validity, cohort comparability or causal treatment benefit.' };
+  for (const frame of [undefined, 'open', 'ruled', 'panel']) {
+    const ops = captureFigureRole('renderScientificFigure', { ...data, figure_frame: frame }, preset);
+    checkMeasuredFigureRole(ops);
+    const effective = frame || 'panel';
+    assert.equal(ops.filter((op) => op.options.objectName === 'scientific:A:frame').length, effective === 'panel' ? 1 : 0);
+    assert.equal(ops.filter((op) => op.options.objectName === 'scientific:A:rule').length, effective === 'ruled' ? 1 : 0);
+    const caption = ops.find((op) => op.options.objectName === 'metadata:scientific:A:caption');
+    assert.equal(normalized(caption.text), data.figures[0].caption);
+    assert.ok(caption.options.h > 0.3 && caption.options.fontSize >= 9);
+    assert.ok(ops.find((op) => op.options.objectName === 'support:scientific:A:title').options.fontSize >= 13);
+    assert.equal(ops.find((op) => op.options.objectName === 'support:scientific:A:title').options.w, 8.84,
+      'one primary panel uses the full content width rather than an empty 38 percent rail');
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'scientific:complete-readout').text), data.interpretation);
+  }
+});
+
+test('scientific overflow and missing or excessive panels fail without silently dropping source', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  const data = { title: 'Synthetic views', figures: [{ label: 'A', title: 'Trend', caption: 'Full caption.' }],
+    __figurePaths: [LAB_FIGURE] };
+  for (const layout of ['panel-grid', 'primary-rail', 'ledger-rail', 'strip-readout']) {
+    assert.throws(() => captureFigureRole('renderScientificFigure', { ...data, figure_layout: layout,
+      interpretation: 'Retain the complete scientific interpretation. '.repeat(90) }, preset), /split the source slide/i);
+    assert.throws(() => captureFigureRole('renderScientificFigure', { ...data, figure_layout: layout,
+      figures: [{ ...data.figures[0], caption: 'Complete caption with all exclusions. '.repeat(100) }] }, preset), /split the source slide/i);
+  }
+  assert.throws(() => captureFigureRole('renderScientificFigure', { ...data, __figurePaths: [] }, preset), /missing.*image/);
+  assert.throws(() => captureFigureRole('renderScientificFigure', { ...data,
+    figures: Array(5).fill(data.figures[0]), __figurePaths: Array(5).fill(LAB_FIGURE) }, preset), /four panels/);
+});
+
+test('modern analysis sidebar measures headings and retains every declared sentence, section and reserved note', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  const data = { title: 'Synthetic assay readout', image_sidebar_mode: 'analysis-rail', __heroPath: LAB_FIGURE, sidebar_body_font_size: 8,
+    sidebar_sections: [{ title: 'Collection and exclusion criteria remain explicit',
+      body: 'First result. Second result. Third result. Fourth result. Fifth result. Sixth result.' }],
+    caption: 'Synthetic fixture caption with the complete collection denominator and all excluded observations. '.repeat(2).trim(),
+    interpretation: 'Exploratory only. Retain the complete readout and all cautions.' };
+  for (const imageSide of ['left', 'right']) {
+    const ops = captureFigureRole('renderImageSidebar', { ...data, image_side: imageSide }, preset);
+    checkMeasuredFigureRole(ops);
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'support:sidebar:0:title').text), data.sidebar_sections[0].title);
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'sidebar:0:body').text), data.sidebar_sections[0].body);
+    assert.ok(ops.find((op) => op.options.objectName === 'sidebar:0:body').options.fontSize >= 16);
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'metadata:sidebar:caption').text), data.caption);
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'sidebar:complete-readout').text), data.interpretation);
+    const image = ops.find((op) => op.image).options;
+    const title = ops.find((op) => op.options.objectName === 'support:sidebar:0:title').options;
+    assert.equal(image.x < title.x, imageSide === 'left');
+  }
+  const sparse = { title: 'All declared notes', image_sidebar_mode: 'analysis-rail', sidebar_sections: Array.from({ length: 5 }, (_, i) => ({ title: `Note ${i}`, body: `Keep ${i}.` })) };
+  const ops = captureFigureRole('renderImageSidebar', sparse, preset);
+  assert.equal(ops.filter((op) => /sidebar:\d+:body/.test(op.options.objectName || '')).length, 5);
+  checkMeasuredFigureRole(ops);
+  const fallback = captureFigureRole('renderImageSidebar', { title: 'All declared bullets', image_sidebar_mode: 'analysis-rail',
+    bullets: Array.from({ length: 6 }, (_, i) => `Result ${i}.`), highlights: ['All cautions retained.'] }, preset);
+  assert.ok(normalized(fallback.find((op) => op.options.objectName === 'sidebar:0:body').text).includes('Result 5.'));
+  assert.throws(() => captureFigureRole('renderImageSidebar', { ...data,
+    sidebar_sections: [{ title: 'All results', body: 'Retain every declared sentence. '.repeat(50) }] }, preset), /split the source slide/i);
+});
+
+test('analysis sidebar tries balanced columns only when three complete sections exceed the preferred rail', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  const data = { title: 'Synthetic three-section readout', image_sidebar_mode: 'analysis-rail', __heroPath: LAB_FIGURE,
+    sidebar_sections: [
+      { title: 'Collection', body: 'Every interval and excluded observation remains available.' },
+      { title: 'Denominator', body: 'All values retain denominators and exclusions for review.' },
+      { title: 'Readout', body: 'Keep every observation and excluded interval in the readout.' },
+    ] };
+  const source = structuredClone(data);
+  for (const imageSide of ['left', 'right']) {
+    const ops = captureFigureRole('renderImageSidebar', { ...data, image_side: imageSide }, preset);
+    checkMeasuredFigureRole(ops);
+    data.sidebar_sections.forEach((section, index) => {
+      const text = ops.find((op) => op.options.objectName === `sidebar:${index}:body`);
+      assert.equal(normalized(text.text), section.body);
+      assert.equal(text.options.fontSize, 16);
+      assert.ok(Math.abs(text.options.w - (9 * 0.50 - 0.30 - 0.14)) < 1e-6);
+      const preferred = wrapText(section.body, 9 * 0.44 - 0.30 - 0.14, 16, preset.font_body);
+      assert.ok(preferred.h > text.options.h, 'balanced columns reduce measured height without reducing type');
+    });
+    const image = ops.find((op) => op.options.objectName === 'sidebar:figure').options;
+    assert.ok(image.w <= 4.5 + 1e-6 && image.h > 0, 'full image is contained in the half-width region');
+  }
+  assert.deepEqual(data, source);
+  const easy = { ...data, sidebar_sections: data.sidebar_sections.map((section) => ({ ...section, body: 'Complete result.' })) };
+  const ops = captureFigureRole('renderImageSidebar', easy, preset);
+  assert.ok(Math.abs(ops.find((op) => op.options.objectName === 'sidebar:0:body').options.w - (9 * 0.44 - 0.30 - 0.14)) < 1e-6,
+    'fitting content keeps the preferred 56 percent figure allocation');
+  assert.throws(() => captureFigureRole('renderImageSidebar', { ...data,
+    sidebar_sections: data.sidebar_sections.map((section) => ({ ...section, body: section.body.repeat(10) })) }, preset), /Split the source slide; no content was dropped/);
+});
+
+test('packed analysis sidebar retains the actual three-section study readouts at 16pt without source edits', () => {
+  for (const [study, slideIds] of [['dark_contrast', ['con-06']], ['light_river_report', ['riv-02', 'riv-06']]]) {
+    const dir = path.resolve(__dirname, '../examples/v0.14_lab_studies', study);
+    const file = path.join(dir, 'outline.json');
+    const bytes = fs.readFileSync(file);
+    const outline = JSON.parse(bytes);
+    const name = outline.deck_style.style_preset;
+    const preset = builder.applyDeckStyle(getPreset(name), outline, name);
+    for (const slideId of slideIds) {
+      const index = outline.slides.findIndex((slide) => slide.slide_id === slideId);
+      assert.ok(index >= 0);
+      const source = outline.slides[index];
+      assert.equal(source.sidebar_sections.length, 3);
+      const data = builder.normalizeSlide(structuredClone(source), dir);
+      Object.assign(data, { __slideIndex: index + 1, __slideCount: outline.slides.length });
+      const ops = captureFigureRole('renderSlide', data, preset);
+      checkMeasuredFigureRole(ops);
+      const paragraphs = ops.filter((op) => /^sidebar:\d+:body$/.test(op.options.objectName || ''));
+      assert.equal(paragraphs.length, 3);
+      paragraphs.forEach(({ text, options }, i) => {
+        const section = source.sidebar_sections[i];
+        assert.equal(normalized(text), `${section.title}: ${section.body}`);
+        assert.ok(Array.isArray(text));
+        assert.equal(text[0].options.bold, true);
+        assert.equal(text[0].text, `${section.title}:`);
+        assert.ok(text.some((run) => run.options.bold === false));
+        assert.equal(options.fontSize, 16);
+        assert.notEqual(options.fit, 'shrink');
+        assert.ok([0.44, 0.50].some((ratio) => Math.abs(options.w - (9 * ratio - 0.30 - 0.14)) < 1e-6),
+          'packed delivery stays within the two bounded column choices');
+        const capacity = Math.max(5, Math.floor(Math.max(0.25, options.w - 0.12)
+          / Math.max(0.055, options.fontSize / 72 * 0.52)));
+        for (const line of plain(text).split('\n')) assert.ok(line.length <= capacity,
+          'explicit mixed-weight wraps also retain the conservative delivery capacity');
+        for (const width of lineWidths(text, options.fontSize, options.fontFace)) {
+          assert.ok(width <= options.w - 0.04 + 1e-6, 'bold prefix is included in line-width measurement');
+        }
+        if (i) assert.ok(options.y > paragraphs[i - 1].options.y, 'section order is unchanged');
+      });
+      const caption = ops.find((op) => op.options.objectName === 'metadata:sidebar:caption');
+      assert.equal(normalized(caption.text), source.caption);
+      const last = paragraphs.at(-1).options;
+      assert.ok(caption.options.y - last.y - last.h >= 0.18 - 1e-6, 'caption and footer band has measured clearance');
+      const available = caption.options.y - 0.18 - paragraphs[0].options.y;
+      for (const ratio of [0.44, 0.50]) {
+        const width = 9 * ratio - 0.30 - 0.14;
+        const normalHeight = source.sidebar_sections.reduce((sum, section) => sum
+          + wrapText(section.title, width, 13, preset.font_heading, true).h
+          + wrapText(section.body, width, 16, preset.font_body).h + 0.08, 0) + 0.28;
+        assert.ok(normalHeight > available, 'packing is used only after both normal column choices fail');
+      }
+      assert.equal(ops.filter((op) => op.options.objectName === 'sidebar:figure').length, 1);
+      assert.deepEqual(data.sidebar_sections, source.sidebar_sections);
+      assert.throws(() => captureFigureRole('renderSlide', { ...data,
+        sidebar_sections: source.sidebar_sections.map((section) => ({ ...section, body: `${section.body} `.repeat(30) })) }, preset), /Split the source slide; no content was dropped/);
+    }
+    assert.ok(bytes.equals(fs.readFileSync(file)), 'example source bytes remain unchanged');
+  }
+});
+
+test('scientific and sidebar readouts consume summary aliases once; support ink remains readable', () => {
+  for (const variant of ['scientific-figure', 'image-sidebar']) {
+    for (const alias of ['summary_callout', 'key_summary', 'takeaway']) {
+      const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+      const data = { type: 'content', variant, title: 'Synthetic readout', figure_layout: 'primary-rail',
+        image_sidebar_mode: 'analysis-rail', [alias]: 'Keep this complete conclusion.', interpretation: 'Independent caveat retained.',
+        ...(variant === 'scientific-figure' ? { figures: [{ label: 'A', title: 'Response', caption: 'Synthetic only.' }],
+          __figurePaths: [LAB_FIGURE] } : { sidebar_sections: [{ title: 'Result', body: 'Complete result.' }] }) };
+      const ops = captureFigureRole('renderSlide', data, preset);
+      assert.equal(data.__roleContractConsumesSummary, true);
+      const readout = ops.find((op) => op.options.objectName === `${variant === 'scientific-figure' ? 'scientific' : 'sidebar'}:complete-readout`);
+      assert.ok(normalized(readout.text).includes(data[alias]));
+      assert.ok(normalized(readout.text).includes(data.interpretation));
+      assert.equal(ops.filter((op) => op.text && normalized(op.text).includes(data[alias])).length, 1);
+      checkMeasuredFigureRole(ops);
+    }
+  }
+  for (const [background, accent, readable] of [['FFFFFF', 'EEEEEE', '111111'], ['111111', '333333', 'FFFFFF']]) {
+    const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+    Object.assign(preset, { bg: background, accent_primary: accent, text: readable });
+    const ops = captureFigureRole('renderImageSidebar', { title: 'Synthetic readout', image_sidebar_mode: 'analysis-rail',
+      sidebar_sections: [{ title: 'Result', body: 'Complete result.' }] }, preset);
+    assert.equal(ops.find((op) => op.options.objectName === 'support:sidebar:0:title').options.color, readable);
+  }
+});
+
+test('explicit v1 scientific layouts and analysis sidebar keep their legacy operations unchanged', () => {
+  const preset = getPreset('lab-report');
+  preset.renderer_role_contract_version = 'renderer_role_systems_v1';
+  const base = { title: 'Synthetic trend', figures: [
+    { label: 'A', title: 'Trend', caption: 'Complete caption.' },
+    { label: 'B', title: 'Control', caption: 'Control caption.' },
+  ], __figurePaths: [LAB_FIGURE, LAB_FIGURE], caption: 'Synthetic only.', interpretation: 'Exploratory pattern.' };
+  const hashes = {
+    'panel-grid': '817e3b6c5f16937a4a385b779f3f23fd18f00dd063c05935f3a191af4841934a',
+    'primary-rail': '5b6e25cc01d002a5cf90adef6d19485a4713591ef548c36e2fd04e41cd3dab6f',
+    'ledger-rail': '41faf06fa65ef25d9783dd950dd9813818ec16e7a51c8773cae92da871e045b6',
+    'strip-readout': '42d6ca88d4e25a55ac37758db72990dabf2abda787115b1c3724ea3aa7a18644',
+  };
+  // Image filenames are normalized so the frozen operations travel with the repo.
+  const hash = (ops) => crypto.createHash('sha256').update(JSON.stringify(ops).replaceAll(LAB_FIGURE, 'lab_trend.jpg')).digest('hex');
+  for (const [layout, expected] of Object.entries(hashes)) {
+    assert.equal(hash(captureFigureRole('renderScientificFigure', { ...base, figure_layout: layout }, preset)), expected);
+  }
+  assert.equal(hash(captureFigureRole('renderImageSidebar', { title: 'Synthetic trend', image_sidebar_mode: 'analysis-rail',
+    __heroPath: LAB_FIGURE, sidebar_sections: [{ title: 'Results', body: 'First result. Second result.' }],
+    caption: 'Synthetic only.' }, preset)), '9c734135f949a5b0d06a5a5c7d9326a98b62d5ba36127b42c0bd88f266c04891');
+});
+
+test('native flow retains two and four ordered strip stages with equal rectangles and measured text', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  for (const count of [2, 4]) {
+    const steps = Array.from({ length: count }, (_, i) => ({ title: `Stage ${i + 1}`, detail: `Retain result ${i + 1}.` }));
+    const data = { title: 'Synthetic method', flow_steps: steps, flow_layout: 'strip',
+      caption: 'Synthetic workflow only.', summary_callout: 'No clinical validation is implied.' };
+    const ops = captureFigureRole('renderFlow', data, preset);
+    checkMeasuredFigureRole(ops);
+    assert.equal(ops.filter((op) => op.image).length, 0, 'native flow remains editable');
+    const titles = ops.filter((op) => /^flow:\d+:title$/.test(op.options.objectName || ''));
+    assert.deepEqual(titles.map((op) => normalized(op.text)), steps.map((step) => step.title));
+    const boxes = titles.map(({ options: title }) => ops.find((op) => op.shape === 'rect'
+      && Math.abs(op.options.x + 0.14 - title.x) < 1e-6 && Math.abs(op.options.y + 0.40 - title.y) < 1e-6).options);
+    for (const box of boxes) assert.deepEqual([box.y, box.w, box.h], [boxes[0].y, boxes[0].w, boxes[0].h]);
+    assert.ok(boxes.every((box, i) => !i || box.x > boxes[i - 1].x + boxes[i - 1].w));
+    steps.forEach((step, i) => assert.equal(normalized(ops.find((op) => op.options.objectName === `flow:${i}:detail`).text), step.detail));
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'flow:readout').text), data.summary_callout);
+    assert.equal(normalized(ops.find((op) => op.options.objectName === 'caption:flow').text), data.caption);
+    assert.deepEqual(data.flow_steps, steps);
+  }
+});
+
+test('native flow explicit bands and auto long-token fallback preserve source order and complete detail', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  const steps = ['Collect', 'Measure', 'Review', 'Release'].map((title) => ({ title,
+    detail: 'Electrochemiluminescence readout retained.' }));
+  for (const layout of ['bands', 'auto']) {
+    const ops = captureFigureRole('renderFlow', { title: 'Synthetic method bands', flow_steps: steps, flow_layout: layout }, preset);
+    checkMeasuredFigureRole(ops);
+    const titles = ops.filter((op) => /^flow:\d+:title$/.test(op.options.objectName || ''));
+    assert.deepEqual(titles.map((op) => normalized(op.text)), steps.map((step, i) => `${i + 1}. ${step.title}`));
+    assert.ok(titles.every((op, i) => !i || op.options.y > titles[i - 1].options.y));
+    assert.ok(titles.every((op) => op.options.x === titles[0].options.x));
+    assert.equal(ops.filter((op) => op.image).length, 0);
+    steps.forEach((step, i) => assert.equal(normalized(ops.find((op) => op.options.objectName === `flow:${i}:detail`).text), step.detail));
+  }
+});
+
+test('native flow invalid counts and impossible strip or bands throw instead of losing steps', () => {
+  const preset = presetFor('scientific-evidence-plate', 'Arial', 16);
+  const data = { title: 'Impossible method' };
+  for (const count of [1, 5]) assert.throws(() => captureFigureRole('renderFlow', { ...data,
+    flow_steps: Array(count).fill({ title: 'Collect' }) }, preset), /2-4 ordered stages/);
+  for (const layout of ['strip', 'bands', 'auto']) {
+    assert.throws(() => captureFigureRole('renderFlow', { ...data, flow_layout: layout,
+      flow_steps: Array(4).fill({ title: 'Complete stage', detail: 'Retain every measurement. '.repeat(60) }) }, preset), /split; no steps were dropped/);
+  }
+  assert.throws(() => captureFigureRole('renderFlow', { ...data, flow_layout: 'strip',
+    flow_steps: Array(4).fill({ title: 'Measure', detail: 'Electrochemiluminescence' }) }, preset), /wider text box/);
+});
+
+test('default v2 policy content preserves narrow labels and value-free evidence without shrinking', () => {
+  const name = 'warm-terracotta';
+  const outline = { deck_style: {} };
+  const preset = builder.applyDeckStyle(getPreset(name), outline, name);
+  const data = { type: 'content', variant: 'matrix', title: 'Museum membership renewal',
+    quadrants: ['High empathy', 'High effort', 'Caveat/Date', 'Low burden'].map((title) => ({ title, body: 'Guide cue.' })) };
+  const ops = capture(data, preset);
+  for (const item of data.quadrants.slice(1)) {
+    const heading = ops.find((op) => op.text && normalized(op.text) === item.title);
+    assert.ok(heading, item.title);
+    const { options } = heading;
+    const measured = wrapText(item.title, options.w, options.fontSize, options.fontFace, true, true);
+    assert.ok(options.h >= measured.h, item.title);
+    assert.notEqual(options.fit, 'shrink');
+    for (const width of lineWidths(heading.text, options.fontSize, options.fontFace, true)) assert.ok(width <= options.w);
+  }
+  const cards = { type: 'content', role: 'evidence', variant: 'cards-2', title: 'Methods and evidence split',
+    cards: [{ title: 'Method Context', body: 'Sample identifiers, assay conditions, and run metadata stay in structured fields.' },
+      { title: 'Evidence Rule', body: 'Long provenance moves to references while short IDs remain in the footer.' }] };
+  const evidence = captureFigureRole('renderSlide', cards, preset).filter((op) => op.text);
+  const visible = evidence.map((op) => normalized(op.text));
+  assert.ok(!visible.includes('01'), 'value-free source must not acquire a numeric evidence anchor');
+  for (const card of cards.cards) {
+    assert.ok(visible.some((text) => text.includes(card.title)));
+    assert.ok(visible.some((text) => text.includes(card.body)));
+  }
+});
 
 async function proof(outdir) {
   const PptxGenJS = require('pptxgenjs');

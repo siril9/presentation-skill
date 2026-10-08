@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "transport": "MCP AppBridge + real stdio tools; not the live Codex host",
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 900,
+      "viewport": 1280,
+      "images": 11,
+      "selected_slide": "cal-04",
+      "model_context_synced": true,
+      "explicit_request_sent": true,
+      "selection_race_pass": true,
+      "duplicate_open_count": 0,
+      "style_picker_pass": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "viewport": 390,
+      "images": 6,
+      "selected_slide": "cal-04",
+      "model_context_synced": true,
+      "explicit_request_sent": true,
+      "selection_race_pass": true,
+      "duplicate_open_count": 0
+    }
+  ],
+  "limited_capabilities": "controls gated; supplied slide remains selectable",
+  "page_errors": []
+}

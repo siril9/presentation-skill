@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import posixpath
 import zipfile
 from pathlib import Path
@@ -30,6 +31,7 @@ DEFAULT_BANNED = [
 
 DEFAULT_READABILITY = {
     "min_title_pt": 24.0,
+    "min_support_pt": 13.0,
     "min_body_pt": 11.0,
     "min_caption_pt": 7.5,
     "chart_label_min_pt": 8.0,
@@ -82,27 +84,35 @@ def _load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _readability_contract(design_brief_path: Path | None):
+def _readability_contract(design_brief_path: Path | None, outline_path: Path | None = None):
     contract = dict(DEFAULT_READABILITY)
-    if design_brief_path is None:
-        return contract, False
-    payload = _load_json(design_brief_path)
-    if not isinstance(payload, dict):
-        return contract, False
-    brief_contract = payload.get("readability_contract")
-    if not isinstance(brief_contract, dict):
-        return contract, False
-    for key in (
-        "min_title_pt",
-        "min_body_pt",
-        "min_caption_pt",
-        "chart_label_min_pt",
-        "footer_reserved_inches",
-    ):
-        value = brief_contract.get(key)
-        if isinstance(value, (int, float)):
-            contract[key] = float(value)
-    return contract, True
+    for path, is_outline in ((design_brief_path, False), (outline_path, True)):
+        if path is None:
+            continue
+        try:
+            payload = _load_json(path)
+        except (OSError, ValueError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        if is_outline:
+            payload = payload.get("deck_style")
+        if not isinstance(payload, dict):
+            continue
+        source_contract = payload.get("readability_contract")
+        if not isinstance(source_contract, dict):
+            continue
+        values = {}
+        for key in DEFAULT_READABILITY:
+            value = source_contract.get(key)
+            if (isinstance(value, (int, float)) and not isinstance(value, bool)
+                    and math.isfinite(value)
+                    and (value >= 0 if key == "footer_reserved_inches" else value > 0)):
+                values[key] = float(value)
+        if values:
+            contract.update(values)
+            return contract, True
+    return contract, False
 
 
 def _font_sizes(shape):
@@ -118,21 +128,27 @@ def _font_sizes(shape):
     return sizes
 
 
-def _text_role(shape, text, slide_h):
+def _text_role(shape, text, slide_h, has_semantic_title=False):
     box = _box(shape)
     top = box[1]
     height = box[3]
     lower = text.lower()
     shape_name = str(getattr(shape, "name", "") or "").strip().lower()
+    if shape_name.startswith("slide-title:"):
+        return "title"
+    if shape_name.startswith("support:"):
+        return "support"
     if shape_name.startswith("metadata:"):
         return "caption"
+    if shape_name.startswith("body:"):
+        return "body"
     if top >= slide_h - 0.75:
         return "caption"
     if height <= 0.36:
         return "caption"
     if lower.startswith(("source", "sources", "ref", "refs")):
         return "caption"
-    if top <= 1.15 and len(text) <= 160:
+    if not has_semantic_title and top <= 1.15 and len(text) <= 160:
         return "title"
     return "body"
 
@@ -240,8 +256,11 @@ def check_footer_overlap(slide_idx, text_shapes, slide_h, contract):
 
 def check_text_readability(slide_idx, text_shapes, slide_h, contract):
     issues = []
+    has_semantic_title = any(str(getattr(shape, "name", "") or "").lower().startswith("slide-title:")
+                             for _, shape, _ in text_shapes)
     thresholds = {
         "title": float(contract["min_title_pt"]),
+        "support": float(contract["min_support_pt"]),
         "body": float(contract["min_body_pt"]),
         "caption": float(contract["min_caption_pt"]),
     }
@@ -252,7 +271,7 @@ def check_text_readability(slide_idx, text_shapes, slide_h, contract):
         if not sizes:
             continue
         min_font = min(sizes)
-        role = _text_role(shape, text, slide_h)
+        role = _text_role(shape, text, slide_h, has_semantic_title)
         threshold = thresholds[role]
         if min_font + 0.05 < threshold:
             issues.append(
@@ -576,7 +595,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Targeted design QA")
     parser.add_argument("--input", required=True, help="Input PPTX")
     parser.add_argument("--report", help="Optional JSON report path")
-    parser.add_argument("--outline", help="Original outline JSON for mapped source-retention checks (not fact checking)")
+    parser.add_argument("--outline", help="Original outline JSON for readability thresholds and mapped source-retention checks (not fact checking)")
     parser.add_argument("--asset-root", help="Renderer asset root for source JSON references and aliases")
     parser.add_argument(
         "--banned-phrase",
@@ -587,8 +606,8 @@ def main() -> int:
     parser.add_argument(
         "--design-brief",
         help=(
-            "Optional design_brief.json. When present, design QA uses its "
-            "readability_contract thresholds for title/body/caption/table/chart text."
+            "Optional design_brief.json. A valid readability_contract takes precedence "
+            "over outline deck_style.readability_contract for text/table/chart thresholds."
         ),
     )
     args = parser.parse_args()
@@ -596,7 +615,8 @@ def main() -> int:
     pptx_path = Path(args.input).expanduser().resolve()
     prs = Presentation(str(pptx_path))
     design_brief_path = Path(args.design_brief).expanduser().resolve() if args.design_brief else None
-    readability_contract, enforce_text_readability = _readability_contract(design_brief_path)
+    outline_path = Path(args.outline).expanduser().resolve() if args.outline else None
+    readability_contract, enforce_text_readability = _readability_contract(design_brief_path, outline_path)
 
     banned = [item.lower() for item in (DEFAULT_BANNED + args.banned_phrase)]
     issues = []
@@ -654,10 +674,11 @@ def main() -> int:
         f"errors={payload['error_count']} warnings={payload['warning_count']}"
     )
     for issue in issues:
+        slide_index = issue.get("slide_index")
         location = (
-            f"slide {issue.get('slide_index', 0) + 1}"
-            if "slide_index" in issue
-            else issue.get("chart_part", "chart")
+            f"slide {slide_index + 1}"
+            if isinstance(slide_index, int)
+            else issue.get("chart_part", "deck")
         )
         print(f"  - {location}: {issue.get('type')}")
 

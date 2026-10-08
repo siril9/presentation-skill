@@ -96,8 +96,10 @@ class FinalizeQuickDeckTests(unittest.TestCase):
             qa = Path(tmp)
             for path in (
                 qa / "qa_report.json", qa / "repair_packet.json",
+                qa / "visual_review_receipt.json",
                 qa / "renders/slide-01.jpg", qa / "renders/render_report.json",
                 qa / "visual_review/contact_sheet.jpg",
+                qa / "visual_review/visual_review_receipt.json",
             ):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("generated")
@@ -114,6 +116,8 @@ class FinalizeQuickDeckTests(unittest.TestCase):
             self.assertEqual(cache.read_text(), "keep")
             self.assertFalse((qa / "qa_report.json").exists())
             self.assertFalse((qa / "renders/slide-01.jpg").exists())
+            self.assertFalse((qa / "visual_review_receipt.json").exists())
+            self.assertFalse((qa / "visual_review/visual_review_receipt.json").exists())
 
     def test_equivalent_package_restores_previous_raw_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

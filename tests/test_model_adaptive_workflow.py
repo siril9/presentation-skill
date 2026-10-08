@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from composition_grammar_catalog import (
+    PRESET_TO_GRAMMAR,
     V2_ROLE_VARIANT_CANDIDATES,
     _starter_sequence_for_candidate,
     compact_grammar_route,
@@ -31,7 +32,7 @@ from model_adaptive_workflow import (
     resolve_profile,
     select_visual_reference_hints,
 )
-from preflight import _check_role_variant_alignment, _check_variant_required
+from preflight import _check_flow_complexity, _check_role_variant_alignment, _check_variant_required
 import present
 
 
@@ -146,7 +147,7 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
         self.assertEqual(six_luna["commands"], quick["commands"])
         examples = quick["outline_contract"]["minimal_payload_examples"]
         self.assertEqual(examples, minimal_payload_examples())
-        self.assertEqual(set(examples), {v for values in V2_ROLE_VARIANT_CANDIDATES.values() for v in values})
+        self.assertEqual(set(examples), {v for values in V2_ROLE_VARIANT_CANDIDATES.values() for v in values} | {"flow"})
         for role, variants in V2_ROLE_VARIANT_CANDIDATES.items():
             for variant in variants:
                 slide = {"type": "title" if role == "title" else "content", "role": role, "variant": variant, "title": "Synthetic illustration", "sources": ["S1: synthetic illustration"], **examples[variant]}
@@ -154,12 +155,33 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
                 self.assertFalse(_check_variant_required(slide, 1, ROOT), (role, variant))
         self.assertEqual(quick["agent_mode"], "single-agent")
         self.assertLess(len(json.dumps(quick, separators=(",", ":"))), 9000)
+        for preset in PRESET_TO_GRAMMAR:
+            brief = quick_deck_agent_brief(route_composition_grammars(
+                topic="Synthetic pilot", user_prompt="", style_preset=preset,
+            ), slide_count=14, agent_profile="fast")
+            self.assertLess(len(json.dumps(brief, separators=(",", ":"))), 9000, preset)
         briefs = [build_agent_brief(packet={}, workspace=ROOT, user_prompt="Clinical review", requested_profile=p) for p in ("luna", "sol", "astra")]
         self.assertEqual(briefs[0]["completion_rubric"], briefs[1]["completion_rubric"])
         self.assertEqual(briefs[0]["quality_contract"], briefs[2]["quality_contract"])
         self.assertEqual(briefs[0]["execution_profile"]["agent_mode"], "single-agent")
         self.assertEqual(briefs[0]["execution_profile"]["delegation"]["data_scout"], "skip")
         self.assertIn('"cards-2":{"cards":', render_agent_brief_markdown(briefs[0]))
+
+    def test_evidence_fallbacks_are_exposed_without_claiming_v2_slot_execution(self):
+        brief = quick_deck_agent_brief(self.route(), slide_count=7, agent_profile="gpt-6.1-sol")
+        fallback = brief["renderer"]["fallback_role_variants"]
+        self.assertIn("scientific-figure", fallback["evidence"])
+        self.assertIn("flow", fallback["evidence"])
+        self.assertNotIn("flow", brief["renderer"]["role_variants"]["evidence"])
+        for role, variants in fallback.items():
+            for variant in variants:
+                self.assertFalse(_check_role_variant_alignment({"role": role, "variant": variant}, 1))
+        method = {"role": "evidence", "variant": "flow", **minimal_payload_examples()["flow"]}
+        self.assertFalse(_check_flow_complexity(method, 1, ROOT))
+        method["assets"] = {"diagram": "unused.png"}
+        self.assertEqual(_check_flow_complexity(method, 1, ROOT)[0]["rule"], "flow_inputs_ambiguous")
+        method = {"variant": "standard", "flow_steps": [{"title": "One"}]}
+        self.assertEqual(_check_flow_complexity(method, 1, ROOT)[0]["rule"], "flow_steps_invalid")
 
     def test_public_cli_matches_workspace_init(self):
         cases = [
@@ -200,9 +222,9 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
         records = catalog["exemplars"]
         self.assertEqual(catalog["license"], "MIT")
         self.assertTrue((ROOT / catalog["license_file"]).is_file())
-        self.assertEqual(len(records), 12)
+        self.assertEqual(len(records), 14)
         self.assertEqual(len({r["id"] for r in records}), len(records))
-        self.assertEqual({r["provenance"]["study"] for r in records}, {"clean-lab", "editorial", "operations"})
+        self.assertEqual({r["provenance"]["study"] for r in records}, {"clean-lab", "editorial", "operations", "white_calibration"})
         total = 0
         for record in records:
             asset = ROOT / record["path"]
@@ -220,7 +242,9 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
                 self.assertTrue(record[key], (record["id"], key))
             provenance = record["provenance"]
             self.assertTrue(provenance["finalize_passed"])
-            self.assertTrue(provenance["source_render"].startswith("decks/sol-design-studies-20260923/"))
+            self.assertTrue(provenance["source_render"].startswith((
+                "decks/sol-design-studies-20260923/", "v0.14.0 release: white_calibration.pptx slide ",
+            )))
             self.assertRegex(provenance["source_render_sha256"], r"^[a-f0-9]{64}$")
             self.assertRegex(provenance["source_outline_sha256"], r"^[a-f0-9]{64}$")
         self.assertEqual(total, catalog["asset_bytes"])
@@ -229,6 +253,8 @@ class ModelAdaptiveWorkflowTests(unittest.TestCase):
 
     def test_visual_retrieval_matches_shape_role_and_purpose_without_loading_images(self):
         cases = [
+            ("scientific-evidence-plate", "Paired residual calibration figure", ["scientific-figure"], ["evidence"], "lab-residual-panels"),
+            ("scientific-evidence-plate", "Holdout method workflow", ["flow"], ["evidence"], "lab-native-method"),
             ("scientific-evidence-plate", "Assay chart of drift", None, None, "lab-trend"),
             ("scientific-evidence-plate", "Assay limits", ["table"], ["support"], "lab-endpoints"),
             ("scientific-evidence-plate", "Validation gate", None, ["decision"], "lab-evidence-gate"),

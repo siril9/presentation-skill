@@ -1,0 +1,187 @@
+{
+  "schema_version": "lab_release_proof/v1",
+  "release": "v0.14.0",
+  "synthetic": true,
+  "scope": "Three original design studies, not a model or cross-generator benchmark. Figures are images; text, charts, tables and native methods remain editable.",
+  "core_source_sha256": {
+    "templates/pptxgenjs/slides.js": "0ba4d04d00ba70c6fca5ce11ba32e305a213f950f6d35fb5cb759f8fdc410d65",
+    "scripts/build_deck_pptxgenjs.js": "1c8900b770ebd9c6340429e044e38762576dfe99eb3601d484b3a83ff45f3a64",
+    "scripts/preflight.py": "96f5c1de101e30666f5394b991d0e1c70e39790b4e2b8381fe220607582fe04f",
+    "scripts/source_fidelity.py": "c671dea7fdf7e8ea4e24132035c7c1618457368f32ad990a4c64133014bd4176",
+    "scripts/design_rules_qa.py": "8b7cf9ad93908c76aa2aed6ecf2b2709ae06adffd233b82a0944201a7341f7a6",
+    "scripts/inventory.py": "f0e3f1550803b9c673148160035e52f8ac1037453e4d47fcb02a193fc200d779",
+    "references/renderer_role_contracts_v2.json": "32a9edd78589c172920faa98470046cae68093f75456c241f551e2c55f6d7c72"
+  },
+  "selection": [
+    {
+      "study": "white_calibration",
+      "slide": 4
+    },
+    {
+      "study": "dark_contrast",
+      "slide": 2
+    },
+    {
+      "study": "light_river_report",
+      "slide": 4
+    },
+    {
+      "study": "white_calibration",
+      "slide": 3
+    },
+    {
+      "study": "dark_contrast",
+      "slide": 5
+    },
+    {
+      "study": "light_river_report",
+      "slide": 3
+    }
+  ],
+  "studies": [
+    {
+      "study": "white_calibration",
+      "title": "A calibration choice, not a release",
+      "source": "white_calibration/outline.json",
+      "source_sha256": "acc39c239a89484b5b5188b98a474fd4e047d30aced81eb8979ec3b1d32164c9",
+      "slide_count": 8,
+      "pptx_sha256": "b6cde67d072836bb6bebfae8b9f661ea688ff02bfdfb76e3218a5caae13e784c",
+      "normalized_pptx_sha256": "733e72841308c76b42e0d72975cab7dad93102c73ed20a5df272c7386e3f0ba1",
+      "automated_qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "source_fidelity_error_count": 0,
+        "source_fidelity_warning_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_review": "pass",
+      "native_charts": 1,
+      "native_tables": 1,
+      "native_method_slides": [
+        3
+      ],
+      "figure_layouts": [
+        "panel-grid",
+        "primary-rail",
+        "strip-readout"
+      ],
+      "render_sha256": [
+        "5b3ff962f54426ab421d8aa1bf9ce1c6e7f4084eec4295ebc7ca738a1407de90",
+        "2a7ea4028fa39b0e242fe84f3c59473a7557c8ff8c9ef8ede61da4729e7e8428",
+        "147ba8ac35d002ea6b162d21a140a8c41dd2d7d4bc726ee5b8668fc205e6d6b0",
+        "d34257a47330e3578f7734f861163d65b32d26034958ea6d1c43645b464ab4e1",
+        "73d128187483009751b895412548a31c679feb28c3c5bc1bbdc418116ee102ef",
+        "4f77f5fc7a4b6f0931d6df751539f78805fbee8adceaf75371c144274ce357c6",
+        "5cf67cd5b368a5395b2b13d0e7bfa88a2b684d952f4af58238f46a95c26fd347",
+        "bf767e86f179e6a7eb41ba3da7467f62211eb7f45137afe3eed5122e967609b4"
+      ],
+      "visual_review_receipt_sha256": "c02f5013d37fdb97d64f117b3726d7b2329945e4946095ed52e3b0b2bea4f9db",
+      "visual_review_receipt": "reviews/white_calibration.json",
+      "pipeline_seconds": 3.001,
+      "timing_scope": "Pipeline only; excludes model authoring and visual judgment."
+    },
+    {
+      "study": "dark_contrast",
+      "title": "Contrast drift: signal or correction?",
+      "source": "dark_contrast/outline.json",
+      "source_sha256": "d365e3cd46f47d0a7b774795f243666bfbe865c2ca90436fe26f2d363d8f93f1",
+      "slide_count": 8,
+      "pptx_sha256": "16d3bcf5ff68cd3f736c4e476db13b5c1f632a3940bb0af02c81e173f4eb4c69",
+      "normalized_pptx_sha256": "4ebe430cd0b9d90351768df68c707dfeebd79c212db2cb11f1efe311f34b6f10",
+      "automated_qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "source_fidelity_error_count": 0,
+        "source_fidelity_warning_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_review": "pass",
+      "native_charts": 1,
+      "native_tables": 0,
+      "native_method_slides": [
+        7
+      ],
+      "figure_layouts": [
+        "panel-grid",
+        "primary-rail"
+      ],
+      "render_sha256": [
+        "efee31754ca92513212c54ea3848d39f67148e7ef853989caf9e05e02b095248",
+        "397d5c7f0ae79d0f73d96ddbd388d36689206a426b9ba978502dff29acdaf053",
+        "7dbc776a0e92c46412f32a4ddee0c893eac1761e7d08d25b02ab78fbbe41b8c8",
+        "79c412921ec4a5ff55155603e30390aae9455a4e296c7ddfca7e72394aece20e",
+        "69387525867b8ac8b366169c2716540926f900eb79c2dbd618d83a79e10dcde4",
+        "fd2413073455706524219a9858041583f6d4c8e5054292632f29d453199abde7",
+        "e6264bd8fc04fddb679f6fdfb859a25a3bb6e76f542840f304a4534c666dbdbf",
+        "33276b46b71d0471bf6ec2bc3d1ff8c680261b5f27195b574be9c96eb885f641"
+      ],
+      "visual_review_receipt_sha256": "c13d27ae1bb6563d6eaa1bddeae52913e44183ad50c4d15bfd8c20ddeddd2052",
+      "visual_review_receipt": "reviews/dark_contrast.json",
+      "pipeline_seconds": 5.363,
+      "timing_scope": "Pipeline only; excludes model authoring and visual judgment."
+    },
+    {
+      "study": "light_river_report",
+      "title": "What a sampling clock leaves unseen",
+      "source": "light_river_report/outline.json",
+      "source_sha256": "e475ddf27ef61eeedda9200ec6a76985218d8e4dc8c60a59cb9995d62e6af7f6",
+      "slide_count": 8,
+      "pptx_sha256": "5cc980c3b215a6f1efd42436cf885035c90f26420c7a3c5e77c75de8709fa7d9",
+      "normalized_pptx_sha256": "9d5667346cbca8ede7149bb14e9b9ab30a8d0e4e295690aae85922769de33c1a",
+      "automated_qa_counts": {
+        "accessibility_error_count": 0,
+        "accessibility_warning_count": 0,
+        "design_error_count": 0,
+        "design_warning_count": 0,
+        "geometry_error_count": 0,
+        "geometry_warning_count": 0,
+        "overflow_count": 0,
+        "overlap_count": 0,
+        "source_fidelity_error_count": 0,
+        "source_fidelity_warning_count": 0,
+        "visual_review_warning_count": 0,
+        "visual_warning_count": 0,
+        "whitespace_warning_count": 0
+      },
+      "visual_review": "pass",
+      "native_charts": 1,
+      "native_tables": 1,
+      "native_method_slides": [
+        7
+      ],
+      "figure_layouts": [
+        "ledger-rail"
+      ],
+      "render_sha256": [
+        "fb9e8fe5597769f7271dddd321ede6dd958b3bc637c605ad99c9a3f1aa70a58e",
+        "113f5ae7ce068351875a30294b9b0b97bec5799b05e0d7812c4947859f6dc1c8",
+        "512364d325c2fd6189925507a7ca5874381d07db579de11f12f112314b795d68",
+        "0c5f44890ec50a161141db959fe18bde6bdbe1802c1f9b47e0e0d30b7bc0273d",
+        "b12e357392ebc6c69b6c84d61a180db47948cceecd408ab7177d93ac46838053",
+        "93fdfe2e079fc9a93fa2ed1ad9032ef5796b6cb40b14611695e94da645b0fafc",
+        "698b38ce874a4ecbfdb05c6a17434af8c17edf24eaaa03b026c46180899b9aaa",
+        "8c7ccc66b0e9a65d104d741f40e7a8f489a62806faea6c7f205e59b23e36ba71"
+      ],
+      "visual_review_receipt_sha256": "3c4a5c88c467d7db0256c47cbe1961d58d14ae84b37904e7b097c0d86650d227",
+      "visual_review_receipt": "reviews/light_river_report.json",
+      "pipeline_seconds": 4.712,
+      "timing_scope": "Pipeline only; excludes model authoring and visual judgment."
+    }
+  ]
+}

@@ -289,14 +289,26 @@ function titleFontForLength(title) {
 
 function headerMetrics(title, subtitle, options) {
   const opts = options || {};
-  const titleText = safeText(title, 'Untitled');
-  const subtitleText = safeText(subtitle);
+  const rawTitle = safeText(title, 'Untitled');
+  const rawSubtitle = safeText(subtitle);
   const textW = opts.textW || (SLIDE_W - MARGIN_X * 2);
-  const titleFont = opts.titleFont || titleFontForLength(titleText);
+  const titleFont = opts.titleFont || titleFontForLength(rawTitle);
   const subtitleFont = opts.subtitleFont || 13;
-  const titleH = Math.max(0.42, estimateTextHeight(titleText, titleFont, textW, 1.50));
+  const titlePlan = opts.measureText
+    ? wrapText(rawTitle, opts.titleTextW || textW, titleFont, opts.fontHeading, true, true) : null;
+  const subtitlePlan = opts.measureText && rawSubtitle
+    ? wrapText(rawSubtitle, opts.subtitleTextW || textW, subtitleFont, opts.fontBody, false, true) : null;
+  const titleText = titlePlan ? titlePlan.text : rawTitle;
+  const subtitleText = subtitlePlan ? subtitlePlan.text : rawSubtitle;
+  // Header padding supplies the leaf's extra 0.07in clearance; retain its
+  // 0.08in baseline clearance without enlarging already-correct single lines.
+  const titleH = Math.max(0.42, opts.measureText
+    ? titlePlan.h - 0.07
+    : estimateTextHeight(titleText, titleFont, textW, 1.50));
   const subtitleH = subtitleText
-    ? Math.max(0.32, estimateTextHeight(subtitleText, subtitleFont, textW, 1.30))
+    ? Math.max(0.32, opts.measureText
+      ? subtitlePlan.h - 0.07
+      : estimateTextHeight(subtitleText, subtitleFont, textW, 1.30))
     : 0;
   const topPad = opts.topPad === undefined ? 0.10 : opts.topPad;
   const titleSubtitleGap = subtitleText ? 0.05 : 0;
@@ -598,6 +610,12 @@ function markRoleContractExecution(slideData, preset, role, consumedSlots = []) 
     layout_variant: String(contract.variant || 'primary'),
     consumed_slots: Array.from(new Set(consumedSlots.map((slot) => String(slot || '')).filter(Boolean))),
   };
+}
+
+function roleTitleFont(preset, fallback) {
+  if (preset.renderer_role_contract_version === 'renderer_role_systems_v1') return fallback;
+  const minimum = Number(preset.readability_contract?.min_title_pt);
+  return Number.isFinite(minimum) && minimum > 0 ? Math.max(fallback, minimum) : fallback;
 }
 
 function roleBodyFont(preset, fallback) {
@@ -1050,23 +1068,36 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
   const grammarHeaderInset = 0;
   const headerMode = String(slideData.header_mode || preset.header_mode || 'bar').trim().toLowerCase();
   const isLabHeader = headerMode === 'lab-clean' || headerMode === 'lab-card';
+  const modernReadability = preset.renderer_role_contract_version !== 'renderer_role_systems_v1';
   const v2 = resolvedRenderPlan(preset, slideData).contractSource === 'v2';
   const titleTop = v2 && headerMode !== 'bar'
     && compositionGrammar(preset, slideData) === 'editorial-spread' ? 0.26 : 0;
   const headerVariant = headerMode === 'lab-card'
     ? 'left-accent'
     : pickLabHeaderVariant(slideData, preset);
+  const modernMetrics = modernReadability ? {
+    measureText: true,
+    titleFont: roleTitleFont(preset, titleFontForLength(title)),
+    fontHeading: preset.font_heading,
+    fontBody: preset.font_body,
+    titleTextW: headerMode === 'lab-card'
+      ? Math.max(2.40, Math.min(6.80, safeText(title, 'Untitled').length * 0.115 + 0.70)) - 0.32
+      : SLIDE_W - MARGIN_X * 2 - (headerVariant === 'side-rail' && headerMode !== 'bar' ? 0.20 : 0),
+    subtitleTextW: SLIDE_W - MARGIN_X * 2 - (headerVariant === 'side-rail' && headerMode !== 'bar' ? 0.20 : 0),
+  } : {};
   const metrics = isLabHeader
     ? headerMetrics(title, subtitle, {
-      titleFont: isPolicyPublicDocket(preset, slideData)
+      ...modernMetrics,
+      titleFont: roleTitleFont(preset, isPolicyPublicDocket(preset, slideData)
         ? Math.max(24, Math.min(28, titleFontForLength(title)))
-        : Math.max(26, Math.min(28, titleFontForLength(title))),
-      subtitleFont: resolvedRenderPlan(preset, slideData).contractSource === 'v2' ? roleSupportFont(preset, 12.5) : 12.5,
+        : Math.max(26, Math.min(28, titleFontForLength(title)))),
+      subtitleFont: modernReadability ? roleSupportFont(preset, 12.5) : 12.5,
       topPad: Math.max(0.20, titleTop),
       bottomPad: 0.10,
     })
     : headerMetrics(title, subtitle, {
-      subtitleFont: resolvedRenderPlan(preset, slideData).contractSource === 'v2' ? roleSupportFont(preset, 13) : 13,
+      ...modernMetrics,
+      subtitleFont: modernReadability ? roleSupportFont(preset, 13) : 13,
       topPad: Math.max(0.10, titleTop),
     });
 
@@ -1123,7 +1154,8 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
         fontSize: metrics.titleFont,
         bold: true,
         color: 'FFFFFF',
-        fit: 'shrink',
+        ...(modernReadability ? { objectName: 'slide-title:content' } : {}),
+        ...(modernReadability ? {} : { fit: 'shrink' }),
       }));
       if (metrics.subtitleText) {
         slide.addText(metrics.subtitleText, textOpts({
@@ -1134,7 +1166,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
           fontFace: preset.font_body,
           fontSize: metrics.subtitleFont,
           color: subtitleColor,
-          fit: 'shrink',
+          ...(modernReadability ? {} : { fit: 'shrink' }),
           objectName: 'support:slide-subtitle',
         }));
       }
@@ -1149,7 +1181,8 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
         fontSize: metrics.titleFont,
         bold: true,
         color: titleColor,
-        fit: 'shrink',
+        ...(modernReadability ? { objectName: 'slide-title:content' } : {}),
+        ...(modernReadability ? {} : { fit: 'shrink' }),
       }));
       if (metrics.subtitleText) {
         slide.addText(metrics.subtitleText, textOpts({
@@ -1160,7 +1193,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
           fontFace: preset.font_body,
           fontSize: metrics.subtitleFont,
           color: subtitleColor,
-          fit: 'shrink',
+          ...(modernReadability ? {} : { fit: 'shrink' }),
           objectName: 'support:slide-subtitle',
         }));
       }
@@ -1229,6 +1262,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
       fontSize: metrics.titleFont,
       bold: true,
       color: titleColor,
+      ...(modernReadability ? { objectName: 'slide-title:content' } : {}),
     }));
     if (metrics.subtitleText) {
       slide.addText(metrics.subtitleText, textOpts({
@@ -1305,6 +1339,7 @@ function addDarkTitleBar(slide, preset, title, subtitle, slideData = {}) {
     bold: true,
     color: 'FFFFFF',
     valign: 'top',
+    ...(modernReadability ? { objectName: 'slide-title:content' } : {}),
   }));
 
   if (metrics.subtitleText) {
@@ -2518,7 +2553,7 @@ function renderContractStage(slide, slideData, preset, contract, kind) {
   const baseTitleFont = kind === 'title' ? 45 : 39;
   const widthPenalty = Math.max(0, 5.2 - headline.w) * 3.1;
   const heightPenalty = Math.max(0, 1.45 - headline.h) * 6.0;
-  const minTitleFont = kind === 'title' ? 25 : 23;
+  const minTitleFont = roleTitleFont(preset, kind === 'title' ? 25 : 23);
   const preferredTitleFont = Math.max(
     minTitleFont,
     baseTitleFont - widthPenalty - heightPenalty - (dense ? 4 : 0),
@@ -4212,7 +4247,7 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
   const metadataFont = roleMetadataFont(preset, 9.0);
   const bodyFont = roleBodyFont(preset, 16.0);
   let minimums = rows.map((item) => Math.max(
-    wrapText(safeText(item.label || item.date), labelW - 0.20, metadataFont, preset.font_heading, true).h + 0.16,
+    wrapText(safeText(item.label || item.date).toUpperCase(), labelW - 0.20, metadataFont, preset.font_heading, true).h + 0.16,
     wrapText(safeText(item.title || item.name), titleW - 0.16, bodyFont, preset.font_heading, true).h + 0.12,
     wrapText(safeText(item.body || item.text || item.caption), bodyW, bodyFont, preset.font_body).h + 0.12,
   ));
@@ -4227,7 +4262,7 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
     bodyX = body.x + titleW + 0.30;
     bodyW = body.x + body.w - bodyX - 0.12;
     minimums = rows.map((item) => Math.max(
-      wrapText(safeText(item.label || item.date), titleW - 0.20, metadataFont, preset.font_heading, true).h
+      wrapText(safeText(item.label || item.date).toUpperCase(), titleW - 0.20, metadataFont, preset.font_heading, true).h
         + wrapText(safeText(item.title || item.name), titleW - 0.20, bodyFont, preset.font_heading, true).h + 0.16,
       wrapText(safeText(item.body || item.text || item.caption), bodyW, bodyFont, preset.font_body).h + 0.12,
     ));
@@ -4241,7 +4276,7 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
     bodyX = body.x + labelW + titleW + 0.38;
     bodyW = body.x + body.w - bodyX - 0.18;
     minimums = rows.map((item) => Math.max(
-      wrapText(safeText(item.label || item.date), labelW - 0.20, metadataFont, preset.font_heading, true, true).h + 0.16,
+      wrapText(safeText(item.label || item.date).toUpperCase(), labelW - 0.20, metadataFont, preset.font_heading, true, true).h + 0.16,
       wrapText(safeText(item.title || item.name), titleW - 0.16, bodyFont, preset.font_heading, true, true).h + 0.12,
       wrapText(safeText(item.body || item.text || item.caption), bodyW, bodyFont, preset.font_body, false, true).h + 0.12,
     ));
@@ -4253,7 +4288,7 @@ function renderReadableTimelineContract(slide, slideData, preset, header, contra
     bodyX = body.x + labelW + 0.38;
     bodyW = body.x + body.w - bodyX - 0.18;
     minimums = rows.map((item) => Math.max(
-      wrapText(safeText(item.label || item.date), labelW - 0.20, metadataFont, preset.font_heading, true, true).h + 0.16,
+      wrapText(safeText(item.label || item.date).toUpperCase(), labelW - 0.20, metadataFont, preset.font_heading, true, true).h + 0.16,
       wrapText(`${safeText(item.title || item.name)}. ${safeText(item.body || item.text || item.caption)}`,
         bodyW, bodyFont, preset.font_body, true, true).h + 0.12,
     ));
@@ -5093,7 +5128,8 @@ function renderEvidenceContract(slide, slideData, preset, header, contract, fact
   const minBody = Number(
     preset && preset.readability_contract && preset.readability_contract.min_body_pt,
   );
-  if (Number.isFinite(minBody) && minBody >= 15) {
+  if ((Number.isFinite(minBody) && minBody >= 15)
+      || (isPolicyPublicDocket(preset, slideData) && !facts.some((fact) => safeText(fact.value)))) {
     if (Array.isArray(slideData.facts) && normalizeFacts(slideData.facts).length > facts.length) {
       throw new Error('Evidence exceeds the adapter item limit. Split this slide; content must not be dropped.');
     }
@@ -5989,7 +6025,7 @@ function addTableReadoutPanel(slide, preset, text, x, y, w, h, treatment, opts =
     line: { color: accentColor, width: 0 },
   }));
   if (opts.measured) {
-    const fontSize = roleBodyFont(preset, 12);
+    const fontSize = roleSupportFont(preset, 13);
     const required = wrapText(text, w - 0.34, fontSize, preset.font_body).h;
     reserveBottom({ x, y, w, h }, [{ id: 'text', h: required + 0.06, gap: 0.10 }], 0.50, 'Table readout');
     slide.addText(treatment === 'decision-matrix' ? 'DECISION' : 'READOUT', textOpts({
@@ -6362,7 +6398,7 @@ function renderPolicyOptionTable(slide, slideData, preset, header, table, contra
     roleBodyFont(preset, 16), preset.font_heading, true).h + 0.12) : 0;
   const summaryGap = summary ? 0.10 : 0;
   const interpretationH = interpretation ? wrapText(interpretation, body.w - 0.34,
-    roleBodyFont(preset, 12), preset.font_body).h + 0.66 : 0;
+    roleSupportFont(preset, 13), preset.font_body).h + 0.66 : 0;
   const interpretationGap = interpretation ? 0.10 : 0;
   const allocated = reserveBottom(body, [
     { id: 'caption', h: captionH, gap: captionGap },
@@ -6606,6 +6642,191 @@ function renderPolicyReferenceRegister(slide, slideData, preset, header, table, 
   return true;
 }
 
+function renderOrdinaryTableContract(slide, slideData, preset, header, table, contract) {
+  const readout = tableReadoutText(slideData, table);
+  const summary = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
+  const consumesSummary = !summary || readout === summary;
+  const body = roleBodyBox(header, slideData, preset, { consumeSummary: consumesSummary,
+    footerReserve: SLIDE_H - footerExclusionTop(preset, slideData) + 0.04, reserveCaption: false });
+  let tableBox = roleSlot(contract, 'table', body);
+  if (!tableBox) return false;
+  let indexBox = roleSlot(contract, 'index', body);
+  let readoutBox = readout && roleSlot(contract, 'readout', body);
+  const supportFont = roleSupportFont(preset, 13);
+  const metadataFont = roleMetadataFont(preset, 9);
+  const captionFont = Math.max(metadataFont, Number(preset.readability_contract?.min_caption_pt) || 9);
+  const caption = [table.caption, ...(table.footnotes || [])].map((text) => safeText(text)).filter(Boolean).join('\n');
+  const treatment = normalizeTableTreatment(slideData.table_treatment || table.table_treatment, preset.table_treatment);
+  const options = tableTreatmentOptions(treatment, preset, false);
+  options.bodyFontSize = Math.max(8, roleBodyFont(preset, options.bodyFontSize));
+  options.headerFontSize = Math.max(8.4, roleBodyFont(preset, options.headerFontSize));
+  const rows = buildTableRows(table, preset, options);
+  const gap = 0.10;
+  const measure = (text, w, size, face, bold = false) => {
+    try { return wrapText(text, w, size, face, bold, true).h; }
+    catch (error) { throw new Error(`Table '${contract.system_id}': ${error.message}; split the source slide or choose a wider supported layout.`); }
+  };
+  const bottom = body.y + body.h;
+  const horizontalReadout = readoutBox && readoutBox.h < body.h * 0.4;
+  let readoutHeight = 0;
+  if (readoutBox) {
+    if (!horizontalReadout) {
+      // Grow only the narrow sidecar; retain its side and the table's opposing alignment.
+      const wordW = Math.max(...readout.split(/\s+/).map((word) => textWidth(word, supportFont, preset.font_body)));
+      const width = Math.max(readoutBox.w, wordW + 0.42);
+      const onLeft = readoutBox.x < tableBox.x;
+      readoutBox = { ...readoutBox, w: width, x: onLeft ? readoutBox.x : body.x + body.w - width };
+      if (onLeft) {
+        const right = tableBox.x + tableBox.w;
+        tableBox.x = Math.max(tableBox.x, readoutBox.x + width + gap);
+        tableBox.w = right - tableBox.x;
+      } else {
+        tableBox.w = Math.min(tableBox.w, readoutBox.x - gap - tableBox.x);
+      }
+      readoutHeight = measure(readout, width - 0.32, supportFont, preset.font_body) + 0.48;
+      reserveBottom(readoutBox, [{ id: 'copy', h: readoutHeight, gap: 0 }], 0, 'Table sidecar');
+    } else {
+      // Shallow readouts use an inline label rather than spending 0.66in on chrome.
+      readoutHeight = Math.max(measure(readout, readoutBox.w - 1.22, supportFont, preset.font_body),
+        measure('READOUT', 0.86, metadataFont, preset.font_heading, true)) + 0.16;
+      readoutBox = { ...readoutBox, y: bottom - readoutHeight, h: readoutHeight };
+    }
+  }
+  if (indexBox) {
+    const horizontal = indexBox.h < body.h * 0.4;
+    const label = 'TABLE INDEX';
+    const detail = `${table.rows.length} rows${horizontal ? ' | ' : '\n'}${table.headers.map((text) => safeText(text)).join(horizontal ? ' | ' : '\n')}`;
+    const detailW = horizontal ? indexBox.w - 1.42 : indexBox.w - 0.24;
+    const height = horizontal
+      ? Math.max(measure(label, 1.06, metadataFont, preset.font_heading, true),
+        measure(detail, detailW, metadataFont, preset.font_body)) + 0.16
+      : measure(label, detailW, metadataFont, preset.font_heading, true)
+        + measure(detail, detailW, metadataFont, preset.font_body) + 0.30;
+    indexBox = { ...indexBox, h: Math.max(indexBox.h, height), label, detail, horizontal };
+    if (horizontal && indexBox.y > tableBox.y) indexBox.y = bottom - indexBox.h;
+    if (horizontal && indexBox.y <= tableBox.y) {
+      tableBox.y = Math.max(tableBox.y, indexBox.y + indexBox.h + gap);
+    }
+  }
+  const maxBottom = Math.min(bottom,
+    horizontalReadout ? readoutBox.y - gap : bottom,
+    indexBox?.horizontal && indexBox.y > tableBox.y ? indexBox.y - gap : bottom);
+  const widths = tableColumnWidths(table.headers, table.column_weights, tableBox.w);
+  const minimumWidths = table.headers.map((_header, column) => Math.max(...rows.map((row) =>
+    Math.max(...row[column].text.split(/\s+/).map((word) =>
+      textWidth(word, row[column].options.fontSize, row[column].options.fontFace, row[column].options.bold))))) + 0.20);
+  const deficit = widths.reduce((sum, width, column) => sum + Math.max(0, minimumWidths[column] - width), 0);
+  const surplus = widths.reduce((sum, width, column) => sum + Math.max(0, width - minimumWidths[column]), 0);
+  if (deficit > surplus + 1e-6) throw new Error(`Table '${contract.system_id}' needs wider columns; split the source slide or choose a wider supported layout.`);
+  widths.forEach((width, column) => {
+    widths[column] = Math.max(width, minimumWidths[column])
+      - (surplus ? Math.max(0, width - minimumWidths[column]) * deficit / surplus : 0);
+  });
+  let rowPadding = 0.10;
+  const rowMinimums = (columnWidths) => rows.map((row) => Math.max(...row.map((cell, column) =>
+    // Native cells do not need the 0.15in text-frame baseline reserved by wrapText.
+    measure(cell.text, columnWidths[column] - 0.12, cell.options.fontSize, cell.options.fontFace, cell.options.bold))) - 0.15 + rowPadding);
+  let minimumRows = rowMinimums(widths);
+  let minimumTableH = minimumRows.reduce((sum, height) => sum + height, 0);
+  const captionH = caption ? measure(caption, tableBox.w, captionFont, preset.font_caption || preset.font_body) : 0;
+  let captionGap = caption ? 0.08 : 0;
+  let availableH = maxBottom - tableBox.y - captionH - captionGap;
+  if (availableH < minimumTableH) {
+    const earliestY = indexBox?.horizontal && indexBox.y <= tableBox.y
+      ? indexBox.y + indexBox.h + gap : body.y;
+    tableBox.y = Math.max(earliestY, tableBox.y - (minimumTableH - availableH));
+    availableH = maxBottom - tableBox.y - captionH - captionGap;
+  }
+  if (availableH < minimumTableH) {
+    // Only a failed fit relaxes column proportions. Try actual cell line widths,
+    // taking spare width from other columns without breaking their longest words.
+    let best = { widths, heights: minimumRows, h: minimumTableH };
+    for (let column = 0; column < widths.length; column += 1) {
+      const targets = new Set(rows.map((row) => textWidth(row[column].text,
+        row[column].options.fontSize, row[column].options.fontFace, row[column].options.bold) + 0.14));
+      const spareWidth = widths.reduce((sum, width, index) =>
+        sum + (index === column ? 0 : Math.max(0, width - minimumWidths[index])), 0);
+      for (const target of targets) {
+        const delta = target - widths[column];
+        if (delta <= 0 || delta > spareWidth + 1e-6) continue;
+        const candidate = widths.map((width, index) => index === column ? target
+          : width - delta * Math.max(0, width - minimumWidths[index]) / spareWidth);
+        const heights = rowMinimums(candidate);
+        const h = heights.reduce((sum, height) => sum + height, 0);
+        if (h < best.h - 1e-6) best = { widths: candidate, heights, h };
+      }
+    }
+    if (best.h < minimumTableH) {
+      widths.splice(0, widths.length, ...best.widths);
+      minimumRows = best.heights;
+      minimumTableH = best.h;
+    }
+  }
+  if (availableH < minimumTableH) {
+    rowPadding = Math.max(0.06, rowPadding - (minimumTableH - availableH) / rows.length);
+    minimumRows = rowMinimums(widths);
+    minimumTableH = minimumRows.reduce((sum, height) => sum + height, 0);
+  }
+  if (caption && availableH < minimumTableH) {
+    const recovered = Math.min(captionGap - 0.05, minimumTableH - availableH);
+    captionGap -= recovered;
+    availableH += recovered;
+  }
+  reserveBottom({ ...tableBox, h: availableH }, [], minimumTableH, `Table '${contract.system_id}' rows, caption and readout`);
+  const tableH = Math.min(availableH, Math.max(minimumTableH, tableBox.h - captionH - captionGap));
+  const spare = (tableH - minimumTableH) / rows.length;
+  const rowH = minimumRows.map((height) => height + spare);
+  const addIndex = () => {
+    if (!indexBox) return;
+    const { x, y, w, horizontal, label, detail } = indexBox;
+    const labelW = horizontal ? 1.06 : w - 0.24;
+    const labelH = measure(label, labelW, metadataFont, preset.font_heading, true);
+    slide.addText(label, textOpts({ x: x + 0.12, y: y + 0.08, w: labelW, h: labelH,
+      fontFace: preset.font_heading, fontSize: metadataFont, bold: true,
+      color: firstReadableColor(preset.bg, [preset.accent_primary, preset.text]), objectName: 'metadata:table-index-label' }));
+    const detailW = horizontal ? w - 1.42 : w - 0.24;
+    slide.addText(detail, textOpts({ x: x + (horizontal ? 1.30 : 0.12), y: y + (horizontal ? 0.08 : labelH + 0.18),
+      w: detailW, h: measure(detail, detailW, metadataFont, preset.font_body),
+      fontFace: preset.font_body, fontSize: metadataFont, color: preset.text, wrap: true,
+      objectName: 'metadata:table-index-detail' }));
+  };
+  const addReadout = () => {
+    if (!readoutBox) return;
+    const { x, y, w } = readoutBox;
+    slide.addShape('line', shapeOpts({ x, y, w, h: 0, line: { color: preset.line || preset.accent_primary, width: 0.65 } }));
+    const labelW = horizontalReadout ? 0.86 : w - 0.32;
+    slide.addText('READOUT', textOpts({ x: x + 0.16, y: y + 0.08, w: labelW,
+      h: measure('READOUT', labelW, metadataFont, preset.font_heading, true),
+      fontFace: preset.font_heading, fontSize: metadataFont, bold: true,
+      color: firstReadableColor(preset.bg, [preset.accent_primary, preset.text]), objectName: 'metadata:table-readout-label' }));
+    const textW = w - (horizontalReadout ? 1.22 : 0.32);
+    const textPlan = wrapText(readout, textW, supportFont, preset.font_body, false, true);
+    slide.addText(textPlan.text, textOpts({ x: x + (horizontalReadout ? 1.06 : 0.16), y: y + (horizontalReadout ? 0.08 : 0.40),
+      w: textW, h: textPlan.h,
+      fontFace: preset.font_body, fontSize: supportFont, color: preset.text, wrap: true,
+      objectName: 'support:table-readout' }));
+  };
+  const addTable = () => {
+    slide.addTable(rows, { x: tableBox.x, y: tableBox.y, w: tableBox.w, h: tableH, colW: widths,
+      fontSize: options.bodyFontSize, rowH, objectName: `Editable table: ${safeText(slideData.title)}` });
+    if (caption) slide.addText(caption, textOpts({ x: tableBox.x, y: tableBox.y + tableH + captionGap,
+      w: tableBox.w, h: captionH, fontFace: preset.font_caption || preset.font_body, fontSize: captionFont,
+      italic: true, color: firstReadableColor(preset.bg, [preset.text_muted, preset.text]), wrap: true,
+      objectName: 'metadata:table-caption' }));
+  };
+  const slots = { index: addIndex, table: addTable, readout: addReadout };
+  for (const slot of contract.reading_order || ['index', 'table', 'readout']) slots[slot]?.();
+  if (summary && consumesSummary) slideData.__roleContractConsumesSummary = true;
+  addFooter(slide, preset, slideData);
+  attachNotes(slide, slideData);
+  markRoleContractExecution(slideData, preset, 'table', ['table', ...(indexBox ? ['index'] : []), ...(readoutBox ? ['readout'] : [])]);
+  if (slideData.__roleContractExecution) {
+    slideData.__roleContractExecution.adaptation = 'measured-table-contract-geometry';
+    slideData.__roleContractExecution.source_system_id = safeText(contract.system_id);
+  }
+  return true;
+}
+
 function renderTableContract(slide, slideData, preset, header, table, referenceTable, contract) {
   if (!referenceTable && safeText(slideData.caption)) {
     table = { ...table, caption: [...new Set([table.caption, slideData.caption]
@@ -6613,6 +6834,7 @@ function renderTableContract(slide, slideData, preset, header, table, referenceT
   }
   if (referenceTable && renderPolicyReferenceRegister(slide, slideData, preset, header, table, contract)) return true;
   if (!referenceTable && renderPolicyOptionTable(slide, slideData, preset, header, table, contract)) return true;
+  if (!referenceTable) return renderOrdinaryTableContract(slide, slideData, preset, header, table, contract);
   const explicitReadout = tableReadoutText(slideData, table);
   const summary = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
   const consumesSummary = !summary || explicitReadout === summary;
@@ -7494,121 +7716,54 @@ function comparisonOptionTextPlan(preset, spec, box, dense, pad = 0.16) {
   const text = comparisonBodyLines(spec, Infinity).join('\n');
   const font = roleBodyFont(preset, dense ? 12 : 15);
   const width = box.w - pad * 2;
-  const titleH = wrapText(title, width, font, preset.font_heading, true).h;
-  const bodyH = text ? wrapText(text, width, font, preset.font_body).h : 0;
-  return { title, text, font, pad, width, titleH, bodyH,
-    h: pad * 2 + titleH + (text ? 0.10 + bodyH : 0) };
+  const candidates = [];
+  const field = (value, x, y, w, bold) => {
+    const measured = wrapText(value, w, font, bold ? preset.font_heading : preset.font_body, bold);
+    return { text: measured.text, x, y, w, h: measured.h, bold };
+  };
+  try {
+    const heading = field(title, pad, pad, width, true);
+    const fields = [heading];
+    if (text) fields.push(field(text, pad, pad + heading.h + 0.10, width, false));
+    candidates.push({ fields, horizontal: false, h: fields.at(-1).y + fields.at(-1).h + pad });
+  } catch (_) { /* A narrow slot is a geometry failure, not permission to shrink. */ }
+  if (text && box.w >= box.h * 1.85) {
+    const minimumTitleW = Math.max(...title.split(/\s+/)
+      .map((word) => textWidth(word, font, preset.font_heading, true))) + 0.08;
+    const widths = [minimumTitleW, width * 0.25, width * 0.33, width * 0.40];
+    for (const titleW of widths) {
+      try {
+        const fields = [field(title, pad, pad, titleW, true),
+          field(text, pad + titleW + 0.12, pad, width - titleW - 0.12, false)];
+        candidates.push({ fields, horizontal: true, h: Math.max(...fields.map((item) => item.h)) + pad * 2 });
+      } catch (_) { /* Try the next measured title/body allocation. */ }
+    }
+  }
+  candidates.sort((a, b) => a.h - b.h);
+  return { font, pad, ...(candidates[0] || { fields: [], h: Infinity }) };
 }
 
 function renderContractComparisonOption(slide, preset, spec, box, index, dense) {
   const accent = index === 0 ? preset.accent_primary : preset.accent_secondary;
   const plan = comparisonOptionTextPlan(preset, spec, box, dense);
   const compact = plan.h > box.h ? comparisonOptionTextPlan(preset, spec, box, dense, 0.06) : plan;
-  const horizontalTitleW = Math.max(1.35, Math.min(2.45,
-    Math.max(...compact.title.split(/\s+/).map((word) => textWidth(word, compact.font, preset.font_heading, true))) + 0.20));
-  const horizontalBodyW = box.w - horizontalTitleW - 0.28;
-  const horizontalFits = box.w >= box.h * 1.85
-    && wrapText(compact.title, horizontalTitleW - 0.16, compact.font, preset.font_heading, true).h <= box.h - 0.32
-    && wrapText(compact.text, horizontalBodyW, compact.font, preset.font_body).h <= box.h - 0.32;
-  if (!horizontalFits && compact.h <= box.h + 1e-6) {
-    slide.addShape('rect', shapeOpts({ ...box,
-      objectName: `role-contract-slot:comparison:option-${index}`,
-      fill: { color: preset.surface || 'FFFFFF' }, line: { color: preset.line || 'CBD5E1', width: 0.65 },
-    }));
-    let y = box.y + compact.pad;
-    for (const field of [{ text: compact.title, h: compact.titleH, bold: true },
-      ...(compact.text ? [{ text: compact.text, h: compact.bodyH, bold: false }] : [])]) {
-      const options = textOpts({ x: box.x + compact.pad, y, w: compact.width, h: field.h,
-        fontFace: field.bold ? preset.font_heading : preset.font_body,
-        fontSize: compact.font, bold: field.bold, wrap: true,
-        color: field.bold ? accent : (preset.text || preset.text_primary || '0F172A'),
-      });
-      requireTextFit(field.text, options, 'Comparison option');
-      slide.addText(field.text, options);
-      y += field.h + 0.10;
-    }
-    return;
+  if (compact.h > box.h + 1e-6) {
+    throw new Error('Comparison options do not fit at the body font floor. Shorten or split this slide; no content was dropped.');
   }
-  const title = safeText(spec.title, `Option ${index + 1}`);
-  const body = comparisonBodyLines(spec, Infinity);
-  const narrow = box.w < 1.45;
-  const horizontal = box.w >= box.h * 1.85;
-  slide.addShape('rect', shapeOpts({
-    x: box.x, y: box.y, w: box.w, h: box.h,
+  slide.addShape('rect', shapeOpts({ ...box,
     objectName: `role-contract-slot:comparison:option-${index}`,
-    fill: { color: preset.surface || 'FFFFFF' },
-    line: { color: preset.line || 'CBD5E1', width: 0.65 },
+    fill: { color: preset.surface || 'FFFFFF' }, line: { color: preset.line || 'CBD5E1', width: 0.65 },
   }));
-  slide.addShape('rect', shapeOpts({
-    x: box.x, y: box.y, w: horizontal ? 0.07 : box.w, h: horizontal ? box.h : 0.07,
-    fill: { color: accent }, line: { color: accent, width: 0 },
-  }));
-  if (horizontal) {
-    const pad = 0.16;
-    const titleW = horizontalTitleW;
-    const titleFont = roleBodyFont(preset, dense ? 12 : 15);
-    const titleTextW = Math.max(0.50, titleW - pad);
-    const titleH = Math.min(
-      Math.max(0.34, box.h - pad * 2),
-      // Keep a full line-height safety margin for bold labels. PowerPoint's
-      // rendered metrics are taller than the compact planning estimate for
-      // short two-word labels such as "Design gap".
-      Math.max(0.52, estimateTextHeight(title, titleFont, titleTextW, 1.16) + 0.30),
-    );
-    slide.addText(title, textOpts({
-      x: box.x + pad, y: box.y + Math.max(pad, (box.h - titleH) / 2),
-      w: titleTextW, h: titleH,
-      fontFace: preset.font_heading, fontSize: titleFont,
-      bold: true, color: accent, valign: 'middle', fit: 'shrink',
-    }));
-    if (body.length) {
-      const text = body.join('\n');
-      const bodyFont = roleBodyFont(preset, dense ? 8.8 : 10.2);
-      const bodyW = Math.max(0.50, box.w - titleW - pad - 0.12);
-      const bodyH = Math.min(
-        Math.max(0.34, box.h - pad * 2),
-        Math.max(0.40, estimateTextHeight(text, bodyFont, bodyW, 1.20) + 0.22),
-      );
-      slide.addText(text, textOpts({
-        x: box.x + titleW + 0.12,
-        y: box.y + Math.max(pad, (box.h - bodyH) / 2),
-        w: bodyW, h: bodyH,
-        fontFace: preset.font_body,
-        fontSize: bodyFont,
-        color: preset.text || preset.text_primary || '0F172A',
-        valign: 'middle', fit: 'shrink',
-      }));
-    }
-    return;
-  }
-  const pad = narrow ? 0.10 : 0.18;
-  const optionTitleFont = roleBodyFont(preset, narrow ? 10 : (dense ? 12 : 15));
-  const titleH = Math.min(0.62, Math.max(0.34,
-    estimateTextHeight(title, optionTitleFont, Math.max(0.30, box.w - pad * 2), 1.10) + 0.08));
-  const titleX = box.x + pad;
-  const titleY = box.y + pad;
-  slide.addText(title, textOpts({
-    x: titleX, y: titleY, w: Math.max(0.30, box.w - pad * 2), h: titleH,
-    fontFace: preset.font_heading, fontSize: optionTitleFont,
-    bold: true, color: accent, fit: 'shrink',
-  }));
-  if (body.length) {
-    const bodyY = titleY + titleH + 0.10;
-    const text = narrow ? body.join('\n') : body.map((item) => `• ${item}`).join('\n');
-    const bodyFont = roleBodyFont(preset, narrow ? 7.6 : (dense ? 8.8 : 10.2));
-    const bodyW = Math.max(0.30, box.w - pad * 2);
-    const availableBodyH = Math.max(0.24, box.y + box.h - bodyY - pad);
-    const bodyH = Math.min(
-      Math.max(0.40, estimateTextHeight(text, bodyFont, bodyW, 1.20) + 0.26),
-      availableBodyH,
-    );
-    slide.addText(text, textOpts({
-      x: titleX, y: bodyY, w: bodyW,
-      h: bodyH,
-      fontFace: preset.font_body,
-      fontSize: bodyFont,
-      color: preset.text || preset.text_primary || '0F172A', fit: 'shrink',
-    }));
+  for (const field of compact.fields) {
+    const options = textOpts({ x: box.x + field.x,
+      y: box.y + (compact.horizontal ? (box.h - field.h) / 2 : field.y), w: field.w, h: field.h,
+      fontFace: field.bold ? preset.font_heading : preset.font_body,
+      fontSize: compact.font, bold: field.bold, wrap: true,
+      objectName: `comparison:${index}:${field.bold ? 'title' : 'body'}`,
+      color: field.bold ? accent : (preset.text || preset.text_primary || '0F172A'),
+    });
+    requireTextFit(field.text, options, 'Comparison option');
+    slide.addText(field.text, options);
   }
 }
 
@@ -7724,6 +7879,7 @@ function renderComparisonContract(slide, slideData, preset, contract) {
   const verdict = safeText(slideData.verdict || slideData.takeaway);
   const verdictBox = roleSlot(contract, 'verdict', body);
   let verdictRenderBox = verdictBox;
+  let adaptation = '';
   const verdictFont = roleBodyFont(preset, 12);
   if (verdict) {
     const intersectsOptions = (rect) => optionBoxes.some((box) => box
@@ -7755,6 +7911,37 @@ function renderComparisonContract(slide, slideData, preset, contract) {
         ? { ...box, y: body.y, h: allocated.content.h }
         : { ...box, y: body.y + (box.y - body.y) * scale, h: box.h * scale }));
     }
+  }
+  // Verdict growth can invalidate options that fit the original slots. Measure
+  // the final rectangles again before choosing a bounded body reallocation.
+  const optionsFit = (boxes) => boxes.every((box, index) => box
+    && comparisonOptionTextPlan(preset, options[index], box, dense, 0.06).h <= box.h + 1e-6);
+  if (!optionsFit(optionBoxes)) {
+    const h = verdict ? Math.max(0.60,
+      wrapText(verdict, body.w - 0.20, verdictFont, preset.font_heading, true).h + 0.16) : 0;
+    const allocated = reserveBottom(body, verdict ? [{ id: 'verdict', h, gap: 0.12 }] : [],
+      1.65, 'Comparison verdict and options');
+    const content = allocated.content;
+    const gap = 0.16;
+    const sideBySide = optionBoxes.every(Boolean)
+      && (optionBoxes[0].x + optionBoxes[0].w <= optionBoxes[1].x + 0.01
+        || optionBoxes[1].x + optionBoxes[1].w <= optionBoxes[0].x + 0.01);
+    const reversed = sideBySide && optionBoxes[0].x > optionBoxes[1].x;
+    const columnW = (content.w - gap) / 2;
+    const candidates = [
+      ...(sideBySide ? [optionBoxes.map((box) => ({ ...box, y: content.y, h: content.h }))] : []),
+      options.map((_spec, index) => ({ ...content, w: columnW,
+        x: content.x + (reversed ? 1 - index : index) * (columnW + gap) })),
+      options.map((_spec, index) => ({ ...content, h: (content.h - gap) / 2,
+        y: content.y + index * (content.h + gap) / 2 })),
+    ];
+    const fitted = candidates.find(optionsFit);
+    if (!fitted) {
+      throw new Error('Comparison options do not fit at the body font floor. Shorten or split this slide; no content was dropped.');
+    }
+    optionBoxes = fitted;
+    if (verdict) verdictRenderBox = allocated.bands.verdict;
+    adaptation = 'readable-comparison-body-reallocation';
   }
   options.forEach((spec, index) => {
     if (optionBoxes[index]) {
@@ -7792,6 +7979,11 @@ function renderComparisonContract(slide, slideData, preset, contract) {
       ...(verdict && verdictRenderBox ? ['verdict'] : []),
     ],
   );
+  if (slideData.__roleContractExecution && adaptation) {
+    slideData.__roleContractExecution.adaptation = adaptation;
+    slideData.__roleContractExecution.executed_slots = optionBoxes.map((box, index) => ({ id: `option_${index}`, ...box }));
+    if (verdict && verdictRenderBox) slideData.__roleContractExecution.executed_slots.push({ id: 'verdict', ...verdictRenderBox });
+  }
 }
 
 function renderComparison2col(pptx, slide, slideData, preset) {
@@ -8028,7 +8220,7 @@ function renderMatrixOpenQuadrants(slide, slideData, preset, header, quadrants, 
 
 function renderReadableDecisionLedger(slide, slideData, preset, header, contract, quadrants) {
   const { planReadableRole, wrapText } = require('./readable_role_layouts.js');
-  const body = roleBodyBox(header, slideData, preset, { topGap: 0.12, consumeSummary: true, footerReserve: 0.58 });
+  let body = roleBodyBox(header, slideData, preset, { topGap: 0.12, consumeSummary: true, footerReserve: 0.58 });
   const items = quadrants.map((item, index) => ({
     value: String(index + 1).padStart(2, '0'),
     label: safeText(item.title, `Gate ${index + 1}`),
@@ -8048,11 +8240,21 @@ function renderReadableDecisionLedger(slide, slideData, preset, header, contract
   let layout;
   try { layout = plan(); }
   catch (error) {
-    if (!commitment) throw error;
-    commitmentGap = 0.10;
-    commitmentH = commitmentText.h + 0.10;
+    body = roleBodyBox(header, slideData, preset, { topGap: 0.08, consumeSummary: true, footerReserve: 0.58 });
     rowsH = body.h - commitmentGap - commitmentH;
-    layout = plan();
+    if (!commitment) {
+      layout = plan();
+    } else {
+      commitmentGap = 0.10;
+      commitmentH = commitmentText.h + 0.10;
+      rowsH = body.h - commitmentGap - commitmentH;
+      try { layout = plan(); }
+      catch (_) {
+        commitmentGap = 0.06;
+        rowsH = body.h - commitmentGap - commitmentH;
+        layout = plan();
+      }
+    }
   }
   layout.placements.forEach((placement) => {
     const { index, box, anchor } = placement;
@@ -8164,6 +8366,10 @@ function renderPolicyDecisionBoard(slide, slideData, preset, header, contract, q
 
   const supporting = items.slice(1);
   if (supporting.length) {
+    const titleFont = roleBodyFont(preset, 17);
+    const titleW = Math.max(Math.min(1.44, rightW * 0.24),
+      Math.max(...supporting.flatMap((item) => safeText(item.title).split(/\s+/)
+        .map((word) => textWidth(word, titleFont, preset.font_heading, true)))) + 0.04);
     const rowGap = 0.02;
     const availableRowsH = boardH - rowGap * Math.max(0, supporting.length - 1);
     const rowWeights = supporting.map((item) => {
@@ -8184,23 +8390,20 @@ function renderPolicyDecisionBoard(slide, slideData, preset, header, contract, q
       }
       const titleText = safeText(item.title, `Gate ${index + 1}`);
       const bodyText = safeText(item.body || item.text);
-      const titleW = Math.min(bodyText.length > 58 ? 1.14 : 1.44, rightW * 0.24);
-      const titleFont = roleBodyFont(preset, 17);
       const bodyFont = roleBodyFont(preset, 15.5);
       const availableTextH = Math.max(0.30, rowH - 0.08);
-      const titleH = Math.min(
-        availableTextH,
-        Math.max(0.34, estimateTextHeight(titleText, titleFont, titleW, 1.14) + 0.14),
-      );
+      const titlePlan = wrapText(titleText, titleW, titleFont, preset.font_heading, true, true);
+      const titleH = Math.max(0.34, titlePlan.h);
+      reserveBottom({ y: 0, h: availableTextH }, [], titleH, 'Policy decision heading');
       const bodyW = rightW - titleW - 0.20;
       const bodyTextH = Math.min(
         availableTextH,
         Math.max(0.34, estimateTextHeight(bodyText, bodyFont, bodyW, 1.18) + 0.16),
       );
-      slide.addText(titleText, textOpts({
+      slide.addText(titlePlan.text, textOpts({
         x: rightX, y: y + 0.04 + (availableTextH - titleH) / 2, w: titleW, h: titleH,
         fontFace: preset.font_heading, fontSize: titleFont,
-        bold: true, color: itemAccent, fit: 'shrink', valign: 'middle',
+        bold: true, color: itemAccent, wrap: true, valign: 'middle',
       }));
       slide.addText(bodyText, textOpts({
         x: rightX + titleW + 0.20, y: y + 0.04 + (availableTextH - bodyTextH) / 2,
@@ -8245,13 +8448,26 @@ function renderDecisionContract(slide, slideData, preset, header, contract, quad
   const minBody = Number(
     preset && preset.readability_contract && preset.readability_contract.min_body_pt,
   );
-  if (Number.isFinite(minBody) && minBody >= 15) {
+  const body = roleBodyBox(header, slideData, preset, { consumeSummary: true, footerReserve: 0.58 });
+  const dense = contract.variant === 'dense';
+  const needsMeasuredLayout = quadrants.some((item, index) => {
+    const box = roleSlot(contract, `decision_${index}`, body);
+    if (!box || box.h < 1.30 || box.w >= box.h * 4.0) return false;
+    const narrow = box.w < 1.55;
+    const pad = narrow ? 0.10 : 0.17;
+    const sequenceW = Math.min(0.38, Math.max(0.28, box.w * 0.16));
+    const titleW = Math.max(0.30, box.w - pad * 2 - sequenceW - 0.08);
+    const font = roleBodyFont(preset, narrow ? 8.8 : (dense ? 10.5 : 12.5));
+    try {
+      return wrapText(safeText(item.title), titleW, font, preset.font_heading, true, true).h
+        > Math.min(0.48, Math.max(0.32, box.h * 0.26));
+    } catch (_) { return true; }
+  });
+  if ((Number.isFinite(minBody) && minBody >= 15) || needsMeasuredLayout) {
     const items = Array.isArray(slideData.quadrants) ? slideData.quadrants : quadrants;
     return renderReadableDecisionLedger(slide, slideData, preset, header, contract, items);
   }
   if (renderPolicyDecisionBoard(slide, slideData, preset, header, contract, quadrants)) return true;
-  const body = roleBodyBox(header, slideData, preset, { consumeSummary: true, footerReserve: 0.58 });
-  const dense = contract.variant === 'dense';
   quadrants.slice(0, 4).forEach((item, index) => {
     const box = roleSlot(contract, `decision_${index}`, body);
     if (!box) return;
@@ -8651,9 +8867,120 @@ function renderEditableFlowFallback(slide, slideData, preset, header, body) {
   }));
 }
 
+function renderNativeFlow(slide, slideData, preset, header) {
+  const steps = slideData.flow_steps;
+  if (!Array.isArray(steps) || steps.length < 2 || steps.length > 4
+      || steps.some((step) => !step || typeof step.title !== 'string' || !step.title.trim()
+        || (step.detail !== undefined && typeof step.detail !== 'string'))) {
+    throw new Error('Native flow_steps needs 2-4 ordered stages with title and optional detail. Shorten or split; no steps were dropped.');
+  }
+  const body = roleBodyBox(header, slideData, preset, { consumeSummary: true });
+  const font = roleBodyFont(preset, 16);
+  const summary = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
+  const caption = safeText(slideData.caption);
+  const bands = [];
+  if (summary) bands.push({ id: 'readout', h: wrapText(summary, body.w - 0.28, font, preset.font_body, true, true).h + 0.16, gap: 0.16 });
+  const captionFont = roleMetadataFont(preset, 9);
+  if (caption) bands.push({ id: 'caption', h: wrapText(caption, body.w, captionFont, preset.font_body).h, gap: 0.12 });
+  const allocation = reserveBottom(body, bands, 1.2, 'Native method and readout');
+  const region = allocation.content;
+  const gap = 0.26;
+  const width = (region.w - gap * (steps.length - 1)) / steps.length;
+  const layout = String(slideData.flow_layout || 'auto').trim().toLowerCase();
+  if (!['auto', 'strip', 'bands'].includes(layout)) throw new Error(`Unsupported flow_layout '${layout}'.`);
+  let strip = [];
+  let height = Infinity;
+  if (layout !== 'bands') {
+    try {
+      strip = steps.map((step) => {
+        const title = wrapText(step.title, width - 0.28, font, preset.font_heading, true, true);
+        const detail = wrapText(step.detail || '', width - 0.28, font, preset.font_body);
+        return { title, detail, h: 0.50 + title.h + (detail.h ? detail.h + 0.14 : 0) };
+      });
+      height = Math.max(...strip.map((item) => item.h));
+    } catch (error) {
+      if (layout === 'strip') throw error;
+    }
+  }
+  const useBands = layout === 'bands' || (layout === 'auto' && height > region.h);
+  if (useBands) {
+    const labelW = region.w * 0.30;
+    const detailW = region.w - labelW - 0.22;
+    const rows = steps.map((step, index) => ({
+      title: wrapText(`${index + 1}. ${step.title}`, labelW - 0.16, font, preset.font_heading, true, true),
+      detail: wrapText(step.detail || '', detailW - 0.16, font, preset.font_body),
+    }));
+    const rowH = Math.max(...rows.map((item) => Math.max(item.title.h, item.detail.h))) + 0.14;
+    if (rowH * rows.length + 0.10 * (rows.length - 1) > region.h) {
+      throw new Error('Native method bands need more room at the readable size. Shorten or split; no steps were dropped.');
+    }
+    rows.forEach((item, index) => {
+      const y = region.y + index * (rowH + 0.10);
+      slide.addShape('line', shapeOpts({ x: region.x, y, w: region.w, h: 0,
+        line: { color: preset.line, width: 0.6 } }));
+      slide.addText(item.title.text, textOpts({
+        x: region.x + 0.08, y: y + 0.07, w: labelW - 0.16, h: item.title.h,
+        fontFace: preset.font_heading, fontSize: font, bold: true, color: preset.text,
+        objectName: `flow:${index}:title`,
+      }));
+      if (item.detail.h) slide.addText(item.detail.text, textOpts({
+        x: region.x + labelW + 0.22, y: y + 0.07, w: detailW - 0.16, h: item.detail.h,
+        fontFace: preset.font_body, fontSize: font, color: preset.text,
+        objectName: `flow:${index}:detail`,
+      }));
+    });
+  } else {
+    if (height > region.h) throw new Error('Native method strip needs more room at the readable size. Use bands or split; no steps were dropped.');
+    const y = region.y + Math.min(0.18, (region.h - height) / 2);
+    const cardFill = preset.surface || preset.bg;
+    const cardText = firstReadableColor(cardFill, [preset.text, preset.text_primary, 'FFFFFF', '111111']);
+    strip.forEach((item, index) => {
+      const x = region.x + index * (width + gap);
+      slide.addShape('rect', shapeOpts({ x, y, w: width, h: height,
+        fill: { color: preset.surface || preset.bg }, line: { color: preset.line, width: 0.65 } }));
+      slide.addText(`${index + 1}`, textOpts({ x: x + 0.14, y: y + 0.09, w: width - 0.28, h: 0.22,
+        fontSize: captionFont, fontFace: preset.font_heading, bold: true,
+        color: firstReadableColor(preset.surface || preset.bg, [preset.accent_primary, preset.text]),
+        objectName: `metadata:flow-${index}-index` }));
+      slide.addText(item.title.text, textOpts({ x: x + 0.14, y: y + 0.40,
+        w: width - 0.28, h: item.title.h, fontSize: font, fontFace: preset.font_heading,
+        bold: true, color: cardText, objectName: `flow:${index}:title` }));
+      if (item.detail.h) slide.addText(item.detail.text, textOpts({
+        x: x + 0.14, y: y + 0.40 + item.title.h + 0.14, w: width - 0.28, h: item.detail.h,
+        fontSize: font, fontFace: preset.font_body, color: cardText, objectName: `flow:${index}:detail` }));
+      if (index < strip.length - 1) slide.addShape('line', shapeOpts({
+        x: x + width + 0.04, y: y + height / 2, w: gap - 0.08, h: 0,
+        line: { color: preset.text_muted, width: 0.9, endArrowType: 'triangle' } }));
+    });
+  }
+  if (summary) {
+    const box = allocation.bands.readout;
+    slide.addShape('rect', shapeOpts({ ...box, fill: { color: preset.surface || preset.bg },
+      line: { color: preset.line, width: 0.6 } }));
+    slide.addText(wrapText(summary, box.w - 0.28, font, preset.font_body, true, true).text,
+      textOpts({ x: box.x + 0.14, y: box.y + 0.08, w: box.w - 0.28, h: box.h - 0.16,
+        fontSize: font, fontFace: preset.font_body, bold: true, color: preset.text,
+        objectName: 'flow:readout' }));
+    slideData.__roleContractConsumesSummary = true;
+  }
+  if (caption) {
+    const box = allocation.bands.caption;
+    slide.addText(wrapText(caption, box.w, captionFont, preset.font_body).text,
+      textOpts({ ...box, fontSize: captionFont, fontFace: preset.font_body,
+        color: preset.text_muted, objectName: 'caption:flow' }));
+  }
+}
+
 function renderFlow(pptx, slide, slideData, preset) {
   paintBackground(slide, preset.bg);
   const header = addDarkTitleBar(slide, preset, slideData.title, slideData.subtitle, slideData);
+
+  if (slideData.flow_steps !== undefined) {
+    renderNativeFlow(slide, slideData, preset, header);
+    addFooter(slide, preset, slideData);
+    attachNotes(slide, slideData);
+    return;
+  }
 
   const diagramPath = slideData.__mermaidPath || slideData.__diagramPath;
   // Body region: below header, leaving space for footer/callout.
@@ -8755,11 +9082,11 @@ function renderFlow(pptx, slide, slideData, preset) {
   attachNotes(slide, slideData);
 }
 
-function normalizeSidebarSections(slideData) {
+function normalizeSidebarSections(slideData, retained = false) {
   const sections = Array.isArray(slideData.sidebar_sections)
     ? slideData.sidebar_sections.filter((s) => s && typeof s === 'object')
     : [];
-  if (sections.length) return sections.slice(0, 4);
+  if (sections.length) return retained ? sections : sections.slice(0, 4);
 
   const fallback = [];
   const body = safeText(slideData.body);
@@ -8768,24 +9095,25 @@ function normalizeSidebarSections(slideData) {
     ? slideData.highlights.map((h) => safeText(h)).filter(Boolean)
     : [];
   if (body) fallback.push({ title: 'Readout', body });
-  if (bullets.length) fallback.push({ title: 'Key results', body: bullets.slice(0, 4) });
-  if (highlights.length) fallback.push({ title: 'Interpretation', body: highlights.slice(0, 4) });
-  if (!fallback.length) {
+  if (bullets.length) fallback.push({ title: 'Key results', body: retained ? bullets : bullets.slice(0, 4) });
+  if (highlights.length) fallback.push({ title: 'Interpretation', body: retained ? highlights : highlights.slice(0, 4) });
+  if (!fallback.length && !retained) {
     fallback.push({ title: 'Figure note', body: 'Add sidebar_sections to explain the visual.' });
   }
   return fallback.slice(0, 4);
 }
 
-function sectionBodyLines(section) {
+function sectionBodyLines(section, retained = false) {
   const raw = section && section.body;
   if (Array.isArray(raw)) return raw.map((v) => safeText(v)).filter(Boolean);
   const text = safeText(raw || (section && section.text));
   if (!text) return [];
-  return text
+  if (retained) return text.split('\n').map((s) => s.trim()).filter(Boolean);
+  const lines = text
     .split(/\n|(?<=\.)\s+/)
     .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 4);
+    .filter(Boolean);
+  return lines.slice(0, 4);
 }
 
 function sidebarPrimaryMetric(slideData) {
@@ -9087,6 +9415,157 @@ function renderImageSidebarEditorialAtlas(pptx, slide, slideData, preset) {
   attachNotes(slide, slideData);
 }
 
+function renderImageSidebarRetained(slide, slideData, preset) {
+  paintBackground(slide, preset.bg);
+  const header = addDarkTitleBar(slide, preset, slideData.title, slideData.subtitle, slideData);
+  const top = header.contentTop + 0.18;
+  const parent = { x: MARGIN_X, y: top, w: SLIDE_W - MARGIN_X * 2,
+    h: footerExclusionTop(preset, slideData) - top };
+  const captionFont = roleMetadataFont(preset, 9);
+  const requestedFont = Number(slideData.sidebar_body_font_size);
+  const bodyFont = roleBodyFont(preset, requestedFont > 0 && Number.isFinite(requestedFont) ? Math.max(16, requestedFont) : 16);
+  const titleFont = roleSupportFont(preset, 13);
+  // Use both measured advances and the conservative delivery line capacity.
+  const wrapSidebarText = (text, width, font, face, bold = false, prefixLength = null) =>
+    wrapText(text, width, font, face, bold, false, prefixLength);
+  const caption = wrapSidebarText(safeText(slideData.caption), parent.w, captionFont,
+    preset.font_caption || preset.font_body);
+  const summary = safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway);
+  const readout = wrapSidebarText([...new Set([safeText(slideData.interpretation), summary].filter(Boolean))].join('\n'),
+    parent.w - 0.28, bodyFont, preset.font_body);
+  const allocated = reserveBottom(parent, [
+    { id: 'caption', h: caption.h, gap: 0.18 },
+    { id: 'readout', h: readout.h ? readout.h + 0.16 : 0, gap: 0.12 },
+  ], 0.5, 'Image sidebar');
+  const body = allocated.content;
+  const imagePath = slideData.__heroPath || slideData.__generatedImagePath;
+  const hasImage = imagePath && fs.existsSync(imagePath);
+  let imageW = hasImage ? body.w * 0.56 : 0;
+  let sidebarW = hasImage ? body.w - imageW - 0.30 : body.w;
+  const rightImage = String(slideData.image_side || '').toLowerCase() === 'right';
+  const icons = Array.isArray(slideData.__iconPaths) ? slideData.__iconPaths : [];
+  const sections = normalizeSidebarSections(slideData, true);
+  const measureRows = (width, packed = false) => sections.map((section, index) => {
+    const icon = icons[index] && fs.existsSync(icons[index]) ? icons[index] : null;
+    const titleInset = icon ? 0.38 : 0.14;
+    const heading = safeText(section.title || section.label, index === 0 ? 'Figure note' : `Note ${index + 1}`);
+    const bodyText = sectionBodyLines(section, true).join('\n');
+    if (packed) {
+      const prefix = bodyText ? `${heading}:` : heading;
+      const text = wrapSidebarText(bodyText ? `${prefix} ${bodyText}` : prefix, width - titleInset,
+        bodyFont, preset.font_body, false, prefix.length);
+      return { packed: true, text, prefixLength: prefix.length, icon, titleInset,
+        bodyInset: titleInset, bodyW: width - titleInset, h: text.h };
+    }
+    const title = wrapSidebarText(heading,
+      width - titleInset, titleFont, preset.font_heading, true);
+    const text = wrapSidebarText(bodyText, width - 0.14,
+      bodyFont, preset.font_body);
+    return { title, text, icon, titleInset, titleW: width - titleInset,
+      bodyInset: 0.14, bodyW: width - 0.14, h: title.h + (text.h ? 0.08 + text.h : 0) };
+  });
+  const requiredHeight = (items) => items.reduce((sum, row) => sum + row.h, 0) + 0.14 * Math.max(0, items.length - 1);
+  const tryMeasure = (width, packed = false) => {
+    try { return measureRows(width, packed); }
+    catch (error) {
+      if (!hasImage || !/wider text box/.test(error.message)) throw error;
+      return null;
+    }
+  };
+  let rows = tryMeasure(sidebarW);
+  // Keep normal rows first; packing changes emphasis only after both fail.
+  if (hasImage && (!rows || requiredHeight(rows) > body.h + 1e-6)) {
+    imageW = body.w * 0.50;
+    sidebarW = body.w - imageW - 0.30;
+    rows = tryMeasure(sidebarW);
+  }
+  if (hasImage && (!rows || requiredHeight(rows) > body.h + 1e-6)) {
+    for (const ratio of [0.56, 0.50]) {
+      const candidateImageW = body.w * ratio;
+      const candidateWidth = body.w - candidateImageW - 0.30;
+      const candidate = tryMeasure(candidateWidth, true);
+      if (candidate && requiredHeight(candidate) <= body.h + 1e-6) {
+        imageW = candidateImageW;
+        sidebarW = candidateWidth;
+        rows = candidate;
+        break;
+      }
+    }
+  }
+  if (!rows) {
+    throw new Error('Image sidebar needs a wider text region at the readable size. Split the source slide; no content was dropped.');
+  }
+  if (!hasImage && requiredHeight(rows) > body.h) {
+    // A text-only rail can use the empty figure width instead of shrinking.
+    try {
+      const inline = rows.map((row) => {
+        const titleW = sidebarW * 0.30 - row.titleInset;
+        const bodyInset = sidebarW * 0.30 + 0.16;
+        const bodyW = sidebarW - bodyInset;
+        const title = wrapSidebarText(row.title.text, titleW, titleFont, preset.font_heading, true);
+        const text = wrapSidebarText(row.text.text, bodyW, bodyFont, preset.font_body);
+        return { ...row, title, text, titleW, bodyInset, bodyW, inline: true, h: Math.max(title.h, text.h) };
+      });
+      if (requiredHeight(inline) <= body.h) rows = inline;
+    } catch (error) {
+      if (!/wider text box/.test(error.message)) throw error;
+    }
+  }
+  const required = requiredHeight(rows);
+  if (required > body.h + 1e-6) {
+    throw new Error(`Image sidebar needs ${required.toFixed(2)}in for all declared headings and body text; ${body.h.toFixed(2)}in available. Split the source slide; no content was dropped.`);
+  }
+  const sidebarX = body.x + (hasImage && !rightImage ? imageW + 0.30 : 0);
+  const imageX = body.x + (rightImage ? sidebarW + 0.30 : 0);
+  if (hasImage) slide.addImage({ path: imagePath,
+    ...imageSizingContainLocal(imagePath, imageX, body.y, imageW, body.h), objectName: 'sidebar:figure' });
+  let y = body.y;
+  rows.forEach((row, index) => {
+    const accent = index % 2 ? preset.accent_secondary : preset.accent_primary;
+    slide.addShape('rect', shapeOpts({ x: sidebarX, y, w: 0.04, h: row.h,
+      fill: { color: accent }, line: { color: accent, width: 0 } }));
+    if (row.icon) slide.addImage({ path: row.icon, x: sidebarX + 0.14, y: y + 0.02, w: 0.18, h: 0.18 });
+    if (row.packed) {
+      // Preserve line breaks and the measured bold prefix in native rich text.
+      let offset = 0;
+      const runs = [];
+      const lines = row.text.text.split('\n');
+      lines.forEach((line, lineIndex) => {
+        const boldLength = Math.min(line.length, Math.max(0, row.prefixLength - offset));
+        if (boldLength) runs.push({ text: line.slice(0, boldLength), options: { bold: true } });
+        if (boldLength < line.length) runs.push({ text: line.slice(boldLength), options: { bold: false } });
+        if (lineIndex < lines.length - 1) runs[runs.length - 1].text += '\n';
+        offset += line.length + 1;
+      });
+      slide.addText(runs, textOpts({ x: sidebarX + row.bodyInset, y, w: row.bodyW, h: row.text.h,
+        fontFace: preset.font_body, fontSize: bodyFont, color: preset.text,
+        objectName: `sidebar:${index}:body` }));
+      y += row.h + 0.14;
+      return;
+    }
+    slide.addText(row.title.text, textOpts({ x: sidebarX + row.titleInset, y,
+      w: row.titleW, h: row.title.h, fontFace: preset.font_heading,
+      fontSize: titleFont, bold: true, color: firstReadableColor(preset.bg, [accent, preset.text, '111111', 'FFFFFF']),
+      objectName: `support:sidebar:${index}:title` }));
+    if (row.text.h) slide.addText(row.text.text, textOpts({ x: sidebarX + row.bodyInset, y: row.inline ? y : y + row.title.h + 0.08,
+      w: row.bodyW, h: row.text.h, fontFace: preset.font_body,
+      fontSize: bodyFont, color: preset.text, objectName: `sidebar:${index}:body` }));
+    y += row.h + 0.14;
+  });
+  if (caption.h) slide.addText(caption.text, textOpts({ ...allocated.bands.caption,
+    fontFace: preset.font_caption || preset.font_body, fontSize: captionFont,
+    color: preset.text_muted, italic: true, objectName: 'metadata:sidebar:caption' }));
+  if (readout.h) {
+    const box = allocated.bands.readout;
+    slide.addText(readout.text, textOpts({ x: box.x + 0.14, y: box.y + 0.08, w: box.w - 0.28,
+      h: readout.h, fontFace: preset.font_body, fontSize: bodyFont,
+      color: preset.text, objectName: 'sidebar:complete-readout' }));
+    if (summary) slideData.__roleContractConsumesSummary = true;
+  }
+  addFooter(slide, preset, slideData);
+  attachNotes(slide, slideData);
+}
+
 function renderImageSidebar(pptx, slide, slideData, preset) {
   const mode = String(slideData.image_sidebar_mode || preset.image_sidebar_mode || 'analysis-rail').trim().toLowerCase();
   if (mode === 'evidence-mosaic') {
@@ -9095,6 +9574,10 @@ function renderImageSidebar(pptx, slide, slideData, preset) {
   }
   if (mode === 'editorial-atlas') {
     renderImageSidebarEditorialAtlas(pptx, slide, slideData, preset);
+    return;
+  }
+  if (preset.renderer_role_contract_version !== 'renderer_role_systems_v1') {
+    renderImageSidebarRetained(slide, slideData, preset);
     return;
   }
   paintBackground(slide, preset.bg);
@@ -9224,15 +9707,21 @@ function renderImageSidebar(pptx, slide, slideData, preset) {
   attachNotes(slide, slideData);
 }
 
-function normalizeFigures(slideData) {
+function normalizeFigures(slideData, retained = false) {
   const raw = Array.isArray(slideData.figures)
     ? slideData.figures
     : (slideData.assets && Array.isArray(slideData.assets.figures))
       ? slideData.assets.figures
       : [];
   const paths = Array.isArray(slideData.__figurePaths) ? slideData.__figurePaths : [];
+  if (retained && raw.length > 4) {
+    throw new Error('Scientific figure supports up to four panels; split the source slide; no content was dropped.');
+  }
   return raw.slice(0, 4).map((item, idx) => {
     const spec = typeof item === 'string' ? { path: item } : (item || {});
+    if (retained && (!paths[idx] || !fs.existsSync(paths[idx]))) {
+      throw new Error(`Scientific panel ${idx + 1} is missing its resolved image; no declared panel may be dropped.`);
+    }
     return {
       path: paths[idx] || '',
       label: safeText(spec.label, String.fromCharCode(65 + idx)),
@@ -9262,11 +9751,13 @@ function normalizeScientificFigureLayout(slideData, preset) {
   return 'panel-grid';
 }
 
-function scientificBottomText(slideData, figures = []) {
+function scientificBottomText(slideData, figures = [], retained = false) {
   const caption = safeText(slideData.caption || slideData.figure_caption);
   return [
     figures.some((figure) => figure.caption === caption) ? '' : caption,
-    safeText(slideData.interpretation || slideData.takeaway),
+    ...(retained ? [...new Set([safeText(slideData.interpretation),
+      safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway)].filter(Boolean))]
+      : [safeText(slideData.interpretation || slideData.takeaway)]),
   ].filter(Boolean).join('\n');
 }
 
@@ -9298,15 +9789,17 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
   const titleFont = options.titleFontSize || 8.5;
   const captionFont = options.captionFontSize || 8.2;
   const ruleColor = cleanHex(options.ruleColor || preset.bg_dark || preset.accent_primary, '0F172A');
-  if (options.frame !== false) slide.addShape('rect', shapeOpts({
+  const frame = options.measured ? options.figureFrame || 'open' : null;
+  if (frame ? frame === 'panel' : options.frame !== false) slide.addShape('rect', shapeOpts({
     x,
     y,
     w,
     h,
     fill: { color: options.fill || preset.surface || 'FFFFFF' },
     line: { color: options.line || preset.line || 'CBD5E1', width: options.lineWidth || 0.75 },
+    ...(options.measured ? { objectName: `scientific:${figure.label}:frame` } : {}),
   }));
-  if (options.rule !== false) {
+  if (frame ? frame === 'ruled' : options.rule !== false) {
     slide.addShape('rect', shapeOpts({
       x,
       y,
@@ -9314,27 +9807,31 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
       h: options.ruleH || 0.05,
       fill: { color: ruleColor },
       line: { color: ruleColor, width: 0 },
+      ...(options.measured ? { objectName: `scientific:${figure.label}:rule` } : {}),
     }));
   }
   const heading = options.title === false ? '' : figure.title ? `${figure.label}. ${figure.title}` : figure.label;
   if (options.sideCaption) {
     const imageW = w * 0.38;
     const textW = w - imageW - 0.22;
-    const titleH = wrapText(heading, textW, titleFont, preset.font_heading, true, true).h;
-    const captionH = figure.caption
-      ? wrapText(figure.caption, textW, captionFont, preset.font_caption || preset.font_body, false, true).h : 0;
-    if (titleH + captionH + (captionH ? 0.10 : 0) > h - 0.16 + 1e-6) {
+    const title = wrapText(heading, textW, titleFont, preset.font_heading, true, true);
+    const caption = wrapText(figure.caption, textW, captionFont, preset.font_caption || preset.font_body, false, true);
+    const titleH = title.h;
+    const captionH = caption.h;
+    if (titleH + captionH + (captionH ? 0.06 : 0) > h - 0.12 + 1e-6) {
       throw new Error(`Scientific panel ${figure.label} needs a taller rail for its full heading and caption; split the source slide or use panel-grid.`);
     }
-    const sized = imageSizingContainLocal(figure.path, x + 0.06, y + 0.08, imageW, h - 0.16);
-    slide.addImage(Object.assign({ path: figure.path }, sized));
+    const sized = imageSizingContainLocal(figure.path, x + 0.06, y + 0.06, imageW, h - 0.12);
+    slide.addImage(Object.assign({ path: figure.path, objectName: `scientific:${figure.label}:image` }, sized));
     const textX = x + imageW + 0.14;
-    slide.addText(heading, textOpts({ x: textX, y: y + 0.08, w: textW, h: titleH,
-      fontFace: preset.font_heading, fontSize: titleFont, bold: true, color: preset.text || preset.text_primary }));
+    slide.addText(heading, textOpts({ x: textX, y: y + 0.06, w: textW, h: titleH,
+      fontFace: preset.font_heading, fontSize: titleFont, bold: true, color: preset.text || preset.text_primary,
+      objectName: `support:scientific:${figure.label}:title` }));
     if (captionH) slide.addText(figure.caption, textOpts({
-      x: textX, y: y + 0.08 + titleH + 0.10, w: textW, h: captionH,
+      x: textX, y: y + 0.06 + titleH + 0.06, w: textW, h: captionH,
       fontFace: preset.font_caption || preset.font_body, fontSize: captionFont,
       color: preset.text_muted, italic: true,
+      objectName: `metadata:scientific:${figure.label}:caption`,
     }));
     return;
   }
@@ -9351,7 +9848,7 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
       fontSize: titleFont,
       bold: true,
       color: preset.text || preset.text_primary,
-      ...(options.measured ? {} : { fit: 'shrink' }),
+      ...(options.measured ? { objectName: `support:scientific:${figure.label}:title` } : { fit: 'shrink' }),
     }));
   }
   const showCaption = options.caption !== false && figure.caption;
@@ -9359,12 +9856,13 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
     ? wrapText(figure.caption, w - 0.16, captionFont, preset.font_caption || preset.font_body, false, true).h
     : (figure.caption.length > 90 ? 0.28 : 0.22)) : 0;
   const imageY = y + 0.12 + titleH;
-  const imageH = Math.max(0.1, h - (imageY - y) - figCaptionH - 0.08);
+  const imageH = Math.max(0.1, h - (imageY - y) - figCaptionH - (options.measured ? 0.12 : 0.08));
   if (options.measured && imageH < 0.35) {
     throw new Error(`Scientific panel ${figure.label} leaves ${imageH.toFixed(2)}in for its image in ${h.toFixed(2)}in; split the source slide or use panel-grid.`);
   }
   const sized = imageSizingContainLocal(figure.path, x + 0.06, imageY, w - 0.12, imageH);
-  slide.addImage(Object.assign({ path: figure.path }, sized));
+  slide.addImage(Object.assign({ path: figure.path,
+    ...(options.measured ? { objectName: `scientific:${figure.label}:image` } : {}) }, sized));
   if (showCaption) {
     slide.addText(figure.caption, textOpts({
       x: x + 0.08,
@@ -9375,7 +9873,7 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
       fontSize: captionFont,
       color: preset.text_muted,
       italic: true,
-      ...(options.measured ? {} : { fit: 'shrink' }),
+      ...(options.measured ? { objectName: `metadata:scientific:${figure.label}:caption` } : { fit: 'shrink' }),
     }));
   }
 }
@@ -9384,55 +9882,90 @@ function renderFigurePanel(slide, preset, figure, x, y, w, h, opts) {
 // Explicit v1 workspaces continue through their original geometry below.
 function renderScientificRetainedRail(slide, preset, figures, metrics, layout) {
   const parent = { x: MARGIN_X, y: metrics.topY, w: metrics.usableW, h: metrics.gridH };
-  const noteFont = roleBodyFont(preset, 11.2);
+  const noteFont = roleBodyFont(preset, 16);
   const captionFont = roleMetadataFont(preset, 9);
-  const titleFont = Math.max(11.2, Number(preset.readability_contract?.min_support_pt) || 0);
-  const noteH = metrics.bottomText
-    ? wrapText(metrics.bottomText, parent.w - 0.28, noteFont, preset.font_body, false, true).h + 0.16 : 0;
+  const titleFont = roleSupportFont(preset, 13);
+  const figureFrame = metrics.figureFrame || 'open';
+  const note = wrapText(metrics.bottomText, parent.w - 0.28, noteFont, preset.font_body, false, true);
+  const noteH = note.h ? note.h + 0.16 : 0;
   const allocated = reserveBottom(parent, [{ id: 'readout', h: noteH, gap: 0.12 }], 1.2, 'Scientific evidence');
   const body = allocated.content;
   if (layout === 'primary-rail') {
     const gap = 0.24;
-    const primaryW = body.w * 0.62;
+    const primaryW = figures.length === 1 ? body.w : body.w * 0.62;
     const railW = body.w - primaryW - gap;
     renderFigurePanel(slide, preset, figures[0], body.x, body.y, primaryW, body.h, {
-      measured: true, titleFontSize: titleFont, captionFontSize: captionFont,
+      measured: true, figureFrame, titleFontSize: titleFont, captionFontSize: captionFont,
       ruleColor: preset.accent_primary,
     });
     const secondary = figures.slice(1);
-    const panelH = secondary.length ? (body.h - 0.12 * (secondary.length - 1)) / secondary.length : 0;
-    secondary.forEach((figure, index) => renderFigurePanel(slide, preset, figure,
-      body.x + primaryW + gap, body.y + index * (panelH + 0.12), railW, panelH, {
-        measured: true, sideCaption: true, titleFontSize: titleFont, captionFontSize: captionFont,
+    const textW = railW * 0.62 - 0.22;
+    const heights = secondary.map((figure) => {
+      const heading = figure.title ? `${figure.label}. ${figure.title}` : figure.label;
+      return Math.max(0.47, wrapText(heading, textW, titleFont, preset.font_heading, true, true).h
+        + wrapText(figure.caption, textW, captionFont, preset.font_caption || preset.font_body, false, true).h
+        + (figure.caption ? 0.06 : 0) + 0.12);
+    });
+    const required = heights.reduce((sum, h) => sum + h, 0) + 0.12 * Math.max(0, heights.length - 1);
+    if (required > body.h + 1e-6) {
+      throw new Error(`Scientific primary rail needs ${required.toFixed(2)}in for all secondary headings and captions; ${body.h.toFixed(2)}in available. Split the source slide or use panel-grid.`);
+    }
+    const spare = heights.length ? (body.h - required) / heights.length : 0;
+    let y = body.y;
+    secondary.forEach((figure, index) => {
+      const panelH = heights[index] + spare;
+      renderFigurePanel(slide, preset, figure,
+        body.x + primaryW + gap, y, railW, panelH, {
+        measured: true, figureFrame, sideCaption: true, titleFontSize: titleFont, captionFontSize: captionFont,
         ruleColor: index % 2 ? preset.accent_secondary : preset.accent_primary,
-      }));
-  } else {
+      });
+      y += panelH + 0.12;
+    });
+  } else if (layout === 'ledger-rail') {
     const ledgerW = Math.min(3.2, body.w * 0.35);
     const textW = ledgerW - 0.28;
-    const rows = figures.map((figure) => {
+    let rows = figures.map((figure) => {
       const heading = `${figure.label}. ${figure.title || 'Evidence panel'}`;
-      const headingH = wrapText(heading, textW, titleFont, preset.font_heading, true, true).h;
-      const captionH = figure.caption
-        ? wrapText(figure.caption, textW, captionFont, preset.font_body, false, true).h : 0;
-      return { figure, heading, headingH, captionH, h: headingH + captionH + (captionH ? 0.10 : 0) + 0.12 };
+      const title = wrapText(heading, textW, titleFont, preset.font_heading, true, true);
+      const caption = wrapText(figure.caption, textW, captionFont, preset.font_caption || preset.font_body, false, true);
+      return { figure, heading, caption: figure.caption, headingW: textW, captionW: textW, headingH: title.h,
+        captionH: caption.h, h: title.h + caption.h + (caption.h ? 0.10 : 0) + 0.12 };
     });
-    const required = rows.reduce((height, row) => height + row.h, 0) + 0.08 * (rows.length - 1);
+    const requiredHeight = (items) => items.reduce((height, row) => height + row.h, 0) + 0.08 * (items.length - 1);
+    if (requiredHeight(rows) > body.h) {
+      try {
+        const inline = rows.map((row) => {
+          const headingW = textW * 0.54;
+          const captionW = textW - headingW - 0.12;
+          const title = wrapText(row.heading, headingW, titleFont, preset.font_heading, true, true);
+          const caption = wrapText(row.caption, captionW, captionFont, preset.font_caption || preset.font_body, false, true);
+          return { ...row, headingW, captionW, inline: true, headingH: title.h, captionH: caption.h,
+            h: Math.max(title.h, caption.h) + 0.12 };
+        });
+        if (requiredHeight(inline) <= body.h) rows = inline;
+      } catch (error) {
+        if (!/wider text box/.test(error.message)) throw error;
+      }
+    }
+    const required = requiredHeight(rows);
     if (required > body.h + 1e-6) {
       throw new Error(`Scientific ledger needs ${required.toFixed(2)}in for all panel captions; ${body.h.toFixed(2)}in available. Split the source slide or use panel-grid.`);
     }
     let y = body.y;
     rows.forEach((row, index) => {
       const accent = index % 2 ? preset.accent_secondary : preset.accent_primary;
-      slide.addShape('rect', shapeOpts({ x: body.x, y, w: ledgerW, h: row.h,
+      if (figureFrame === 'panel') slide.addShape('rect', shapeOpts({ x: body.x, y, w: ledgerW, h: row.h,
         fill: { color: preset.surface || 'FFFFFF' }, line: { color: preset.line || 'CBD5E1', width: 0.45 } }));
-      slide.addShape('rect', shapeOpts({ x: body.x, y, w: 0.05, h: row.h,
+      if (figureFrame === 'ruled') slide.addShape('rect', shapeOpts({ x: body.x, y, w: ledgerW, h: 0.04,
         fill: { color: accent }, line: { color: accent, width: 0 } }));
       slide.addText(row.heading, textOpts({ x: body.x + 0.14, y: y + 0.06,
-        w: textW, h: row.headingH, fontFace: preset.font_heading, fontSize: titleFont,
-        bold: true, color: preset.text || preset.text_primary }));
-      if (row.captionH) slide.addText(row.figure.caption, textOpts({
-        x: body.x + 0.14, y: y + 0.06 + row.headingH + 0.10, w: textW, h: row.captionH,
-        fontFace: preset.font_body, fontSize: captionFont, color: preset.text_muted }));
+        w: row.headingW, h: row.headingH, fontFace: preset.font_heading, fontSize: titleFont,
+        bold: true, color: preset.text || preset.text_primary, objectName: `support:scientific:${row.figure.label}:title` }));
+      if (row.captionH) slide.addText(row.caption, textOpts({
+        x: body.x + 0.14 + (row.inline ? row.headingW + 0.12 : 0),
+        y: y + 0.06 + (row.inline ? 0 : row.headingH + 0.10), w: row.captionW, h: row.captionH,
+        fontFace: preset.font_caption || preset.font_body, fontSize: captionFont, color: preset.text_muted,
+        objectName: `metadata:scientific:${row.figure.label}:caption` }));
       y += row.h + 0.08;
     });
     const figureX = body.x + ledgerW + 0.24;
@@ -9448,15 +9981,45 @@ function renderScientificRetainedRail(slide, preset, figures, metrics, layout) {
       const row = figures.length === 3 ? Math.max(0, index - 1) : Math.floor(index / columns);
       renderFigurePanel(slide, preset, figure, figureX + column * (panelW + imageGap),
         body.y + row * (panelH + imageGap), panelW, primarySpansRows ? body.h : panelH, {
-          measured: true, title: false, caption: false,
+          measured: true, figureFrame, title: false, caption: false,
           frame: false,
           ruleColor: index % 2 ? preset.accent_secondary : preset.accent_primary,
         });
     });
+  } else {
+    const gap = layout === 'strip-readout' ? 0.20 : 0.30;
+    const columns = layout === 'strip-readout' ? figures.length : Math.min(2, figures.length);
+    const panelW = (body.w - gap * (columns - 1)) / columns;
+    const rowCount = Math.ceil(figures.length / columns);
+    const rowMinimums = Array.from({ length: rowCount }, (_, row) => Math.max(...figures
+      .slice(row * columns, (row + 1) * columns).map((figure) => {
+        const heading = figure.title ? `${figure.label}. ${figure.title}` : figure.label;
+        return wrapText(heading, panelW - 0.16, titleFont, preset.font_heading, true, true).h
+          + wrapText(figure.caption, panelW - 0.16, captionFont, preset.font_caption || preset.font_body, false, true).h
+          + 0.24 + 0.35;
+      })));
+    const required = rowMinimums.reduce((sum, height) => sum + height, 0) + gap * (rowCount - 1);
+    if (required > body.h + 1e-6) {
+      throw new Error(`Scientific ${layout} needs ${required.toFixed(2)}in for all headings, plots and captions; ${body.h.toFixed(2)}in available. Split the source slide; no content was dropped.`);
+    }
+    const spare = (body.h - required) / rowCount;
+    let y = body.y;
+    rowMinimums.forEach((minimum, row) => {
+      const h = minimum + spare;
+      figures.slice(row * columns, (row + 1) * columns).forEach((figure, column) => {
+        renderFigurePanel(slide, preset, figure, body.x + column * (panelW + gap), y, panelW, h, {
+          measured: true, figureFrame, titleFontSize: titleFont, captionFontSize: captionFont,
+          ruleColor: preset.accent_primary,
+        });
+      });
+      y += h + gap;
+    });
   }
   if (metrics.bottomText) {
     const box = allocated.bands.readout;
-    slide.addText(metrics.bottomText, textOpts({
+    if (layout === 'strip-readout') slide.addShape('rect', shapeOpts({ ...box,
+      fill: { color: preset.surface || 'FFFFFF' }, line: { color: preset.line, width: 0.65 } }));
+    slide.addText(note.text, textOpts({
       x: box.x + 0.14, y: box.y + 0.08, w: box.w - 0.28, h: box.h - 0.16,
       fontFace: preset.font_body, fontSize: noteFont, color: preset.text || preset.text_primary,
       objectName: 'scientific:complete-readout',
@@ -9630,7 +10193,8 @@ function renderScientificStripReadout(slide, slideData, preset, figures, metrics
 function renderScientificFigure(pptx, slide, slideData, preset) {
   paintBackground(slide, preset.bg);
   const header = addDarkTitleBar(slide, preset, slideData.title, slideData.subtitle, slideData);
-  const figures = normalizeFigures(slideData);
+  const modern = preset.renderer_role_contract_version !== 'renderer_role_systems_v1';
+  const figures = normalizeFigures(slideData, modern);
   if (!figures.length) {
     renderImageSidebar(pptx, slide, slideData, preset);
     return;
@@ -9648,10 +10212,14 @@ function renderScientificFigure(pptx, slide, slideData, preset) {
   const count = Math.min(figures.length, 4);
 
   const metrics = { topY, gridH, usableW, bottomText };
-  if (preset.renderer_role_contract_version === 'renderer_role_contracts_v2'
-      && ['primary-rail', 'ledger-rail'].includes(layout)) {
+  if (modern) {
     renderScientificRetainedRail(slide, preset, figures.slice(0, count),
-      { ...metrics, bottomText: scientificBottomText(slideData, figures) }, layout);
+      { ...metrics, gridH: footerExclusionTop(preset, slideData) - topY,
+        figureFrame: slideData.figure_frame || preset.figure_frame || 'open',
+        bottomText: scientificBottomText(slideData, figures, true) }, layout);
+    if (safeText(slideData.summary_callout || slideData.key_summary || slideData.takeaway)) {
+      slideData.__roleContractConsumesSummary = true;
+    }
     addFooter(slide, preset, slideData);
     attachNotes(slide, slideData);
     return;
@@ -10221,6 +10789,92 @@ function chartAxisBounds(payload, series) {
   return bounds;
 }
 
+function measuredChartFactFields(facts, box, preset, factFont, mode) {
+  const fields = [];
+  let y = box.y;
+  for (const fact of facts) {
+    const valueFont = Math.max(18, factFont);
+    const valueW = fact.value ? textWidth(fact.value, valueFont, preset.font_heading, true) + 0.08 : 0;
+    const labelW = mode === 'row' ? box.w * 0.31 : box.w - valueW - (valueW ? 0.12 : 0);
+    const parts = [
+      { text: fact.value, fontSize: valueFont, bold: true, x: box.x, w: mode === 'stack' ? box.w : valueW },
+      { text: fact.label, fontSize: factFont, bold: true,
+        x: mode === 'stack' ? box.x : box.x + valueW + (valueW ? 0.12 : 0),
+        w: mode === 'stack' ? box.w : labelW },
+      { text: fact.caption, fontSize: factFont, bold: false,
+        x: mode === 'row' ? box.x + valueW + labelW + 0.24 : box.x,
+        w: mode === 'row' ? box.w - valueW - labelW - 0.24 : box.w },
+    ].filter((field) => field.text).map((field) => {
+      const fontFace = field.bold ? preset.font_heading : preset.font_body;
+      return { ...field, fontFace, h: wrapText(field.text, field.w, field.fontSize, fontFace, field.bold).h };
+    });
+    const headH = Math.max(0, ...parts.filter((field) => field.bold).map((field) => field.h));
+    for (const field of parts) {
+      field.y = mode === 'stack' ? y : y + (!field.bold && mode !== 'row' ? headH + 0.10 : 0);
+      fields.push(field);
+      if (mode === 'stack') y += field.h + 0.06;
+    }
+    if (mode === 'stack') y -= 0.06;
+    else y += mode === 'row' ? Math.max(0, ...parts.map((field) => field.h))
+      : headH + (fact.caption ? 0.10 + parts.find((field) => !field.bold).h : 0);
+    y += 0.16;
+  }
+  const h = facts.length ? y - box.y - 0.16 : 0;
+  if (h > box.h + 1e-6) return null;
+  fields.forEach((field) => requireTextFit(field.text, field, 'Chart family readout'));
+  return { fields, h };
+}
+
+function measuredChartFamilyFallback(contract, body, chartBox, facts, notePlans, preset, factFont) {
+  const family = safeText(contract.layout_family);
+  if (!['clinical-outcomes', 'unit-economics'].includes(family) || !facts.length) return null;
+  const noteH = notePlans.reduce((sum, field) => sum + field.h, 0) + Math.max(0, notePlans.length - 1) * 0.05;
+  const allocated = reserveBottom(body, [{ id: 'register', h: noteH, gap: 0.12 }], 1.40, 'Chart family notes');
+  const content = allocated.content;
+  const plotOnRight = chartBox.x > body.x + body.w * 0.20;
+  for (const fraction of [0.30, 0.36, 0.42]) {
+    try {
+      const railW = body.w * fraction;
+      const plotW = body.w - railW - 0.24;
+      const plotX = plotOnRight ? body.x + railW + 0.24 : body.x;
+      const railX = plotOnRight ? body.x : body.x + plotW + 0.24;
+      let insight; let secondary; let plot; let lead; let rest;
+      if (family === 'clinical-outcomes') {
+        lead = measuredChartFactFields(facts.slice(0, 1), content, preset, factFont, 'row');
+        if (!lead) continue;
+        insight = { ...content, h: lead.h };
+        const y = content.y + lead.h + 0.18;
+        const h = content.h - lead.h - 0.18;
+        if (h < 1.40) continue;
+        plot = { x: plotX, y, w: plotW, h };
+        secondary = { x: railX, y, w: railW, h };
+        rest = measuredChartFactFields(facts.slice(1), secondary, preset, factFont, 'head');
+      } else {
+        insight = { x: railX, y: content.y, w: railW, h: content.h };
+        lead = measuredChartFactFields(facts.slice(0, 1), insight, preset, factFont, 'stack');
+        rest = measuredChartFactFields(facts.slice(1), { ...content, x: plotX, w: plotW }, preset, factFont, 'row');
+        if (!lead || !rest) continue;
+        const h = content.h - (rest.h ? rest.h + 0.18 : 0);
+        if (h < 1.40) continue;
+        plot = { x: plotX, y: content.y, w: plotW, h };
+        secondary = rest.h ? { x: plotX, y: content.y + h + 0.18, w: plotW, h: rest.h } : null;
+        if (secondary) rest.fields.forEach((field) => { field.y += secondary.y - content.y; });
+      }
+      if (!lead || !rest) continue;
+      const register = noteH ? allocated.bands.register : null;
+      const fields = [...lead.fields, ...rest.fields];
+      let y = register?.y;
+      for (const field of notePlans) {
+        fields.push({ ...field, x: register.x, y, w: register.w, fontFace: preset.font_body });
+        y += field.h + 0.05;
+      }
+      return { chartBox: plot, insightBox: insight, factsBox: secondary, registerBox: register,
+        fields, adaptation: `readable-chart-${family}` };
+    } catch { /* Try the next bounded rail width without reducing readable type. */ }
+  }
+  return null;
+}
+
 function renderChartContract(pptx, slide, slideData, preset, payload, facts, note, contract) {
   paintBackground(slide, preset.bg);
   const header = addDarkTitleBar(slide, preset, slideData.title || payload.title, slideData.subtitle || payload.subtitle, slideData);
@@ -10315,6 +10969,16 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
     try {
       originalFields.forEach((field) => requireTextFit(field.text, field, 'Original chart readout slot'));
     } catch { originalFits = false; }
+    if (!originalFits) {
+      const familyPlan = measuredChartFamilyFallback(contract, body, chartBox, facts, notePlans, preset, factFont);
+      if (familyPlan) {
+        ({ chartBox, insightBox, factsBox, registerBox } = familyPlan);
+        originalFields.length = 0;
+        originalFields.push(...familyPlan.fields);
+        originalFits = true;
+        readableAdaptation = familyPlan.adaptation;
+      }
+    }
     if (!originalFits && facts.length && (insightBox || factsBox) && chartBox.w <= body.w * 0.78) {
       const noteBody = reserveBottom(body, [{ id: 'register', h: noteH, gap: 0.12 }], 1.40, 'Chart caption and sidecar');
       for (const fraction of [0.34, 0.38, 0.42]) {
@@ -10386,9 +11050,12 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
       });
       factH = factPlans.reduce((sum, plan) => sum + plan.h, 0) + Math.max(0, facts.length - 1) * 0.08;
     }
+    // Compress only inter-band whitespace before rejecting otherwise readable
+    // dense content; keep the measured text and minimum plot height intact.
+    const spaciousGaps = body.h - factH - noteH - (factH ? 0.18 : 0) - (noteH ? 0.12 : 0) >= 1.40;
     const allocated = reserveBottom(body, [
-      { id: 'facts', h: factH, gap: 0.18 },
-      { id: 'register', h: noteH, gap: 0.12 },
+      { id: 'facts', h: factH, gap: spaciousGaps ? 0.18 : 0.10 },
+      { id: 'register', h: noteH, gap: spaciousGaps ? 0.12 : 0.10 },
     ], 1.40, 'Chart facts, details, and notes');
     // Keep the family's plot width and alignment; only its vertical budget moves.
     const topFacts = compositionGrammar(preset, slideData) === 'operations-grid';
@@ -10398,7 +11065,7 @@ function renderChartContract(pptx, slide, slideData, preset, payload, facts, not
     registerBox = noteH ? allocated.bands.register : null;
     if (topFacts && insightBox) {
       insightBox = { ...insightBox, y: body.y };
-      chartBox.y = body.y + factH + 0.18;
+      chartBox.y = body.y + factH + (spaciousGaps ? 0.18 : 0.10);
     }
     measuredReadout = { factPlans, factW, gap, notePlans, inline };
     readableAdaptation = policyLayout ? 'policy-public-impact-open' : 'readable-chart-insight-band';
@@ -11062,14 +11729,13 @@ function addSummaryCallout(pptx, slide, slideData, preset) {
 
 function withReadableDisplayFont(renderer) {
   return (pptx, slide, slideData, preset, ...rest) => {
-    const minBody = Number(preset && preset.readability_contract && preset.readability_contract.min_body_pt);
     const defaultMidnightDisplay = preset && preset.style_preset === 'midnight-neon'
       && preset.renderer_role_contract_version === 'renderer_role_contracts_v2'
       && preset.font_heading === 'Inter' && preset.font_title === 'Inter'
-      && preset.font_body === 'Inter'
-      && Number.isFinite(minBody) && minBody >= 15;
+      && preset.font_body === 'Inter';
     const resolvedPreset = defaultMidnightDisplay
-      ? { ...preset, font_heading: 'Helvetica Neue', font_title: 'Helvetica Neue' }
+      ? { ...preset, font_heading: 'Arial', font_title: 'Arial', font_body: 'Arial',
+        font_caption: preset.font_caption === 'Inter' ? 'Arial' : preset.font_caption }
       : preset;
     return renderer(pptx, slide, slideData, resolvedPreset, ...rest);
   };

@@ -138,6 +138,17 @@ def _overflow_amount(shape: Any, text: str) -> float:
         return 0.0
     font_size_pt = _font_size_pt(shape)
     estimated_h = _estimate_text_height(text, bounds["w"], font_size_pt)
+    if estimated_h > max(0.0, bounds["h"] - 0.06):
+        # Reuse the declared-font, native-margin measurement for candidates only.
+        # Unknown fonts retain the conservative character estimate.
+        from visual_review import _measured_text_layout
+
+        try:
+            measured = _measured_text_layout(shape)
+        except (OSError, ValueError, TypeError, AttributeError):
+            measured = None
+        if measured is not None:
+            estimated_h = measured[1]
     overflow = max(0.0, estimated_h - max(0.0, bounds["h"] - 0.06))
     return round(overflow, 3)
 

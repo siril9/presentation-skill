@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
 const builder = require('../scripts/build_deck_pptxgenjs.js');
@@ -14,6 +15,7 @@ const LAB_CAPTION = 'Total: 72 assay wells (3 lots x 4 timepoints x 6 wells), ex
 
 const STYLES = ['midnight-neon', 'editorial-minimal', 'lavender-ops'];
 const INTERPRETATION = 'Uptime measures device availability; it does not establish measurement accuracy.';
+const normalizedText = (value) => String(value).replace(/\s+/g, ' ').trim();
 
 function presetFor(name, grammar) {
   return builder.applyDeckStyle(getPreset(name), { deck_style: {
@@ -207,8 +209,8 @@ test('ordinary table retains the lab caption and every footnote alongside a read
       const table = ops.find((op) => op.kind === 'table');
       assert.ok(caption.options.y - (table.options.y + table.options.h) >= 0.05);
       assert.ok(caption.options.h >= wrapText(caption.text, caption.options.w,
-        caption.options.fontSize, caption.options.fontFace).h);
-      if (readout) assert.ok(ops.some((op) => op.kind === 'text' && op.text === readout));
+        caption.options.fontSize, caption.options.fontFace, false, true).h);
+      if (readout) assert.ok(ops.some((op) => op.kind === 'text' && normalizedText(op.text) === normalizedText(readout)));
     }
   }
 });
@@ -221,7 +223,7 @@ test('table readout must not consume a distinct takeaway or overflow by shrinkin
   const preset = presetFor('lab-report', 'scientific-evidence-plate');
   const ops = capture(renderers.renderTable, data, preset);
   assert.notEqual(data.__roleContractConsumesSummary, true);
-  assert.ok(ops.some((op) => op.text === data.interpretation));
+  assert.ok(ops.some((op) => normalizedText(op.text) === normalizedText(data.interpretation)));
   assert.ok(ops.some((op) => String(op.text).includes(data.caption)));
   const labData = { ...data, variant: 'lab-run-results', tables: [data.table] };
   assert.ok(capture(renderers.renderLabRunResults, labData, preset)
@@ -246,16 +248,71 @@ for (const style of STYLES) {
     assert.equal(operations.find((op) => op.kind === 'chart').options.valAxisMinVal, 0);
   });
 
-  test(`${style} ordinary table adapts narrow readout to a body-size band`, () => {
+  test(`${style} ordinary table measures readout within its family geometry`, () => {
     const data = tableData();
-    const operations = capture(renderers.renderTable, data, presetFor(style));
-    const readout = operations.find((op) => op.kind === 'text' && op.text === data.interpretation);
+    const preset = presetFor(style);
+    preset.readability_contract.min_support_pt = 16;
+    const operations = capture(renderers.renderTable, data, preset);
+    const readout = operations.find((op) => op.kind === 'text' && normalizedText(op.text) === normalizedText(data.interpretation));
     assert.ok(readout, 'ordinary table readout must be rendered in full');
     assert.ok(readout.options.fontSize >= 16);
-    assert.ok(readout.options.w >= 7.0);
-    assert.equal(data.__roleContractExecution.adaptation, 'readable-table-readout-band');
+    assert.ok(readout.options.h >= wrapText(readout.text, readout.options.w,
+      readout.options.fontSize, readout.options.fontFace, false, true).h);
+    assert.notEqual(readout.options.fit, 'shrink');
+    assert.equal(data.__roleContractExecution.adaptation, 'measured-table-contract-geometry');
   });
 }
+
+test('all eight ordinary table contracts retain native cells and 13pt support without a universal band', () => {
+  const { contractsForGrammar } = require('../templates/pptxgenjs/role_layout_contracts');
+  const styles = ['arctic-minimal', 'lab-report', 'executive-clinical', 'editorial-minimal',
+    'sunset-investor', 'lavender-ops', 'warm-terracotta', 'midnight-neon'];
+  const geometries = new Set();
+  GRAMMARS.forEach((grammar, index) => {
+    const style = styles[index];
+    const preset = builder.applyDeckStyle(getPreset(style), { metadata: {
+      renderer_role_contracts_v2: contractsForGrammar(grammar, style),
+    } }, style);
+    for (const variant of ['primary', 'alternate', 'dense']) {
+      const data = tableData();
+      data.role_layout_variant = variant;
+      data.table.caption = LAB_CAPTION;
+      const source = structuredClone(data.table);
+      const ops = capture(renderers.renderTable, data, preset);
+      const native = ops.find((op) => op.kind === 'table');
+      assert.deepEqual(native.rows.map((row) => row.map((cell) => cell.text)), [source.headers, ...source.rows]);
+      const readout = ops.find((op) => normalizedText(op.text) === normalizedText(data.interpretation));
+      assert.ok(readout.options.fontSize >= 13, `${grammar}/${variant}`);
+      assert.notEqual(readout.options.fit, 'shrink');
+      const caption = ops.find((op) => op.options?.objectName === 'metadata:table-caption');
+      assert.ok(caption.text.includes(source.caption));
+      assert.ok(caption.options.y >= native.options.y + native.options.h + 0.05);
+      assert.notEqual(caption.options.fit, 'shrink');
+      assert.ok(ops.some((op) => String(op.text).includes('D1')));
+      if (variant === 'primary') geometries.add(JSON.stringify([
+        native.options.x, native.options.y, native.options.w, native.options.h,
+        readout.options.x, readout.options.y, readout.options.w, readout.options.h,
+      ].map((value) => Math.round(value * 100))));
+    }
+  });
+  assert.equal(geometries.size, 8);
+  const outline = JSON.parse(fs.readFileSync(path.resolve(__dirname,
+    '../examples/v0.14_lab_studies/white_calibration/outline.json')));
+  for (const style of ['lab-report', 'editorial-minimal']) {
+    const data = builder.normalizeSlide(outline.slides.find((slide) => slide.variant === 'table'),
+      path.resolve(__dirname, '..'));
+    const preset = builder.applyDeckStyle(getPreset(style), { ...outline, deck_style: {
+      ...outline.deck_style, style_preset: style,
+      composition_grammar: style === 'lab-report' ? 'scientific-evidence-plate' : 'editorial-spread',
+    } }, style);
+    const ops = capture(renderers.renderTable, data, preset);
+    const native = ops.find((op) => op.kind === 'table');
+    assert.deepEqual(native.rows.map((row) => row.map((cell) => cell.text)), [data.table.headers, ...data.table.rows]);
+    assert.ok(native.rows.flat().every((cell) => cell.options.fontSize >= 16));
+    const caption = ops.find((op) => op.options?.objectName === 'metadata:table-caption');
+    assert.ok(caption.options.y >= native.options.y + native.options.h + 0.05);
+  }
+});
 
 test('bar axes include zero by default while honoring explicit limits', () => {
   for (const [values, options, expected] of [
@@ -297,6 +354,33 @@ test('native charts show supplied axis titles unless explicitly hidden', async (
   const chart = capture(renderers.renderChart, chartData(), preset).find((op) => op.kind === 'chart');
   assert.equal(chart.options.showCatAxisTitle, false);
   assert.equal(chart.options.showValAxisTitle, false);
+});
+
+test('dense lab chart recovers inter-band whitespace without shrinking facts or the plot', () => {
+  const data = builder.normalizeSlide({
+    type: 'content', role: 'chart', variant: 'chart', role_layout_variant: 'dense',
+    title: 'The combined intervention is expected to close most of the heat gap',
+    subtitle: 'Modeled peak surface-temperature reduction',
+    chart: { type: 'bar', labels: ['Shade', 'Cool roof', 'Combined', 'Target'], values: [1.8, 2.4, 4.1, 4.5],
+      facts: [{ value: '4.1 C', label: 'Combined', detail: 'modeled reduction' },
+        { value: '91%', label: 'Of target', detail: 'before field correction' }] },
+    caption: 'Illustrative model values; not a public performance claim.',
+    footer: 'Urban heat resilience pilot | Evidence Plate',
+  }, path.resolve(__dirname, '..'));
+  const ops = capture(renderers.renderChart, data, presetFor('lab-report', 'scientific-evidence-plate'));
+  const chart = ops.find((op) => op.kind === 'chart').options;
+  assert.ok(chart.h >= 1.20 - 1e-6, 'preserve 1.40in plot region before internal padding');
+  for (const fact of data.chart.facts) {
+    for (const text of [fact.value, fact.label, fact.detail]) {
+      const box = ops.find((op) => op.text === text)?.options;
+      assert.ok(box && box.fontSize >= 16 && box.fit !== 'shrink', text);
+      assert.ok(box.y >= chart.y + chart.h + 0.09 - 1e-6, text);
+    }
+  }
+  const caption = ops.find((op) => op.text === data.caption).options;
+  const factBottom = Math.max(...ops.filter((op) => op.options.objectName?.startsWith('content:chart-fact-'))
+    .map((op) => op.options.y + op.options.h));
+  assert.ok(caption.y >= factBottom + 0.09 - 1e-6, 'retain visible fact/caption separation');
 });
 
 test('editorial chart fills its sidecar with complete measured fact heads and details', () => {
@@ -362,7 +446,7 @@ test('v2 editorial comparison and table keep complete source clear of the left p
   assert.ok(Math.min(...panels.map((op) => op.options.x)) >= 0.70);
   for (const option of [data.left, data.right]) {
     for (const text of [option.title, option.bullets.join('\n')]) {
-      const field = ops.find((op) => op.kind === 'text' && op.text === text);
+      const field = ops.find((op) => op.kind === 'text' && normalizedText(op.text) === normalizedText(text));
       assert.ok(field && field.options.x >= 0.74 && field.options.fontSize >= 16);
       assert.notEqual(field.options.fit, 'shrink');
     }
@@ -581,7 +665,7 @@ test('midnight reference table has a visible nearby context label', () => {
   assert.ok(table && label);
   assert.equal(label.text, 'SOURCE REGISTER');
   assert.ok(table.options.y - label.options.y - label.options.h <= 0.75);
-  assert.equal(table.rows[0][0].options.fontFace, 'Helvetica Neue');
+  assert.equal(table.rows[0][0].options.fontFace, 'Arial');
 });
 
 test('midnight display adjustment preserves explicit and legacy fonts', () => {

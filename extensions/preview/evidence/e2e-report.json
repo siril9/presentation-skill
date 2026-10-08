@@ -1,0 +1,140 @@
+{
+  "passed": true,
+  "transport": "real MCP stdio",
+  "tools": [
+    "presentation_open",
+    "presentation_slide",
+    "presentation_update_slide",
+    "presentation_build",
+    "presentation_audition",
+    "presentation_preview"
+  ],
+  "operations": [
+    {
+      "name": "presentation_open",
+      "elapsed_ms": 12,
+      "isError": false
+    },
+    {
+      "name": "presentation_open",
+      "elapsed_ms": 7,
+      "isError": false
+    },
+    {
+      "name": "presentation_build",
+      "elapsed_ms": 3846,
+      "isError": false
+    },
+    {
+      "name": "presentation_update_slide",
+      "elapsed_ms": 3,
+      "isError": false
+    },
+    {
+      "name": "presentation_update_slide",
+      "elapsed_ms": 1,
+      "isError": true
+    },
+    {
+      "name": "presentation_open",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_build",
+      "elapsed_ms": 10974,
+      "isError": false
+    },
+    {
+      "name": "presentation_open",
+      "elapsed_ms": 7,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 5,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 3,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 3,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 3,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 5,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_slide",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_audition",
+      "elapsed_ms": 21405,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 5,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 2,
+      "isError": false
+    },
+    {
+      "name": "presentation_audition",
+      "elapsed_ms": 22406,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 6,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 4,
+      "isError": false
+    },
+    {
+      "name": "presentation_preview",
+      "elapsed_ms": 4,
+      "isError": false
+    }
+  ],
+  "slide_count": 8,
+  "visual_review": "pending",
+  "unchanged_other_slides": true,
+  "stale_edit_rejected": true,
+  "stale_previews_hidden": true,
+  "repeated_audition_pixels_identical": true
+}

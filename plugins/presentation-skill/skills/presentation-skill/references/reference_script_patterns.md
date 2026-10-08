@@ -134,7 +134,8 @@ interior whitespace in a chart is meaningful. When a Python script generates
 figures, make it export slide-ready assets:
 
 - choose the plot aspect ratio for the target layout, not for a paper page
-- keep legends inside the axes only when they do not shrink the plotted region
+- keep legends inside the axes only in a clear region, with space from every
+  trace and point; otherwise reserve an outside legend row
 - use `bbox_inches="tight"` and small `pad_inches` for Matplotlib exports
 - run `scripts/trim_image_whitespace.py` on generated PNG/JPG files when the
   plot still carries exterior borders
@@ -142,6 +143,20 @@ figures, make it export slide-ready assets:
   `scientific-figure` grid would make labels or curves unreadable
 - store output paths, target variants, target box sizes, and crop rules in
   `design_brief.json` under `figure_export_contract`
+
+Check typography at the inserted size, not just in the exported image.
+Approximate effective point size as `source_font_pt * inserted_height /
+exported_figure_height`, using consistent units for both heights. Target at
+least 13 pt for axes, ticks and legends and 9 pt for source metadata. For a
+cropped raster, use actual PNG height in pixels divided by export DPI, not the
+uncropped figure canvas height. Leave about 10% label-size headroom before
+insertion, then recheck the final picture transform and render; increasing DPI
+alone does not make labels larger.
+Long rotated labels can clip when a tight export reruns layout. Use a horizontal
+y-axis label above the plot or enlarge the source canvas, then inspect the PNG
+edges and recompute effective label sizes after cropping.
+For manual outside labels in Matplotlib, solve layout before saving and include
+those labels in `bbox_extra_artists`; changing rotation alone can still clip them.
 
 Example Matplotlib helper for workspace scripts:
 
@@ -174,9 +189,24 @@ The strongest process slides use native editable shapes: equal-width rounded
 boxes, explicit gap constants, arrow connectors, grouped-stage brackets,
 short detail labels, and a final turnaround/result callout.
 
-This should be treated as an enhanced `flow` mode or future `workflow-strip`
-variant. Mermaid is useful for quick diagrams, but editable method workflows
-are better for lab decks and handoff decks.
+Use `variant: flow` with 2-4 ordered `flow_steps` objects containing `title`
+and optional `detail`. `flow_layout: auto` chooses an equal-height strip or
+readable stacked bands; `strip` and `bands` are bounded explicit choices.
+All stage text and connectors remain editable. A longer method must be split,
+not silently truncated. Do not supply both steps and a Mermaid/diagram asset.
+Mermaid remains useful for graph-shaped diagrams rather than simple methods.
+
+### Measured Evidence Regions
+
+Reserve the complete interpretation and source caption before allocating plot
+space. Modern scientific layouts retain each panel caption in `panel-grid`,
+`primary-rail`, `ledger-rail`, and `strip-readout`; explicit v1 workspaces keep
+their original rendering. `figure_frame: open | ruled | panel` controls framing,
+not plot geometry. A restrained heading/footer can stay consistent while the
+evidence changes between a large plot, panel pair, measured ledger, native
+table, and methods strip. When labels inside a bitmap are too small, regenerate
+the figure for the actual slide region. The renderer cannot enlarge plot labels
+independently of the data.
 
 ### Safe Incremental Deck Surgery
 
@@ -287,7 +317,8 @@ collapsing into generic cards.
    figures; `scripts/scaffold_figure_artifacts.py` now creates the first
    deterministic `assets/make_figures.py`, chart JSON, slide-ready figure, and
    artifact-plan draft from simple tabular data.
-5. Add or harden editable workflow-strip rendering.
+5. Use the native method strip and measured evidence regions before adding more
+   decorative layouts.
 6. Add an inspection command for existing PPTX geometry and tables.
 7. Expand regression fixtures around `scientific-figure`, `image-sidebar`,
    `lab-run-results`, and semantic table cell styles.

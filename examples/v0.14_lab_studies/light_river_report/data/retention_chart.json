@@ -1,0 +1,35 @@
+{
+  "type": "bar",
+  "categories": [
+    "A / phase 0",
+    "B / phase 6"
+  ],
+  "series": [
+    {
+      "name": "Mean peak fraction",
+      "values": [
+        0.1528,
+        0.8459
+      ]
+    }
+  ],
+  "options": {
+    "catAxisLabelFontSize": 16,
+    "valAxisLabelFontSize": 16,
+    "legendFontSize": 16,
+    "dataLabelFormatCode": "0.00",
+    "valAxisMinVal": 0,
+    "valAxisTitle": "Retained peak fraction",
+    "showValue": true,
+    "showLegend": false,
+    "chartColors": [
+      "315A74"
+    ],
+    "valAxisMaxVal": 1
+  },
+  "synthetic": true,
+  "disclosure": "Invented synthetic nonclinical illustration; no measured empirical findings.",
+  "sources": [
+    "SYN-R | computed synthetic ratios"
+  ]
+}

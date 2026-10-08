@@ -1,0 +1,220 @@
+{
+  "schema_version": "synthetic_source_validation/v1",
+  "source_validation": "pass",
+  "command": "python3 scripts/python_runtime.py examples/v0.14_lab_studies/validate_sources.py",
+  "core_revision": "2776d8a7d08e64924a69cbf5bdb1271c5bedf99b",
+  "core_state": "Concurrent core work may be dirty; this is a source-only snapshot, not release proof.",
+  "core_contract_sha256": {
+    "scripts/preflight.py": "96f5c1de101e30666f5394b991d0e1c70e39790b4e2b8381fe220607582fe04f",
+    "schemas/renderer_capabilities_v2.json": "9a197f22943a26714b584061580888828dcf0e4d89bc0d7c4ff4a01be3f01cb2",
+    "scripts/taste_grammar_catalog.py": "c328983fc77ebf3c1804e7b2f2a0cb47f72bc1d11b1d16242118041e92b65ba0"
+  },
+  "source_sha256": {
+    "dark_contrast/outline.json": "d365e3cd46f47d0a7b774795f243666bfbe865c2ca90436fe26f2d363d8f93f1",
+    "light_river_report/outline.json": "e475ddf27ef61eeedda9200ec6a76985218d8e4dc8c60a59cb9995d62e6af7f6",
+    "white_calibration/outline.json": "acc39c239a89484b5b5188b98a474fd4e047d30aced81eb8979ec3b1d32164c9"
+  },
+  "generation_manifest_sha256": "d5a989ce713476e1a498fef14222fc0f2e5dca2cab116ce1c22f30d92eba3982",
+  "studies": [
+    {
+      "path": "white_calibration/outline.json",
+      "slides": 8,
+      "source_preflight_errors": 0,
+      "source_preflight_warnings": 0,
+      "information": [],
+      "routes": [
+        {
+          "slide_id": "cal-01",
+          "role": "title",
+          "variant": "title",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "cal-02",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "cal-03",
+          "role": "evidence",
+          "variant": "flow",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "cal-04",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "cal-05",
+          "role": "chart",
+          "variant": "chart",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "cal-06",
+          "role": "table",
+          "variant": "table",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "cal-07",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "cal-08",
+          "role": "decision",
+          "variant": "standard",
+          "route": "v2-capable pair; render execution unverified"
+        }
+      ],
+      "data_integrity": "pass"
+    },
+    {
+      "path": "dark_contrast/outline.json",
+      "slides": 8,
+      "source_preflight_errors": 0,
+      "source_preflight_warnings": 0,
+      "information": [],
+      "routes": [
+        {
+          "slide_id": "con-01",
+          "role": "title",
+          "variant": "title",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "con-02",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "con-03",
+          "role": "comparison",
+          "variant": "comparison-2col",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "con-04",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "con-05",
+          "role": "chart",
+          "variant": "chart",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "con-06",
+          "role": "evidence",
+          "variant": "image-sidebar",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "con-07",
+          "role": "evidence",
+          "variant": "flow",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "con-08",
+          "role": "decision",
+          "variant": "standard",
+          "route": "v2-capable pair; render execution unverified"
+        }
+      ],
+      "data_integrity": "pass"
+    },
+    {
+      "path": "light_river_report/outline.json",
+      "slides": 8,
+      "source_preflight_errors": 0,
+      "source_preflight_warnings": 0,
+      "information": [],
+      "routes": [
+        {
+          "slide_id": "riv-01",
+          "role": "title",
+          "variant": "title",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "riv-02",
+          "role": "evidence",
+          "variant": "image-sidebar",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "riv-03",
+          "role": "table",
+          "variant": "table",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "riv-04",
+          "role": "evidence",
+          "variant": "scientific-figure",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "riv-05",
+          "role": "chart",
+          "variant": "chart",
+          "route": "v2-capable pair; render execution unverified"
+        },
+        {
+          "slide_id": "riv-06",
+          "role": "evidence",
+          "variant": "image-sidebar",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "riv-07",
+          "role": "evidence",
+          "variant": "flow",
+          "route": "legacy fallback"
+        },
+        {
+          "slide_id": "riv-08",
+          "role": "decision",
+          "variant": "standard",
+          "route": "v2-capable pair; render execution unverified"
+        }
+      ],
+      "data_integrity": "pass"
+    }
+  ],
+  "figure_layouts": [
+    "ledger-rail",
+    "panel-grid",
+    "primary-rail",
+    "strip-readout"
+  ],
+  "figure_frames": [
+    "open",
+    "panel",
+    "ruled"
+  ],
+  "flow_layouts": [
+    "auto",
+    "bands",
+    "strip"
+  ],
+  "native_flow_stage_counts": [
+    2,
+    3,
+    4
+  ],
+  "build": "not run",
+  "render": "not run",
+  "visual_review": "not performed",
+  "readability_status": "Requested source floors checked; native geometry and embedded label sizes await rendering.",
+  "public_proof_status": "Authored candidates only; no final deck acceptance or benchmark claim."
+}

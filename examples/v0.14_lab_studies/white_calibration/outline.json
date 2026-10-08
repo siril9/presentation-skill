@@ -1,0 +1,136 @@
+{
+  "title": "A calibration choice, not a release",
+  "subtitle": "Invented synthetic nonclinical instrument study",
+  "deck_style": {
+    "style_preset": "lab-report",
+    "composition_grammar": "scientific-evidence-plate",
+    "style_seed": "v014-white-calibration",
+    "palette_key": "lab_monochrome_v1",
+    "font_pair": "clean_modern_v1",
+    "header_mode": "lab-clean",
+    "header_variant": "plain",
+    "title_layout": "lab-plate",
+    "title_motif": "none",
+    "footer_mode": "source-line",
+    "footer_page_numbers": true,
+    "chart_treatment": "minimal",
+    "table_treatment": "journal-grid",
+    "figure_frame": "open",
+    "emoji_mode": "none",
+    "readability_contract": {
+      "min_title_pt": 28, "min_body_pt": 16, "min_support_pt": 13,
+      "min_caption_pt": 9, "min_footer_pt": 9, "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true,
+    "source_ledger": "data/synthetic_data.json",
+    "external_assets": false,
+    "route_claim": "Figures, sidebars and flows are supported legacy fallbacks, not v2 evidence-slot coverage.",
+    "verification": "Source validation is separate from rendered approval; see release_manifest.json for the reviewed release artifacts."
+  },
+  "slides": [
+    {
+      "slide_id": "cal-01", "type": "title", "role": "title", "variant": "title",
+      "slide_intent": "question",
+      "title": "A calibration choice,\nnot a release",
+      "subtitle": "Which correction deserves another test?\nInvented synthetic instrument responses; nonclinical.",
+      "kicker": "ILLUSTRATIVE CALIBRATION / 01",
+      "sources": ["SYN-C | invented nonclinical data"],
+      "notes": "All instrument signals, repeat counts, candidate formulas and screening limits are invented. The arbitrary unit AU is internal to this simulation. No physical instrument, certified standard or measured calibration is represented."
+    },
+    {
+      "slide_id": "cal-02", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "diagnosis", "title": "The toy response bends at high input",
+      "subtitle": "Synthetic response = offset + gain + curvature + noise",
+      "figure_layout": "primary-rail", "figure_frame": "open",
+      "figures": [{"path": "assets/response.png", "label": "A", "title": "Input and response", "caption": "24 synthetic training values; six levels."}],
+      "caption": "SYN-C. AU = arbitrary simulation units.",
+      "interpretation": "A constant offset cannot remove input-dependent error.",
+      "sources": ["SYN-C | synthetic model"],
+      "notes": "The dashed identity line is a mathematical reference, not an empirical standard. Training uses six levels with four synthetic repeats each. This primary-rail contains one dominant figure and a complete native readout; no small secondary thumbnail is required."
+    },
+    {
+      "slide_id": "cal-03", "type": "content", "role": "evidence", "variant": "flow",
+      "slide_intent": "method", "title": "Fit first; score on untouched values",
+      "subtitle": "Synthetic split fixed before comparing the three candidate formulas",
+      "flow_layout": "strip",
+      "flow_steps": [
+        {"title": "Generate", "detail": "24 training values at six levels."},
+        {"title": "Fit", "detail": "Offset, affine and quadratic inverse maps."},
+        {"title": "Hold out", "detail": "30 new values at ten interleaved levels."},
+        {"title": "Score", "detail": "Same 30 residuals for every candidate."}
+      ],
+      "caption": "SYN-C. Native editable stages; random seed 1401.",
+      "sources": ["SYN-C | invented analysis plan"],
+      "notes": "Offset correction subtracts the mean training response-minus-input. Affine and quadratic candidates fit input as a function of training response with least squares. Holdout values are generated independently using the same invented response law. No holdout tuning, extrapolation or real instrument calibration is performed."
+    },
+    {
+      "slide_id": "cal-04", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "residual-audit", "title": "Read residual shape before the score",
+      "subtitle": "Synthetic holdout: ten input levels, three new values per level",
+      "figure_layout": "panel-grid", "figure_frame": "ruled",
+      "figures": [
+        {"path": "assets/affine_residuals.png", "label": "A", "title": "Affine inverse", "caption": "Corrected input minus known input; n = 30."},
+        {"path": "assets/quadratic_residuals.png", "label": "B", "title": "Quadratic inverse", "caption": "Same residual axis and same 30 values."}
+      ],
+      "caption": "SYN-C. Dashed lines mark invented +/-3 AU limits.",
+      "interpretation": "The model-matched candidate removes more curvature in this toy case.",
+      "sources": ["SYN-C | synthetic holdout"],
+      "notes": "Both panels show all 30 values, identical axis bounds and the exact candidate predictions retained in data/synthetic_data.json. Matching the simulation law favors the quadratic candidate; this is not evidence of general superiority."
+    },
+    {
+      "slide_id": "cal-05", "type": "content", "role": "chart", "variant": "chart",
+      "slide_intent": "quantitative-selection", "title": "Rank corrections on one denominator",
+      "subtitle": "Synthetic holdout RMSE in AU; lower is better; n = 30 each",
+      "chart": "data/rmse_chart.json",
+      "caption": "SYN-C. RMSE = sqrt(mean(residual squared)); bars start at zero. No significance claim.",
+      "sources": ["SYN-C | computed synthetic RMSE"],
+      "notes": "The generator computes this native chart directly from the retained residual arrays. The illustrative RMSE screen is <=1.5 AU and the maximum-absolute-error screen is <=3 AU; neither is a real instrument specification. Actual pass counts and maxima are in the data ledger."
+    },
+    {
+      "slide_id": "cal-06", "type": "content", "role": "table", "variant": "table",
+      "slide_intent": "decision-rule", "title": "Passing the screen earns another test",
+      "subtitle": "Invented decision rules; not a validated calibration specification",
+      "table": {
+        "headers": ["Gate", "Toy criterion", "What it does not establish"],
+        "rows": [
+          ["Average error", "Holdout RMSE <=1.5 AU", "Accuracy outside this input range"],
+          ["Worst value", "Maximum absolute error <=3 AU", "Protection against rare outliers"],
+          ["Denominator", "All 30 holdout values retained", "Independent physical instruments"],
+          ["Next step", "New law, new seed, new noise", "Production release"]
+        ],
+        "column_weights": [1, 1.6, 2.1],
+        "caption": "SYN-C. All thresholds are invented for this nonclinical illustration."
+      },
+      "sources": ["SYN-C | illustrative gates"],
+      "notes": "The table expresses an authored decision policy. It is not a report of field failures or a confidence statement. Source-level validation verifies the same-denominator scores and checks whether the quadratic candidate actually clears both toy limits."
+    },
+    {
+      "slide_id": "cal-07", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "sensitivity", "title": "Noise widens the residuals",
+      "subtitle": "Synthetic sensitivity rerun: same holdout design at three noise settings",
+      "figure_layout": "strip-readout", "figure_frame": "panel",
+      "figures": [{"path": "assets/noise_sensitivity.png", "label": "A", "title": "Quadratic error under noise", "caption": "One seeded synthetic split per noise setting."}],
+      "caption": "SYN-C. Noise SD is 0.45, 0.90 or 1.80 AU.",
+      "interpretation": "A favorable toy fit does not certify robustness.",
+      "sources": ["SYN-C | invented sensitivity sweep"],
+      "notes": "All three settings use the same generated standard-normal draws scaled by their noise SD, so the sweep changes one causal factor. Each setting refits all candidates on 24 training values and scores 30 holdout values. Only the quadratic residual distribution is plotted here; every candidate metric is retained in the JSON ledger. No Monte Carlo uncertainty interval is implied."
+    },
+    {
+      "slide_id": "cal-08", "type": "content", "role": "decision", "variant": "standard",
+      "slide_intent": "bounded-recommendation", "title": "Advance a candidate; withhold release",
+      "content_recipe": {"required_slots": ["Next test", "Challenge", "Boundary"]},
+      "subtitle": "Illustrative selection under one invented response law",
+      "bullets": [
+        "Take the quadratic inverse into a different synthetic response law.",
+        "Test drift, outliers and extrapolation before making a stronger claim.",
+        "Do not translate AU thresholds into physical instrument specifications."
+      ],
+      "summary_callout": "Synthetic screening only. No empirical calibration or deployment claim.",
+      "sources": ["SYN-C | synthetic scope and limitations"],
+      "notes": "No real units, physical reference materials, instrument population, repeated run stability or uncertainty budget were modeled. The generator verifies that the recommendation is consistent with the toy metrics, not that this correction is suitable for any actual device."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Public Plugin Publication
 
-Verified against official OpenAI documentation on 2026-09-30. This repository's
+Verified against official OpenAI documentation on 2026-10-08. This repository's
 local/repo marketplace is not the public directory. No public approval,
 curation, completed portal scans, or verified publishing identity is claimed.
 
@@ -30,12 +30,12 @@ These archive rules are stricter than local-listing screenshot support.
 
 ## Export
 
-After main finishes changes and synchronizes the snapshot, run from repo root:
+For 0.14.0, run from repo root with the core and plugin snapshot synchronized:
 
 ```bash
 python3 scripts/sync_plugin_snapshot.py --check
 python3 scripts/validate_distribution.py
-python3 scripts/package_plugin.py --output /tmp/presentation-skill-v0.13.1-plugin.zip
+python3 scripts/package_plugin.py --output /tmp/presentation-skill-v0.14.0-plugin.zip
 ```
 
 The packager does not sync. It checks parity, validates listing limits, paths
@@ -46,6 +46,16 @@ Unreferenced root assets are omitted; curated skill reference images remain.
 The 10 MB extracted cap is this project's lean budget, not a portal limit.
 Its JSON report includes the ZIP hash and byte counts. These local checks are
 not portal safety/security scans or proof of public acceptance.
+
+The [release proof](../examples/v0.14_lab_studies/release_manifest.json)
+is separate from this skills-only plugin ZIP. Three synthetic studies, 24 actual
+slides, and their deck/source assets do not establish plugin approval
+or a model benchmark. One capable model, including GPT-6.1, can use the core;
+no model-specific or multi-agent dependency is required.
+
+The optional [Slide Review extension](../extensions/preview/README.md) remains
+a local pilot. It is not this skills-only export, a globally hosted service,
+or a curated listing; its extra dependencies are not required for core use.
 
 ## Human Publication
 

@@ -1,0 +1,23 @@
+{
+  "name": "presentation-skill-preview",
+  "version": "0.1.0",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "type": "module",
+  "description": "Optional local MCP slide preview and source-first revision panel.",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "1.7.5",
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "@openai/mcp-extensions": "0.1.0",
+    "lucide": "1.49.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

@@ -1,49 +1,56 @@
 {
+  "deck_style": {
+    "style_preset": "executive-clinical",
+    "composition_grammar": "clinical-care-pathway",
+    "font_pair": "clean_modern_v1",
+    "readability_contract": {
+      "min_title_pt": 28,
+      "min_body_pt": 16,
+      "min_support_pt": 13,
+      "min_caption_pt": 9,
+      "min_footer_pt": 9,
+      "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
   "slides": [
     {
       "type": "title",
-      "title": "How City Libraries Become Climate Refuges",
+      "role": "title",
+      "title": "Libraries as Climate Refuges",
       "subtitle": "Cooling centers, charging stations, and filtered air for the hot week"
     },
     {
       "type": "section",
+      "role": "section",
       "title": "Why Libraries",
       "subtitle": "Already trusted, distributed, and free to enter"
     },
     {
       "type": "content",
-      "variant": "cards-3",
+      "variant": "table",
+      "role": "table",
       "title": "What a Refuge Provides",
       "subtitle": "Three services that change risk during a heat wave",
-      "cards": [
-        {
-          "title": "Cool Air",
-          "body": "Conditioned space for residents without home cooling.",
-          "accent": "accent_primary"
-        },
-        {
-          "title": "Power",
-          "body": "Charging for phones and medical devices.",
-          "accent": "accent_secondary"
-        },
-        {
-          "title": "Clean Air",
-          "body": "MERV-13 filtration on wildfire smoke days.",
-          "accent": "accent_primary"
-        }
-      ]
+      "table": {
+        "headers": ["Service", "Purpose"],
+        "rows": [
+          ["Cool Air", "Conditioned space for residents without home cooling."],
+          ["Power", "Charging for phones and medical devices."],
+          ["Clean Air", "MERV-13 filtration on wildfire smoke days."]
+        ]
+      }
     },
     {
       "type": "content",
-      "variant": "split",
+      "variant": "standard",
+      "role": "decision",
       "title": "What It Takes to Operate",
       "subtitle": "Coordination beats hardware",
       "bullets": [
         "Extend opening hours during heat advisories.",
         "Train staff on heat-illness recognition.",
-        "Pre-stage water near the entrance."
-      ],
-      "highlights": [
+        "Pre-stage water near the entrance.",
         "Pair every refuge with a public-health contact."
       ],
       "footer": "Operations, not just infrastructure"
@@ -51,6 +58,7 @@
     {
       "type": "content",
       "variant": "timeline",
+      "role": "evidence",
       "title": "Setup Timeline",
       "subtitle": "From building audit to first hot day",
       "milestones": [
@@ -78,31 +86,24 @@
     },
     {
       "type": "content",
-      "variant": "comparison-2col",
+      "variant": "table",
+      "role": "table",
       "title": "Day-Of vs Pre-Positioned",
       "subtitle": "Two ways the same heat wave plays out",
-      "left": {
-        "title": "Day-Of Scramble",
-        "body": [
-          "Staff find out via the news.",
-          "No filtered air for smoke days.",
-          "Residents wander between buildings.",
-          "First-aid kits checked the morning of."
+      "table": {
+        "headers": ["Day-Of Scramble", "Pre-Positioned"],
+        "rows": [
+          ["Staff find out via the news.", "Heads-up at the 48-hour forecast."],
+          ["No filtered air for smoke days.", "Filtration installed and tested."],
+          ["Residents wander between buildings.", "Refuge map published before the heat."],
+          ["First-aid kits checked the morning of.", "Staff already trained, supplies staged."]
         ]
       },
-      "right": {
-        "title": "Pre-Positioned",
-        "body": [
-          "Heads-up at the 48-hour forecast.",
-          "Filtration installed and tested.",
-          "Refuge map published before the heat.",
-          "Staff already trained, supplies staged."
-        ]
-      },
-      "verdict": "Pre-positioning is a procurement question solved months early, not a crisis decision."
+      "interpretation": "Pre-positioning is a procurement question solved months early, not a crisis decision."
     },
     {
       "type": "section",
+      "role": "section",
       "title": "What It Costs",
       "subtitle": "Less than a single emergency room admission for heat stroke"
     }

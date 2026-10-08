@@ -1,6 +1,6 @@
 {
   "name": "presentation-skill",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Source-first PowerPoint/PPTX generation for Codex and ChatGPT agents.",
   "author": {
     "name": "Sirilsengolraj",
@@ -27,7 +27,7 @@
   "interface": {
     "displayName": "Presentation Skill",
     "shortDescription": "Editable decks with visual QA",
-    "longDescription": "A lightweight source-first PowerPoint/PPTX workflow for coding agents. One capable model can author and refine a deck, with optional questions and style previews. Deterministic scripts preserve editable charts and tables, check readability, and expose focused repairs. Verified render caching speeds unchanged rebuilds without reusing visual approval.",
+    "longDescription": "A lightweight source-first PowerPoint/PPTX workflow for coding agents. One capable model chooses content-led composition, with optional questions and style previews. Native methods, charts and tables remain editable; scientific figures reserve readable captions and interpretation. Deterministic checks preserve source content and expose focused repairs. Verified render reuse speeds unchanged rebuilds without reusing visual approval.",
     "developerName": "Sirilsengolraj",
     "category": "Productivity",
     "capabilities": [
@@ -47,11 +47,10 @@
     "logo": "./assets/icon.svg",
     "composerIcon": "./assets/icon.svg",
     "screenshots": [
-      "./assets/v0.13_showcase.jpg",
-      "./assets/v0.13_lab_contact_sheet.jpg",
-      "./assets/v0.13_editorial_contact_sheet.jpg",
-      "./assets/v0.13_operations_contact_sheet.jpg",
-      "./assets/codex_native_vs_updated_clean_three_topics.png"
+      "./assets/v0.14_lab_showcase.jpg",
+      "./assets/white_calibration_contact_sheet.jpg",
+      "./assets/dark_contrast_contact_sheet.jpg",
+      "./assets/light_river_report_contact_sheet.jpg"
     ]
   }
 }

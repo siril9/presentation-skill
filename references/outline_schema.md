@@ -332,14 +332,18 @@ Example (`cards-3` with icons):
 Notes:
 - Renderer selection is handled by `build_workspace.py --renderer auto`; do not
   use slide-level renderer flags for new decks.
-- `visual_intent: flow` uses a fixed template (headline + diagram + decision/caption zone).
-  It is optional and fragile when overused. Prefer it only when the process,
+- `visual_intent: flow` reserves a method/diagram and decision/caption zone.
+  Prefer it only when the process,
   method, architecture, or causal chain is the actual evidence on the slide.
   Keep diagrams to four boxes in a visible row; split or summarize longer
   processes instead of forcing every step into one slide.
 - `visual_intent: hero` can use a native figure-plus-sidebar composition in the reliable builder.
 - `visual_intent: data` can use a native chart + evidence layout in the reliable builder.
-- For `flow`, provide `assets.diagram` or `assets.mermaid_source`. The
+- For an editable method, use `variant: flow`, `flow_steps: [{"title": "Collect", "detail": "Retain raw observations"}, {"title": "Review", "detail": "Log every exclusion"}]`.
+  Supply 2-4 ordered stages. `flow_layout: auto | strip | bands` uses equal-height
+  native shapes or measured stacked rows. It never drops stages to fit.
+  Keep the diagram input mutually exclusive with `flow_steps`.
+- For graph-shaped `flow`, provide `assets.diagram` or `assets.mermaid_source`. The
   builder auto-renders `.mmd` files to PNG via `scripts/render_mermaid.py`
   at build time — you write the diagram in mermaid syntax (easy for
   processes, sequences, flowcharts), the build pipeline turns it into a
@@ -566,6 +570,10 @@ Variant-specific fields:
     an appendix.
   - `figure_layout`: optional `panel-grid`, `primary-rail`, `ledger-rail`, or
     `strip-readout`; omit it to use the preset/default panel grid.
+  - `figure_frame`: `open`, `ruled`, or `panel`. Modern layouts measure all
+    headings/captions and reserve the complete readout; explicit v1 role-system
+    workspaces retain their original geometry. Shorten or split an infeasible
+    source instead of shrinking or hiding captions.
   - the image file should already be slide-ready: tight crop, compact legend,
     and enough plotted/image content to remain readable at panel size.
 - `facts` / `stats` / `evidence` (for `stats` or `chart`):

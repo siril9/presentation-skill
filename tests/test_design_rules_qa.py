@@ -12,7 +12,7 @@ from unittest.mock import patch
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
-from pptx.util import Inches
+from pptx.util import Inches, Pt
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -24,6 +24,7 @@ from design_rules_qa import (  # noqa: E402
     _text_role,
     check_table_caption_overlap,
     check_table_readability,
+    check_text_readability,
 )
 from finalize_quick_deck import _completion_status  # noqa: E402
 from source_fidelity import check_source_fidelity  # noqa: E402
@@ -49,6 +50,107 @@ class TextRoleTests(unittest.TestCase):
     def test_ordinary_text_in_the_same_box_is_body(self) -> None:
         shape = self._shape(name="Text 1")
         self.assertEqual(_text_role(shape, shape.text, 7.5), "body")
+        shape.top = Inches(0.7)
+        shape.text_frame.paragraphs[0].font.size = Pt(16)
+        title = self._shape(name="slide-title:content", top=0.2)
+        title.text_frame.paragraphs[0].font.size = Pt(28)
+        contract = {**design_rules_qa.DEFAULT_READABILITY, "min_title_pt": 28, "min_body_pt": 16}
+        self.assertEqual(_text_role(shape, shape.text, 7.5), "title")
+        self.assertFalse(check_text_readability(0, [(1, title, title.text), (2, shape, shape.text)], 7.5, contract))
+        shape.text_frame.paragraphs[0].font.size = Pt(15)
+        finding, = check_text_readability(0, [(1, title, title.text), (2, shape, shape.text)], 7.5, contract)
+        self.assertEqual(finding["type"], "body_font_too_small")
+
+    def test_support_has_its_own_readability_floor_not_a_metadata_exemption(self) -> None:
+        shape = self._shape(name="support:scientific:A:heading")
+        shape.text_frame.paragraphs[0].font.size = Pt(13)
+        contract = {**design_rules_qa.DEFAULT_READABILITY, "min_body_pt": 16, "min_support_pt": 13}
+        self.assertEqual(_text_role(shape, shape.text, 7.5), "support")
+        self.assertFalse(check_text_readability(0, [(1, shape, shape.text)], 7.5, contract))
+        shape.text_frame.paragraphs[0].font.size = Pt(12)
+        self.assertEqual(check_text_readability(0, [(1, shape, shape.text)], 7.5, contract)[0]["type"],
+                         "support_font_too_small")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            outline = directory / "outline.json"
+            brief = directory / "design_brief.json"
+            pptx = directory / "deck.pptx"
+            report = directory / "design_rules.json"
+            presentation = Presentation()
+            slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+            title = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(6), Inches(0.3))
+            title.name = "slide-title:content"
+            title.text = "Measured results"
+            title.text_frame.paragraphs[0].font.size = Pt(26)
+            support = slide.shapes.add_textbox(Inches(1), Inches(0.5), Inches(6), Inches(0.58))
+            support.name = "support:slide-subtitle"
+            support.text = "Supporting context"
+            support.text_frame.paragraphs[0].font.size = Pt(13)
+            presentation.save(pptx)
+            outline.write_text(json.dumps({"slides": [{"title": title.text}], "deck_style": {
+                "readability_contract": {"min_title_pt": 28, "min_body_pt": 16,
+                                         "unknown_floor": 99, "min_caption_pt": "bad"}}}), encoding="utf-8")
+
+            def run(*arguments):
+                argv = ["design_rules_qa.py", "--input", str(pptx), "--report", str(report), *arguments]
+                with patch.object(sys, "argv", argv), patch("builtins.print"):
+                    returncode = design_rules_qa.main()
+                return returncode, json.loads(report.read_text(encoding="utf-8"))
+
+            rc, payload = run("--outline", str(outline))
+            self.assertEqual(rc, 1)
+            self.assertTrue(payload["readability_contract_enforced"])
+            self.assertEqual(payload["readability_contract"], {**design_rules_qa.DEFAULT_READABILITY,
+                                                            "min_title_pt": 28, "min_body_pt": 16})
+            finding, = payload["issues"]
+            self.assertEqual(finding["type"], "title_font_too_small")
+            self.assertEqual(finding["severity"], "warning")
+            self.assertEqual((finding["font_pt"], finding["min_allowed_pt"]), (26, 28))
+            self.assertEqual(_text_role(support, support.text, 7.5), "support")
+            for name in ("slide-title:title", "slide-title:section", "slide-title:content"):
+                with self.subTest(name=name):
+                    title.name = name
+                    self.assertEqual(_text_role(title, title.text, 7.5), "title")
+
+            # A partial valid brief wins as a source, not a field-wise outline merge.
+            brief.write_text(json.dumps({"readability_contract": {"min_title_pt": 24}}), encoding="utf-8")
+            rc, payload = run("--outline", str(outline), "--design-brief", str(brief))
+            self.assertEqual(rc, 0)
+            self.assertEqual(payload["issues"], [])
+            self.assertTrue(payload["readability_contract_enforced"])
+            self.assertEqual(payload["readability_contract"], design_rules_qa.DEFAULT_READABILITY)
+            rc, payload = run("--design-brief", str(brief))
+            self.assertEqual(rc, 0)
+            self.assertTrue(payload["readability_contract_enforced"])
+
+            for invalid in ("{", "null", "{}", '{"readability_contract":{}}', json.dumps({
+                    "readability_contract": {"min_title_pt": True, "min_body_pt": -1,
+                                             "min_support_pt": float("nan"), "unknown_floor": 99}})):
+                with self.subTest(invalid_brief=invalid):
+                    brief.write_text(invalid, encoding="utf-8")
+                    rc, payload = run("--outline", str(outline), "--design-brief", str(brief))
+                    self.assertEqual(rc, 1)
+                    self.assertEqual([issue["type"] for issue in payload["issues"]], ["title_font_too_small"])
+                    self.assertEqual(payload["readability_contract"]["min_title_pt"], 28)
+
+            rc, payload = run()
+            self.assertEqual(rc, 0)
+            self.assertFalse(payload["readability_contract_enforced"])
+            self.assertEqual(payload["readability_contract"], design_rules_qa.DEFAULT_READABILITY)
+            for legacy_style in ({}, {"readability_contract": {}}, {"readability_contract": {"unknown_floor": 99}}):
+                with self.subTest(legacy_style=legacy_style):
+                    outline.write_text(json.dumps({"slides": [{"title": title.text}], "deck_style": legacy_style}),
+                                       encoding="utf-8")
+                    rc, payload = run("--outline", str(outline))
+                    self.assertEqual(rc, 0)
+                    self.assertFalse(payload["readability_contract_enforced"])
+            outline.write_text("{", encoding="utf-8")
+            self.assertEqual(design_rules_qa._readability_contract(None, outline),
+                             (design_rules_qa.DEFAULT_READABILITY, False))
+            rc, payload = run("--outline", str(outline))
+            self.assertEqual(rc, 1)
+            self.assertGreater(payload["source_fidelity_error_count"], 0)
 
 
 class TableGeometryTests(unittest.TestCase):
@@ -128,8 +230,8 @@ class SourceFidelityTests(unittest.TestCase):
         self.prs = Presentation()
         self.slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
 
-    def check(self, spec):
-        self.outline.write_text(json.dumps({"slides": [spec]}), encoding="utf-8")
+    def check(self, spec, deck_style=None):
+        self.outline.write_text(json.dumps({"slides": [spec], "deck_style": deck_style or {}}), encoding="utf-8")
         return check_source_fidelity(self.prs, self.outline)
 
     def text(self, value):
@@ -163,7 +265,9 @@ class SourceFidelityTests(unittest.TestCase):
         for layout in ("strip-readout", "strip_readout", "stats-strip", "metric-strip"):
             with self.subTest(layout=layout):
                 self.assertEqual(self.check({"variant": "scientific-figure", "figure_layout": layout,
-                                             "figures": figures})["issues"], [])
+                                             "figures": figures}, {"role_systems": {"evidence": "lab-evidence-plate"}})["issues"], [])
+                self.assertEqual(len(self.check({"variant": "scientific-figure", "figure_layout": layout,
+                                                 "figures": figures})["issues"]), 2)
         result = self.check({"variant": "scientific-figure", "figure_layout": "panel-grid", "figures": figures})
         self.assertEqual([issue["source_pointer"] for issue in result["issues"]],
                          ["/slides/0/figures/1/caption", "/slides/0/figures/2/caption"])
@@ -177,7 +281,7 @@ class SourceFidelityTests(unittest.TestCase):
         self.assertEqual([issue["source_pointer"] for issue in result["issues"]],
                          ["/slides/0/caption", "/slides/0/interpretation", "/slides/0/figures/0/caption"])
 
-    def test_native_figure_routes_require_primary_and_panel_captions_not_thumbnail_metadata(self):
+    def test_native_figure_routes_require_all_captioned_panels(self):
         node = shutil.which("node")
         if not node:
             self.skipTest("repository Node renderer unavailable")
@@ -209,6 +313,21 @@ class SourceFidelityTests(unittest.TestCase):
         result = check_source_fidelity(prs, self.outline)
         self.assertEqual([issue["source_pointer"] for issue in result["issues"]],
                          ["/slides/0/figures/0/caption", "/slides/1/figures/2/caption", "/slides/2/caption"])
+
+    def test_native_method_and_sidebar_text_have_repair_pointers(self):
+        self.text("Collect raw observations")
+        method = {"variant": "flow", "flow_steps": [
+            {"title": "Collect", "detail": "raw observations"},
+            {"title": "Review", "detail": "retain failed checks"},
+        ]}
+        result = self.check(method)
+        self.assertEqual([issue["source_pointer"] for issue in result["issues"]],
+                         ["/slides/0/flow_steps/1/title", "/slides/0/flow_steps/1/detail"])
+        result = self.check({"variant": "image-sidebar", "sidebar_sections": [
+            {"title": "Denominator", "body": "All 24 observations; synthetic only"},
+        ]})
+        self.assertEqual([issue["source_pointer"] for issue in result["issues"]],
+                         ["/slides/0/sidebar_sections/0/title", "/slides/0/sidebar_sections/0/body"])
 
     def test_caption_in_speaker_notes_does_not_satisfy_visible_source(self):
         self.slide.notes_slide.notes_text_frame.text = "n=12; pilot only"

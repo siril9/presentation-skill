@@ -143,9 +143,9 @@ def _effective_variant(spec, resolve, outline_path, base, asset_root=None):
     def count(key):
         return len(spec[key]) if isinstance(spec.get(key), list) else 0
 
-    if variant in {"standard", "content", "flow"} and any(
+    if variant in {"standard", "content", "flow"} and (spec.get("flow_steps") or any(
         existing_asset(assets.get(key)) for key in ("diagram", "mermaid_source", "mermaid") if assets.get(key)
-    ):
+    )):
         variant = "flow"
     if slide_type in {"content", "text"} and variant in {"standard", "content"}:
         chart = source(spec, ("chart",), base) or source(assets, ("chart_data", "chart"), base + "/assets")
@@ -330,6 +330,14 @@ def check_source_fidelity(prs, outline_path, asset_root=None):
         is_chart = variant == "chart"
         is_table = variant in {"table", "lab-run-results"} or (variant == "standard" and reference_role)
         is_figure = variant in {"scientific-figure", "image-sidebar"}
+        if "flow_steps" in spec:
+            for offset, step in enumerate(spec["flow_steps"]):
+                if isinstance(step, dict):
+                    fields(step, f"{base}/flow_steps/{offset}", ("title", "detail"), "process_step")
+            fields(spec, base, ("caption",), "caption")
+            key = _first(spec, ("summary_callout", "key_summary", "takeaway"))
+            if key:
+                fields(spec, base, (key,), "caveat_readout")
         if variant == "standard" and not reference_role:
             bullets = spec.get("bullets", [])
             if isinstance(bullets, list) and bullets:
@@ -354,20 +362,42 @@ def check_source_fidelity(prs, outline_path, asset_root=None):
             figures = spec.get("figures", spec.get("assets", {}).get("figures", []))
             figure_base = base + ("/figures" if "figures" in spec else "/assets/figures")
             # Sidebar renderers consume the slide caption, not a figure array.
-            # Scientific strip-readout captions its primary panel only; its
-            # secondary images are bare thumbnails, unlike captioned panels.
+            # Explicit v1 strip-readout has bare secondary thumbnails. Modern
+            # scientific layouts retain every panel's authored caption.
             style = resolved_outline.get("deck_style")
             style = style if isinstance(style, dict) else {}
+            legacy_figures = bool(style.get("role_systems")) and not style.get("renderer_role_contracts_v2")
             layout = str(effective_spec.get("figure_layout") or effective_spec.get("scientific_figure_layout")
                          or effective_spec.get("figure_treatment") or style.get("figure_layout")
                          or effective_spec.get("figure_table_treatment") or style.get("figure_table_treatment")
                          or "").strip().lower()
             if variant == "image-sidebar":
                 figures = []
-            elif layout in {"strip-readout", "strip_readout", "stats-strip", "metric-strip"}:
+                for offset, section in enumerate(spec.get("sidebar_sections", [])):
+                    if isinstance(section, dict):
+                        pointer = f"{base}/sidebar_sections/{offset}"
+                        key = _first(section, ("title", "label"))
+                        if key:
+                            fields(section, pointer, (key,), "figure_readout")
+                        key = _first(section, ("body", "text"))
+                        if key and isinstance(section[key], list):
+                            for bullet, value in enumerate(section[key]):
+                                text(value, f"{pointer}/{key}/{bullet}", "figure_readout")
+                        elif key:
+                            fields(section, pointer, (key,), "figure_readout")
+                if not spec.get("sidebar_sections") and not legacy_figures:
+                    fields(spec, base, ("body",), "figure_readout")
+                    for key in ("bullets", "highlights"):
+                        for offset, value in enumerate(spec.get(key, [])):
+                            text(value, f"{base}/{key}/{offset}", "figure_readout")
+            elif legacy_figures and layout in {"strip-readout", "strip_readout", "stats-strip", "metric-strip"}:
                 figures = figures[:1]
             for offset, figure in enumerate(figures):
                 if isinstance(figure, dict):
+                    if not legacy_figures:
+                        key = _first(figure, ("title", "heading"))
+                        if key:
+                            fields(figure, f"{figure_base}/{offset}", (key,), "figure_heading")
                     key = _first(figure, ("caption", "note"))
                     if key:
                         fields(figure, f"{figure_base}/{offset}", (key,), "figure_caption")

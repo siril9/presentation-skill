@@ -23,6 +23,8 @@ inspiration: use a supported `stats` representation for v2, not an assumed
 | [Lab trend](assets/visual_references/lab_trend.jpg) | chart, evidence | drift against a threshold | medium; wide line plot above interpretation | plot/readout allocation; retain units and bounds |
 | [Lab endpoints](assets/visual_references/lab_endpoints.jpg) | table, evidence, support | limits and denominators | medium; five-column ledger above caveat | ledger and readout; no second page frame |
 | [Lab evidence gate](assets/visual_references/lab_evidence_gate.jpg) | comparison, decision | findings versus required validation | medium; open paired columns | evidence/limits split; not a mandatory close |
+| [Lab residual panels](assets/visual_references/lab-residual-panels.jpg) | scientific-figure, evidence | paired error and spread on unchanged samples | medium; two ruled plots and one measured readout | paired panel allocation with shared units and denominators |
+| [Lab native method](assets/visual_references/lab-native-method.jpg) | flow, evidence | ordered fit, holdout and evaluation | medium; four editable steps with equal geometry | ordered method strip, not decorative cards |
 | [Editorial chart](assets/visual_references/editorial_chart.jpg) | chart, evidence | survey demand | medium; asymmetric chart and sidecar | chart/rail proportions in the base type |
 | [Editorial focal metric](assets/visual_references/editorial_focal_metric.jpg) | evidence, stats | synthesis or a rhythm break | sparse; one metric plus denominator | one optional contrast pause, not a dark theme |
 | [Editorial pilot](assets/visual_references/editorial_pilot.jpg) | evidence, support, timeline | bounded implementation | medium; preparation block plus open events | unequal staging with coherent spacing |
@@ -34,10 +36,14 @@ inspiration: use a supported `stats` representation for v2, not an assumed
 
 ## Provenance And Retrieval
 
-All 12 images are full-slide snapshots of original repository Sol studies under
+All 14 images are full-slide snapshots of original repository studies. The
+original 12 come from Sol studies under
 `decks/sol-design-studies-20260923`: clean-lab slides 1/3/4/6, editorial slides
 2/4/6/7, and operations slides 3/4/6/7. They use original synthetic data and
 repository composition, without external slide, photo, logo or brand assets.
+The two new lab references are white calibration slides 4 and 3 from the
+[v0.14 studies](../examples/v0.14_lab_studies/README.md), with source and review
+hashes in their [release manifest](../examples/v0.14_lab_studies/release_manifest.json).
 Copyright (c) 2026 Siril Sengolraj; [MIT license](../LICENSE).
 
 The source [repair recheck](../decks/sol-design-studies-20260923/review.md)
@@ -48,9 +54,10 @@ scientific, survey or operational outcome is validated by those reviews.
 
 [Machine-readable catalog](visual_reference_catalog.json) records each use,
 density, composition, mixing option, compatible grammar, source slide/outline,
-review link, SHA-256 and snapshot size. Images total **875,916 bytes**;
-each is 1200 x 675 JPEG, resized without cropping or content changes at quality
-82 with 4:4:4 chroma. Original decks/renders are provenance only and need not
+review link, SHA-256 and snapshot size. Images total **997,394 bytes**;
+each is 1200 x 675 JPEG, resized without cropping or content changes with
+4:4:4 chroma. The original 12 use quality 82; the two new references use
+quality 70 and contain-fit padding of at most one pixel. Original decks/renders are provenance only and need not
 be shipped or present for retrieval.
 
 Existing `present.py brief` exposes selected `route_candidates[].visual_references`

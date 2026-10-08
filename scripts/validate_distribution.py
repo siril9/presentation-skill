@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -18,7 +19,36 @@ FORBIDDEN_PACKAGE_PARTS = (
     "large_style_corpus_catalog.json",
     "large_style_corpus_catalog_enriched.json",
     "run_pptxgenjs_regression.py",
+    "build_native_vs_latest_random_topic_decks.py",
+    "build_release_showcase.py",
+    "package_plugin.py",
+    "sync_plugin_snapshot.py",
+    "validate_distribution.py",
 )
+PRIVATE_PARTS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache", ".env", ".ssh"}
+HOST_HOME_PATH = re.compile(r"/(?:Users|home)/[\w.-]+/|[A-Za-z]:[\\/]+Users[\\/]+[\w.-]+[\\/]+")
+RUNTIME_FILES = (
+    "SKILL.md", "DESIGN.md", "scripts/present.py", "scripts/python_runtime.py",
+    "scripts/runtime_doctor.py", "scripts/requirements-runtime.txt",
+    "scripts/build_deck_pptxgenjs.js", "templates/pptxgenjs/slides.js",
+)
+
+
+def _surface_issues(root: Path, paths: list[str]) -> dict[str, list[str]]:
+    issues: dict[str, list[str]] = {"development": [], "private": [], "host_specific_scripts": []}
+    for name in sorted(paths):
+        path = Path(name)
+        if any(part in name for part in FORBIDDEN_PACKAGE_PARTS):
+            issues["development"].append(name)
+        if (any(part.casefold() in PRIVATE_PARTS or part.casefold().startswith(".env.")
+                for part in path.parts)
+                or path.suffix.lower() in {".pem", ".key", ".p12", ".pfx", ".pyc"}):
+            issues["private"].append(name)
+        # Historical source docs are evidence, not executable runtime requirements.
+        if "scripts" in path.parts and path.suffix.lower() in {".py", ".js", ".mjs", ".sh"}:
+            if HOST_HOME_PATH.search((root / path).read_text(encoding="utf-8")):
+                issues["host_specific_scripts"].append(name)
+    return issues
 
 
 def _tree_bytes(root: Path) -> int:
@@ -41,11 +71,10 @@ def main() -> int:
     records = json.loads(completed.stdout)
     package = records[0]
     paths = [str(item.get("path") or "") for item in package.get("files") or []]
-    leaked = sorted(
-        path
-        for path in paths
-        if any(part in path for part in FORBIDDEN_PACKAGE_PARTS)
-    )
+    npm_issues = _surface_issues(ROOT, paths)
+    plugin_paths = [path.relative_to(PLUGIN).as_posix() for path in PLUGIN.rglob("*") if path.is_file()]
+    plugin_issues = _surface_issues(PLUGIN, plugin_paths)
+    leaked = npm_issues["development"]
     required = [
         PLUGIN / ".codex-plugin" / "plugin.json",
         PLUGIN / "skills" / "presentation-skill" / "SKILL.md",
@@ -58,6 +87,15 @@ def main() -> int:
     missing = [str(path.relative_to(ROOT)) for path in required if not path.is_file()]
     plugin_bytes = _tree_bytes(PLUGIN)
     failures = []
+    for surface, issues in (("npm artifact", npm_issues), ("plugin snapshot", plugin_issues)):
+        for category, found in issues.items():
+            if found:
+                failures.append(f"{surface} contains {category}: {found}")
+    for name in RUNTIME_FILES:
+        if name not in paths:
+            failures.append(f"npm artifact is missing runtime file: {name}")
+        if not (PLUGIN / "skills/presentation-skill" / name).is_file():
+            failures.append(f"plugin snapshot is missing runtime file: {name}")
     if discovery.get("version") != version:
         failures.append("agent discovery metadata does not match the package version")
     plugin_manifest = json.loads((PLUGIN / ".codex-plugin/plugin.json").read_text())
@@ -81,8 +119,6 @@ def main() -> int:
         failures.append("npm artifact exceeds 8 MB unpacked")
     if plugin_bytes > MAX_PLUGIN_BYTES:
         failures.append("plugin snapshot exceeds 10 MB")
-    if leaked:
-        failures.append(f"npm artifact leaked development files: {leaked}")
     if missing:
         failures.append(f"plugin snapshot is missing runtime files: {missing}")
     payload = {
@@ -92,6 +128,8 @@ def main() -> int:
         "npm_entry_count": package.get("entryCount"),
         "plugin_bytes": plugin_bytes,
         "leaked_paths": leaked,
+        "npm_surface_issues": npm_issues,
+        "plugin_surface_issues": plugin_issues,
         "missing_plugin_files": missing,
         "failures": failures,
     }

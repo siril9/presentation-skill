@@ -90,6 +90,8 @@ _STYLE_ENUM_VALUES = {
     "footer_mode": {"standard", "source-line", "none"},
     "summary_callout_mode": {"default", "lab-box"},
     "figure_table_treatment": {"figure-first", "table-first", "stats-strip", "image-sidebar"},
+    "figure_frame": {"open", "ruled", "panel"},
+    "flow_layout": {"auto", "strip", "bands"},
 }
 
 _ROOT_STYLE_ENUM_KEYS = set(_STYLE_ENUM_VALUES)
@@ -106,6 +108,8 @@ _SLIDE_STYLE_ENUM_KEYS = {
     "footer_mode",
     "summary_callout_mode",
     "figure_table_treatment",
+    "figure_frame",
+    "flow_layout",
 }
 
 _ASSET_ALIAS_PREFIXES = ("asset:", "image:", "background:", "chart:", "table:", "generated:")
@@ -1037,11 +1041,32 @@ def _check_flow_complexity(
         assets = {}
     mermaid_source = assets.get("mermaid_source") or assets.get("mermaid")
     diagram = assets.get("diagram")
-    is_flow = variant == "flow" or visual_intent == "flow" or bool(mermaid_source or diagram)
+    is_flow = variant == "flow" or visual_intent == "flow" or "flow_steps" in slide or bool(mermaid_source or diagram)
     if not is_flow:
         return []
 
     issues: list[dict[str, Any]] = []
+    if "flow_steps" in slide:
+        steps = slide["flow_steps"]
+        valid = isinstance(steps, list) and 2 <= len(steps) <= 4 and all(
+            isinstance(step, dict) and isinstance(step.get("title"), str)
+            and bool(step["title"].strip())
+            and ("detail" not in step or isinstance(step["detail"], str))
+            for step in steps
+        )
+        if not valid:
+            issues.append(_make_issue(
+                idx, "flow_steps_invalid", "error",
+                "Native flow_steps requires 2-4 stages with nonempty title and optional string detail.",
+                "Keep the source order. Shorten or split a longer method; do not discard steps.",
+            ))
+        if mermaid_source or diagram:
+            issues.append(_make_issue(
+                idx, "flow_inputs_ambiguous", "error",
+                "Choose native flow_steps or a diagram asset, not both.",
+                "Remove the unused representation so the visible workflow has one source.",
+            ))
+        return issues
     if variant == "flow" and not (mermaid_source or diagram):
         issues.append(
             _make_issue(
@@ -1374,13 +1399,15 @@ _EVIDENCE_ANCHOR_VARIANTS = {
     "timeline",
 }
 
-_RENDERER_CAPABILITIES_V2 = json.loads(
+_RENDERER_CAPABILITIES = json.loads(
     (
         Path(__file__).resolve().parent.parent
         / "schemas"
         / "renderer_capabilities_v2.json"
     ).read_text(encoding="utf-8")
-)["role_variants"]
+)
+_RENDERER_CAPABILITIES_V2 = _RENDERER_CAPABILITIES["role_variants"]
+_FALLBACK_ROLE_VARIANTS = _RENDERER_CAPABILITIES["fallback_role_variants"]
 _PREFERRED_ROLES_BY_VARIANT: dict[str, set[str]] = {}
 for _role, _variants in _RENDERER_CAPABILITIES_V2.items():
     for _variant in _variants:
@@ -1390,6 +1417,8 @@ for _role, _variants in _RENDERER_CAPABILITIES_V2.items():
 def _check_role_variant_alignment(slide: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     role = str(slide.get("role") or "").strip().lower()
     variant = str(slide.get("variant") or "").strip().lower()
+    if variant in _FALLBACK_ROLE_VARIANTS.get(role, []):
+        return []
     preferred = _PREFERRED_ROLES_BY_VARIANT.get(variant)
     if not role or not variant or (preferred and role in preferred):
         return []

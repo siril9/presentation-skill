@@ -1,0 +1,127 @@
+{
+  "title": "What a sampling clock leaves unseen",
+  "subtitle": "Invented synthetic river-sensor report",
+  "deck_style": {
+    "style_preset": "editorial-minimal", "composition_grammar": "editorial-spread",
+    "style_seed": "v014-light-river", "palette_key": "journal_monochrome_v1",
+    "font_pair": "editorial_serif_v1", "header_mode": "lab-clean", "header_variant": "plain",
+    "title_layout": "masthead", "title_motif": "none",
+    "footer_mode": "source-line", "footer_page_numbers": true,
+    "figure_frame": "open", "table_treatment": "compact-ledger",
+    "chart_treatment": "sparse-wide", "emoji_mode": "none",
+    "readability_contract": {
+      "min_title_pt": 28, "min_body_pt": 16, "min_support_pt": 13,
+      "min_caption_pt": 9, "min_footer_pt": 9, "min_metadata_pt": 9,
+      "max_title_lines": 2
+    }
+  },
+  "metadata": {
+    "synthetic": true, "source_ledger": "data/synthetic_data.json", "external_assets": false,
+    "route_claim": "Figure ledger, sidebar and flow are honest legacy-route fallbacks alongside native chart/table roles.",
+    "verification": "Source validation is separate from rendered approval; see release_manifest.json for the reviewed release artifacts."
+  },
+  "slides": [
+    {
+      "slide_id": "riv-01", "type": "title", "role": "title", "variant": "title",
+      "slide_intent": "premise", "title": "What a sampling clock\nleaves unseen",
+      "subtitle": "Six samples can tell different stories.\nInvented synthetic river signals; no field observations.",
+      "kicker": "ILLUSTRATIVE SENSOR REPORT / 03",
+      "sources": ["SYN-R | invented nonclinical signals"],
+      "notes": "There is no named river, geographical coordinate, measured environmental event, pollutant concentration or regulatory criterion. All time values are dimensionless toy time units and all responses are arbitrary units."
+    },
+    {
+      "slide_id": "riv-02", "type": "content", "role": "evidence", "variant": "image-sidebar",
+      "slide_intent": "scene", "title": "The invented event sits between clock ticks",
+      "subtitle": "One illustrative realization from a fixed 24-realization synthetic ensemble",
+      "image_sidebar_mode": "analysis-rail", "sidebar_body_font_size": 16,
+      "assets": {"hero_image": "assets/pulse_trace.png"},
+      "caption": "SYN-R. Dense synthetic grid: 289 values over toy time 0-72.",
+      "sidebar_sections": [
+        {"title": "Signal", "body": "Two narrow pulses are deliberately placed at 30 and 54."},
+        {"title": "Question", "body": "What survives when only six values are retained?"},
+        {"title": "Boundary", "body": "The dense grid is a simulated reference, not observed truth."}
+      ],
+      "sources": ["SYN-R | invented pulse sequence"],
+      "notes": "The displayed realization has seeded center jitter around the authored centers. Gaussian pulses and independent noise are assumptions of the generator, not hydrological mechanisms supported by external sources."
+    },
+    {
+      "slide_id": "riv-03", "type": "content", "role": "table", "variant": "table",
+      "slide_intent": "sampling-ledger", "title": "Hold the sample budget fixed",
+      "subtitle": "Both synthetic schedules retain exactly six values from the same trace",
+      "table": {
+        "headers": ["Schedule", "Toy sampling times", "Budget", "Selection caveat"],
+        "rows": [
+          ["A / phase 0", "0, 12, 24, 36, 48, 60", "6", "Clock misses authored centers"],
+          ["B / phase 6", "6, 18, 30, 42, 54, 66", "6", "Clock aligned to authored centers"],
+          ["Dense reference", "0-72 in steps of 0.25", "289", "Synthetic grid, not field truth"]
+        ],
+        "column_weights": [1.2, 1.9, 0.6, 1.8],
+        "caption": "SYN-R. Neither six-value schedule samples time 72. Peak retention uses this shared 0-72 reference window."
+      },
+      "sources": ["SYN-R | invented schedule ledger"],
+      "notes": "The unequal first/last retained times are deliberate phase differences, not different sample budgets. Both schedules use the same 24 dense traces and the same baseline-subtracted reference peak denominator. Phase B has privileged alignment to the invented event centers."
+    },
+    {
+      "slide_id": "riv-04", "type": "content", "role": "evidence", "variant": "scientific-figure",
+      "slide_intent": "traceable-evidence", "title": "Read the gaps, not only the points",
+      "subtitle": "One paired realization; ledger captions keep the assumptions beside the figure",
+      "figure_layout": "ledger-rail", "figure_frame": "ruled",
+      "figures": [{"path": "assets/sampling_overlay.png", "label": "A", "title": "Two six-point clocks", "caption": "Same dense signal. Circles: A. Squares: B. Lines connect samples, not reconstructed truth."}],
+      "caption": "SYN-R. Pulse centers were authored before plotting.",
+      "interpretation": "An uneventful sampled line is compatible with an unsampled peak.",
+      "sources": ["SYN-R | synthetic sampling overlay"],
+      "notes": "This one-figure ledger allows a large evidence region rather than a dense thumbnail inventory. The visible native caption is an interpretation ledger, not an external citation. Sample markers encode schedules as well as color."
+    },
+    {
+      "slide_id": "riv-05", "type": "content", "role": "chart", "variant": "chart",
+      "slide_intent": "ensemble-summary", "title": "A phase shift changes retained peak height",
+      "subtitle": "Synthetic mean retained peak fraction; 24 paired realizations per schedule",
+      "chart": "data/retention_chart.json",
+      "caption": "SYN-R. Fraction = sampled peak above baseline / dense-grid peak above baseline. Zero-based bar axis.",
+      "sources": ["SYN-R | computed synthetic retention"],
+      "notes": "Compute a ratio per realization before averaging. The paired schedules have identical six-value budgets. Each realization perturbs pulse centers by seeded Gaussian jitter with SD 1.5 toy time units. This statistic is peak retention, not event detection sensitivity, exposure, pollutant load or confidence in absence. B is aligned to the generator by design."
+    },
+    {
+      "slide_id": "riv-06", "type": "content", "role": "evidence", "variant": "image-sidebar",
+      "slide_intent": "interpretation", "title": "Averages do not erase the alignment advantage",
+      "subtitle": "All 24 paired synthetic ratios, not just the two means",
+      "image_sidebar_mode": "analysis-rail", "sidebar_body_font_size": 16,
+      "image_side": "right", "assets": {"hero_image": "assets/paired_retention.png"},
+      "caption": "SYN-R. Each line links one realization under A and B; no error bar or confidence interval.",
+      "sidebar_sections": [
+        {"title": "Pattern", "body": "The comparison is paired at the realization level."},
+        {"title": "Bias", "body": "Schedule B knows where the generator puts the pulses."},
+        {"title": "Not shown", "body": "Random event timing, missing samples and sensor lag."}
+      ],
+      "sources": ["SYN-R | synthetic paired peak fractions"],
+      "notes": "This reverses image and interpretation order to suit the report argument, not as a recoloring exercise. The unmodeled cases are limitations, not findings about actual sensors."
+    },
+    {
+      "slide_id": "riv-07", "type": "content", "role": "evidence", "variant": "flow",
+      "slide_intent": "reporting-policy", "title": "Separate the observation from the absence claim",
+      "subtitle": "A two-stage reporting rule for this invented exercise",
+      "flow_layout": "auto",
+      "flow_steps": [
+        {"title": "Retain", "detail": "Keep sample times, values and gaps in the ledger."},
+        {"title": "Qualify", "detail": "Report no sampled peak, not no event."}
+      ],
+      "caption": "SYN-R. Native editable titles and details; proposed reporting policy only.",
+      "sources": ["SYN-R | invented reporting rule"],
+      "notes": "These two stages are an authored reporting policy. They are not an environmental operating procedure or evidence that a monitoring program has performed them. Auto selects a native strip or bands according to source text allocation."
+    },
+    {
+      "slide_id": "riv-08", "type": "content", "role": "decision", "variant": "standard",
+      "slide_intent": "report-close", "title": "Keep the budget; vary the timing next",
+      "content_recipe": {"required_slots": ["Next test", "Control", "Boundary"]},
+      "subtitle": "Synthetic report conclusion, not a monitoring recommendation",
+      "bullets": [
+        "Test phases against blinded, randomly timed synthetic events.",
+        "Keep six samples and paired reference denominators fixed.",
+        "Withhold river-condition and event-absence claims."
+      ],
+      "summary_callout": "Invented signals illustrate a sampling blind spot. No field finding has been established.",
+      "sources": ["SYN-R | synthetic report limits"],
+      "notes": "No actual river, instrument, station, date, water-quality measurement or field asset was used. The proposed random-timing experiment is not included in the current generator. Reproducibility of the toy result is not general validation of phase B."
+    }
+  ]
+}
